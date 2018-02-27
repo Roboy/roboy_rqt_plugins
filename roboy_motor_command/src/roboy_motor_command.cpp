@@ -123,6 +123,7 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     motorCommand = nh->advertise<roboy_communication_middleware::MotorCommand>("/roboy/middleware/MotorCommand", 1);
     motorControl = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/middleware/ControlMode");
+    motorConfig = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/middleware/MotorConfig");
     emergencyStop = nh->serviceClient<std_srvs::SetBool>("/roboy/middleware/EmergencyStop");
 
     ui.stop_button_all->setStyleSheet("background-color: green");
@@ -137,6 +138,8 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
     QObject::connect(ui.vel, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
     QObject::connect(ui.dis, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
     QObject::connect(ui.force, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
+
+    QObject::connect(ui.update_config, SIGNAL(clicked()), this, SLOT(update_config()));
 
     QObject::connect(ui.load_motor_config, SIGNAL(clicked()), this, SLOT(loadMotorConfig()));
     loadMotorConfig();
@@ -350,6 +353,83 @@ void RoboyMotorCommand::controlModeChanged(){
     msg.request.setPoint = setpoint_slider_widget.back()->value() * motor_scale;
     if(!motorControl.call(msg))
         ROS_ERROR("failed to change control mode, is emergency stop active?! are the fpgas connected?!");
+}
+
+void RoboyMotorCommand::update_config(){
+    bool ok;
+    int outputPosMax = ui.outputPosMax->text().toInt(&ok);
+    if(!ok || outputPosMax>4000) {
+        ROS_ERROR("outputPosMax not valid [0 to 4000]");
+        return;
+    }
+    int outputNegMax = ui.outputNegMax->text().toInt(&ok);
+    if(!ok || outputNegMax<-4000) {
+        ROS_ERROR("outputNegMax not valid [0 to -4000]");
+        return;
+    }
+    int spPosMax = ui.spNegMax->text().toInt(&ok);
+    if(!ok) {
+        ROS_ERROR("spPosMax not valid");
+        return;
+    }
+    int spNegMax = ui.spNegMax->text().toInt(&ok);
+    if(!ok) {
+        ROS_ERROR("spNegMax not valid");
+        return;
+    }
+    int integralPosMax = ui.integralPosMax->text().toInt(&ok);
+    if(!ok) {
+        ROS_ERROR("integralPosMax not valid");
+        return;
+    }
+    int integralNegMax = ui.integralNegMax->text().toInt(&ok);
+    if(!ok) {
+        ROS_ERROR("integralNegMax not valid");
+        return;
+    }
+    int deadband = ui.deadband->text().toInt(&ok);
+    if(!ok) {
+        ROS_ERROR("deadband not valid");
+        return;
+    }
+    int Kp = ui.Kp->text().toInt(&ok);
+    if(!ok) {
+        ROS_ERROR("Kp not valid");
+        return;
+    }
+    int Ki = ui.Ki->text().toInt(&ok);
+    if(!ok) {
+        ROS_ERROR("Ki not valid");
+        return;
+    }
+    int Kd = ui.Kd->text().toInt(&ok);
+    if(!ok) {
+        ROS_ERROR("Kd not valid");
+        return;
+    }
+    int forwardGain = ui.forwardGain->text().toInt(&ok);
+    if(!ok) {
+        ROS_ERROR("forwardGain not valid");
+        return;
+    }
+    roboy_communication_middleware::MotorConfigService msg;
+    for(int i=0;i<NUMBER_OF_MOTORS_PER_FPGA;i++){
+        msg.request.config.motors.push_back(i);
+        msg.request.config.control_mode.push_back(control_mode[i]);
+        msg.request.config.outputPosMax.push_back(outputPosMax);
+        msg.request.config.outputNegMax.push_back(outputNegMax);
+        msg.request.config.spPosMax.push_back(spPosMax);
+        msg.request.config.spNegMax.push_back(spNegMax);
+        msg.request.config.IntegralPosMax.push_back(integralPosMax);
+        msg.request.config.IntegralNegMax.push_back(integralNegMax);
+        msg.request.config.deadBand.push_back(deadband);
+        msg.request.config.Kp.push_back(Kp);
+        msg.request.config.Ki.push_back(Ki);
+        msg.request.config.Kd.push_back(Kd);
+        msg.request.config.forwardGain.push_back(forwardGain);
+        msg.request.setPoints.push_back(setpoint[i]);
+    }
+    motorConfig.call(msg);
 }
 
 void RoboyMotorCommand::loadMotorConfig(){

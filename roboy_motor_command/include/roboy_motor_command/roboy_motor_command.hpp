@@ -7,6 +7,7 @@
 #include <roboy_motor_command/ui_roboy_motor_command.h>
 #include <roboy_communication_middleware/ControlMode.h>
 #include <roboy_communication_middleware/MotorCommand.h>
+#include <roboy_communication_middleware/MotorConfigService.h>
 #include <QWidget>
 #include <QtQuick/QQuickView>
 #include <pluginlib/class_list_macros.h>
@@ -48,13 +49,14 @@ public Q_SLOTS:
     void setPointAllChanged();
     void setPointAllChangedSlider();
     void controlModeChanged();
+    void update_config();
     void loadMotorConfig();
 private:
     Ui::RoboyMotorCommand ui;
     QWidget *widget_;
     ros::NodeHandlePtr nh;
     ros::Publisher motorCommand;
-    ros::ServiceClient motorControl, emergencyStop;
+    ros::ServiceClient motorControl, motorConfig, emergencyStop;
 private:
     bool stopButton;
     vector<double> setpoint;
