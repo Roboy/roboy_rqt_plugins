@@ -1,0 +1,14 @@
+<library path="lib/libroboy_trajectories_control">
+  <class name="RoboyTrajectoriesControl" type="RoboyTrajectoriesControl" base_class_type="rqt_gui_cpp::Plugin">
+    <description>
+      Trajectories Control plugin
+    </description>
+    <qtgui>
+      <group>
+        <label>Roboy</label>
+      </group>
+      <label>trajectories control</label>
+      <statustip>Great user interface to provide real value.</statustip>
+    </qtgui>
+  </class>
+</library>
