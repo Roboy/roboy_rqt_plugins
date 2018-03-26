@@ -1,11 +1,13 @@
 #include <roboy_trajectories_control/roboy_trajectories_control.hpp>
 
+
 RoboyTrajectoriesControl::RoboyTrajectoriesControl()
         : rqt_gui_cpp::Plugin(), widget_(0) {
     setObjectName("RoboyTrajectoriesControl");
 }
 
 void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
+
     // access standalone command line arguments
     QStringList argv = context.argv();
     // create QWidget
@@ -18,6 +20,39 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     checkMotorStatus();
     pullExistingTrajectories();
 
+    QObject::connect(ui.clearBehavior, SIGNAL(clicked()), this, SLOT(clearAllTrajectoriesButtonClicked()));
+    QObject::connect(ui.playBehavior, SIGNAL(clicked()), this, SLOT(playTrajectoriesButtonClicked()));
+    QObject::connect(ui.refreshTrajectories, SIGNAL(clicked()), this, SLOT(refreshTrajectoriesButtonClicked()));
+    QObject::connect(ui.addPause, SIGNAL(clicked()), this, SLOT(addPauseButtonClicked()));
+    QObject::connect(ui.relaxAll, SIGNAL(clicked()), this, SLOT(relaxAllMusclesButtonClicked()));
+    QObject::connect(ui.startInit, SIGNAL(clicked()), this, SLOT(startInitializationButtonClicked()));
+    QObject::connect(ui.startRecord, SIGNAL(clicked()), this, SLOT(startRecordTrajectoryButtonClicked()));
+    QObject::connect(ui.stopRecord, SIGNAL(clicked()), this, SLOT(stopRecordTrajectoryButtonClicked()));
+    QObject::connect(ui.pauseDuration, SIGNAL(valueChanged(int)), this, SLOT(setPauseDuration(int)));
+
+    ui.playBehavior->setEnabled(false);
+    ui.clearBehavior->setEnabled(false);
+    ui.addPause->setEnabled(false);
+    ui.stopRecord->setEnabled(false);
+
+    nh = ros::NodeHandlePtr(new ros::NodeHandle);
+    if (!ros::isInitialized()) {
+        int argc = 0;
+        char **argv = NULL;
+        ros::init(argc, argv, "trajectories_control_rqt_plugin");
+    }
+
+//    motorControlServiceClient = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/middleware/ControlMode");
+    emergencyStopServiceClient = nh->serviceClient<std_srvs::SetBool>("/roboy/middleware/EmergencyStop");
+    setDisplacementForAllServiceClient = nh->serviceClient<roboy_communication_middleware::SetInt16>("/roboy/middleware/SetDisplacementForAll");
+    startRecordTrajectoryServiceClient = nh->serviceClient<roboy_communication_control::StartRecordTrajectory>("/roboy/middleware/StartRecordTrajectory");
+    stopRecordTrajectoryServiceClient = nh->serviceClient<roboy_communication_control::StopRecordTrajectory>("/roboy/middleware/StopRecordTrajectory");
+    performMovementServiceClient = nh->serviceClient<roboy_communication_control::PerformMovement>("/roboy/middleware/ReplayTrajectory");
+    executeBehaviorServiceClient = nh->serviceClient<roboy_communication_control::PerformBehavior>("/roboy/middleware/ExecuteBehavior");
+    listExistingTrajectoriesServiceClient = nh->serviceClient<roboy_communication_control::ListTrajectories>("roboy/middleware/ListExistingTrajectories");
+
+//    motorCommandPublisher = nh->advertise<roboy_communication_middleware::motorCommand>("/roboy/middleware/MotorCommand", 1);
+    motorStatusSubscriber = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyTrajectoriesControl::motorStatusCallback, this);
 
 
 //    scene->addEllipse(0,0,50,50,outlinePen,greenBrush);
@@ -152,7 +187,7 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
 }
 
 void RoboyTrajectoriesControl::shutdownPlugin() {
-    // unregister all publishers here
+    // TODO unregister all publishers here
 }
 
 void RoboyTrajectoriesControl::saveSettings(qt_gui_cpp::Settings &plugin_settings,
@@ -175,27 +210,138 @@ void RoboyTrajectoriesControl::checkMotorStatus() {
     view->setBackgroundBrush(greenBrush);
 }
 
+void RoboyTrajectoriesControl::motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
+    // TODO check if motor online
+}
+
 void RoboyTrajectoriesControl::pullExistingTrajectories() {
-    vector<QString> test;//("one", "two", "three");
-    test.push_back("one");
-    test.push_back("two");
-    test.push_back("sdf");
-    test.push_back("asdf");
 
-    QListWidget* trajectoriesList = widget_->findChild<QListWidget *>("existingTrajectories");
+    // TODO ros service to get the list from FPGA
+    roboy_communication_control::ListTrajectories srv;
+    srv.request.folder = TRAJECTORIES_PATH;
+    listExistingTrajectoriesServiceClient.call(srv);
 
-    QStringList existingTrajectories = QStringList::fromVector(QVector<QString>::fromStdVector(test));
-    trajectoriesList->addItems(existingTrajectories);
+    // empty list
+    while(ui.existingTrajectories->count()>0)
+    {
+        ui.existingTrajectories->takeItem(0);
+    }
+    vector<QString> trajectories;
+    for (string t: srv.response.trajectories) {
+        trajectories.push_back(QString::fromStdString(t));
+    }
+    QStringList existingTrajectories = QStringList::fromVector(QVector<QString>::fromStdVector(trajectories));
+    ui.existingTrajectories->addItems(existingTrajectories);
 
-    connect(trajectoriesList, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
+    connect(ui.existingTrajectories, SIGNAL(itemDoubleClicked(QListWidgetItem*)),
             this, SLOT(onExistingTrajectoriesItemClicked(QListWidgetItem*)));
+
 }
 
 void RoboyTrajectoriesControl::onExistingTrajectoriesItemClicked(QListWidgetItem* item) {
-    QScrollArea* scheduledBehavior = widget_->findChild<QScrollArea *>("scheduledBehavior");
-    scheduledBehavior->add
-
+    QListWidgetItem* newItem = new QListWidgetItem();
+    newItem->setWhatsThis("trajectory");
+    newItem->setText(item->text());
+    ui.scheduledBehavior->addItem(newItem);
+    ui.clearBehavior->setEnabled(true);
+    ui.playBehavior->setEnabled(true);
 };
+
+void RoboyTrajectoriesControl::refreshTrajectoriesButtonClicked() {
+    pullExistingTrajectories();
+}
+
+void RoboyTrajectoriesControl::addPauseButtonClicked() {
+    string pauseMsg(to_string(pauseDuration) + "s pause");
+    QListWidgetItem * item = new QListWidgetItem();
+    item->setText(QString::fromStdString(pauseMsg));
+    item->setWhatsThis("pause");
+    ui.scheduledBehavior->addItem(item);
+    ui.pauseDuration->setValue(0);
+    ui.clearBehavior->setEnabled(true);
+    ui.playBehavior->setEnabled(true);
+}
+
+void RoboyTrajectoriesControl::setPauseDuration(int duration) {
+    if (duration>0) {
+        ui.addPause->setEnabled(true);
+        pauseDuration = duration;
+    } else {
+        ui.addPause->setEnabled(false);
+    }
+
+}
+
+void RoboyTrajectoriesControl::clearAllTrajectoriesButtonClicked() {
+    while(ui.scheduledBehavior->count()>0)
+    {
+        ui.scheduledBehavior->takeItem(0);
+    }
+}
+
+void RoboyTrajectoriesControl::playTrajectoriesButtonClicked() {
+    vector<string> actions;
+    for(int i = 0; i < ui.scheduledBehavior->count(); ++i)
+    {
+        QListWidgetItem* item = ui.scheduledBehavior->item(i);
+        string actionName = item->text().toStdString();
+        if (item->whatsThis().contains("trajectory")) {
+            actions.push_back(actionName);
+        }
+        else if (item->whatsThis().contains("pause")) {
+            string delimiter = "s";
+            actions.push_back(actionName.substr(0, actionName.find(delimiter))+"_pause");
+        }
+    }
+
+    roboy_communication_control::PerformBehavior srv;
+    srv.request.actions = actions;
+    executeBehaviorServiceClient.call(srv);
+
+}
+
+void RoboyTrajectoriesControl::relaxAllMusclesButtonClicked() {
+    roboy_communication_middleware::SetInt16 srv;
+    srv.request.setpoint = 0;
+    setDisplacementForAllServiceClient.call(srv);
+}
+
+void RoboyTrajectoriesControl::startInitializationButtonClicked() {
+    roboy_communication_middleware::SetInt16 srv;
+    srv.request.setpoint = 50;
+    setDisplacementForAllServiceClient.call(srv);
+}
+
+void RoboyTrajectoriesControl::startRecordTrajectoryButtonClicked() {
+    roboy_communication_control::StartRecordTrajectory srv;
+
+    if (ui.newTrajectoryName->toPlainText().isEmpty() || ui.newTrajectoryName->toPlainText().isNull()) {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Error","No trajectory name specified");
+        messageBox.setFixedSize(500,200);
+    }
+    else {
+
+        srv.request.name = ui.newTrajectoryName->toPlainText().toStdString();
+        // TODO provide selection of motors to record
+        vector<int8_t> ids(total_number_of_motors);
+        iota(begin(ids), end(ids), 0);
+        srv.request.idList = ids;
+        startRecordTrajectoryServiceClient.call(srv);
+        ui.startRecord->setEnabled(false);
+        ui.stopRecord->setEnabled(true);
+    }
+}
+
+void RoboyTrajectoriesControl::stopRecordTrajectoryButtonClicked() {
+    roboy_communication_control::StopRecordTrajectory srv;
+    stopRecordTrajectoryServiceClient.call(srv);
+    ui.startRecord->setEnabled(true);
+    ui.stopRecord->setEnabled(false);
+    ui.newTrajectoryName->clear();
+
+}
+
 //void RoboyTrajectoriesControl::stopButtonAllClicked(){
 //    std_srvs::SetBool msg;
 //    if(ui.stop_button_all->isChecked()) {

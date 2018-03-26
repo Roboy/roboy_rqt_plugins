@@ -6,6 +6,7 @@
 #include <rqt_gui_cpp/plugin.h>
 #include <roboy_trajectories_control/ui_roboy_trajectories_control.h>
 #include <QWidget>
+#include <QtWidgets/QtWidgets>
 #include <QtQuick/QQuickView>
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
@@ -19,10 +20,20 @@
 #include <QGraphicsItem>
 #include <QLabel>
 #include <QListWidget>
+#include <QTextEdit>
+#include <QMessageBox>
 #include <map>
 #include <common_utilities/CommonDefinitions.h>
 #include <common_utilities/MotorConfig.hpp>
 #include <std_srvs/SetBool.h>
+#include <roboy_communication_control/StartRecordTrajectory.h>
+#include <roboy_communication_control/StopRecordTrajectory.h>
+#include <roboy_communication_control/PerformMovement.h>
+#include <roboy_communication_control/PerformBehavior.h>
+#include <roboy_communication_control/ListTrajectories.h>
+#include <roboy_communication_middleware/MotorCommand.h>
+#include <roboy_communication_middleware/MotorStatus.h>
+#include <roboy_communication_middleware/SetInt16.h>
 
 #endif
 
@@ -43,31 +54,39 @@ class RoboyTrajectoriesControl:
 
             virtual void restoreSettings(const qt_gui_cpp::Settings &plugin_settings,
                                          const qt_gui_cpp::Settings &instance_settings);
+
         public Q_SLOTS:
             void onExistingTrajectoriesItemClicked(QListWidgetItem* item);
-            void checkMotorStatus();
-            void pullExistingTrajectories();
-//            void stopButtonAllClicked();
-//            void setPointChanged();
-//            void setPointChangedSlider();
-//            void setPointAllChanged();
-//            void setPointAllChangedSlider();
-//            void controlModeChanged();
-//            void update_config();
-//            void loadMotorConfig();
+            void refreshTrajectoriesButtonClicked();
+            void playTrajectoriesButtonClicked();
+            void clearAllTrajectoriesButtonClicked();
+            void addPauseButtonClicked();
+            void relaxAllMusclesButtonClicked();
+            void startInitializationButtonClicked();
+            void startRecordTrajectoryButtonClicked();
+            void stopRecordTrajectoryButtonClicked();
+            void setPauseDuration(int duration);
         private:
             Ui::RoboyTrajectoriesControl ui;
             QWidget *widget_;
             ros::NodeHandlePtr nh;
-            ros::Publisher motorCommand;
-            ros::ServiceClient motorControl, motorConfig, emergencyStop;
+            ros::Publisher motorCommandPublisher;
+            ros::Subscriber motorStatusSubscriber, jointStatusSubscriber, motorCommandSubscriber;
+            ros::ServiceClient motorControlServiceClient, emergencyStopServiceClient, startRecordTrajectoryServiceClient,
+                    stopRecordTrajectoryServiceClient, performMovementServiceClient, setDisplacementForAllServiceClient,
+                    executeBehaviorServiceClient, listExistingTrajectoriesServiceClient;
+            void checkMotorStatus();
+            void pullExistingTrajectories();
+            void motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
         private:
             bool stopButton;
+            int pauseDuration; // in seconds
             vector<double> setpoint;
             vector<int> control_mode;
-            int total_number_of_motors = 0, number_of_fpgas = 1;
+            int total_number_of_motors = 6, number_of_fpgas = 1;
             vector<QRadioButton*> pos, vel, dis, force;
             vector<QSlider*> setpoint_slider_widget;
             vector<QLineEdit*> setpoint_widget;
             QLineEdit* scale;
+            const string TRAJECTORIES_PATH = "/home/roboy/Downloads/";
 };
