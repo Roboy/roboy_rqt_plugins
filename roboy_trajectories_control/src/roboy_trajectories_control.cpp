@@ -19,15 +19,19 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
 
 
 
-    QObject::connect(ui.clearBehavior, SIGNAL(clicked()), this, SLOT(clearAllTrajectoriesButtonClicked()));
-    QObject::connect(ui.playBehavior, SIGNAL(clicked()), this, SLOT(playTrajectoriesButtonClicked()));
-    QObject::connect(ui.refreshTrajectories, SIGNAL(clicked()), this, SLOT(refreshTrajectoriesButtonClicked()));
-    QObject::connect(ui.addPause, SIGNAL(clicked()), this, SLOT(addPauseButtonClicked()));
-    QObject::connect(ui.relaxAll, SIGNAL(clicked()), this, SLOT(relaxAllMusclesButtonClicked()));
-    QObject::connect(ui.startInit, SIGNAL(clicked()), this, SLOT(startInitializationButtonClicked()));
-    QObject::connect(ui.startRecord, SIGNAL(clicked()), this, SLOT(startRecordTrajectoryButtonClicked()));
-    QObject::connect(ui.stopRecord, SIGNAL(clicked()), this, SLOT(stopRecordTrajectoryButtonClicked()));
-    QObject::connect(ui.pauseDuration, SIGNAL(valueChanged(int)), this, SLOT(setPauseDuration(int)));
+    connect(ui.clearBehavior, SIGNAL(clicked()), this, SLOT(clearAllTrajectoriesButtonClicked()));
+    connect(ui.playBehavior, SIGNAL(clicked()), this, SLOT(playTrajectoriesButtonClicked()));
+    connect(ui.refreshTrajectories, SIGNAL(clicked()), this, SLOT(refreshTrajectoriesButtonClicked()));
+    connect(ui.addPause, SIGNAL(clicked()), this, SLOT(addPauseButtonClicked()));
+    connect(ui.relaxAll, SIGNAL(clicked()), this, SLOT(relaxAllMusclesButtonClicked()));
+    connect(ui.startInit, SIGNAL(clicked()), this, SLOT(startInitializationButtonClicked()));
+    connect(ui.startRecord, SIGNAL(clicked()), this, SLOT(startRecordTrajectoryButtonClicked()));
+    connect(ui.stopRecord, SIGNAL(clicked()), this, SLOT(stopRecordTrajectoryButtonClicked()));
+    connect(ui.pauseDuration, SIGNAL(valueChanged(int)), this, SLOT(setPauseDuration(int)));
+    connect(ui.existingTrajectories, SIGNAL(itemClicked(QListWidgetItem*)),
+            this, SLOT(onExistingTrajectoriesItemClicked(QListWidgetItem*)));
+    connect(ui.scheduledBehavior, SIGNAL(itemClicked(QListWidgetItem*)),
+            this, SLOT(onScheduledBehaviorItemClicked(QListWidgetItem*)));
 
     ui.playBehavior->setEnabled(false);
     ui.clearBehavior->setEnabled(false);
@@ -106,9 +110,6 @@ void RoboyTrajectoriesControl::pullExistingTrajectories() {
     QStringList existingTrajectories = QStringList::fromVector(QVector<QString>::fromStdVector(trajectories));
     ui.existingTrajectories->addItems(existingTrajectories);
 
-    connect(ui.existingTrajectories, SIGNAL(itemClicked(QListWidgetItem*)),
-            this, SLOT(onExistingTrajectoriesItemClicked(QListWidgetItem*)));
-
 }
 
 void RoboyTrajectoriesControl::onExistingTrajectoriesItemClicked(QListWidgetItem* item) {
@@ -118,6 +119,10 @@ void RoboyTrajectoriesControl::onExistingTrajectoriesItemClicked(QListWidgetItem
     ui.scheduledBehavior->addItem(newItem);
     ui.clearBehavior->setEnabled(true);
     ui.playBehavior->setEnabled(true);
+};
+
+void RoboyTrajectoriesControl::onScheduledBehaviorItemClicked(QListWidgetItem* item) {
+    ui.scheduledBehavior->takeItem(ui.scheduledBehavior->row(item));
 };
 
 void RoboyTrajectoriesControl::refreshTrajectoriesButtonClicked() {
@@ -198,6 +203,8 @@ void RoboyTrajectoriesControl::startRecordTrajectoryButtonClicked() {
     else {
 
         msg.name = ui.newTrajectoryName->toPlainText().toStdString();
+        replace( msg.name.begin(), msg.name.end(), ' ', '_');
+        msg.name.erase(std::remove(msg.name.begin(), msg.name.end(), ','), msg.name.end());
         // TODO provide selection of motors to record
         vector<int8_t> ids(total_number_of_motors);
         iota(begin(ids), end(ids), 0);

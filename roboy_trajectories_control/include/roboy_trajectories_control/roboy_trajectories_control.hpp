@@ -61,6 +61,7 @@ class RoboyTrajectoriesControl:
 
         public Q_SLOTS:
             void onExistingTrajectoriesItemClicked(QListWidgetItem* item);
+            void onScheduledBehaviorItemClicked(QListWidgetItem* item);
             void refreshTrajectoriesButtonClicked();
             void playTrajectoriesButtonClicked();
             void clearAllTrajectoriesButtonClicked();
