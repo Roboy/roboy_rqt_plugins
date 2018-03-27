@@ -26,14 +26,18 @@
 #include <common_utilities/CommonDefinitions.h>
 #include <common_utilities/MotorConfig.hpp>
 #include <std_srvs/SetBool.h>
+#include <std_msgs/Empty.h>
 #include <roboy_communication_control/StartRecordTrajectory.h>
-#include <roboy_communication_control/StopRecordTrajectory.h>
+//#include <roboy_communication_control/StopRecordTrajectoryAction.h>
+//#include <roboy_communication_control/StartRecordTrajectoryAction.h>
+//#include <roboy_communication_control/StopRecordTrajectory.h>
 #include <roboy_communication_control/PerformMovement.h>
 #include <roboy_communication_control/PerformBehavior.h>
 #include <roboy_communication_control/ListTrajectories.h>
 #include <roboy_communication_middleware/MotorCommand.h>
 #include <roboy_communication_middleware/MotorStatus.h>
 #include <roboy_communication_middleware/SetInt16.h>
+#include <actionlib/client/simple_action_client.h>
 
 #endif
 
@@ -70,10 +74,11 @@ class RoboyTrajectoriesControl:
             Ui::RoboyTrajectoriesControl ui;
             QWidget *widget_;
             ros::NodeHandlePtr nh;
-            ros::Publisher motorCommandPublisher;
+            ros::Publisher motorCommandPublisher, startRecordTrajectoryPublisher,
+                    stopRecordTrajectoryPublisher;
             ros::Subscriber motorStatusSubscriber, jointStatusSubscriber, motorCommandSubscriber;
-            ros::ServiceClient motorControlServiceClient, emergencyStopServiceClient, startRecordTrajectoryServiceClient,
-                    stopRecordTrajectoryServiceClient, performMovementServiceClient, setDisplacementForAllServiceClient,
+            ros::ServiceClient motorControlServiceClient, emergencyStopServiceClient,
+                    performMovementServiceClient, setDisplacementForAllServiceClient,
                     executeBehaviorServiceClient, listExistingTrajectoriesServiceClient;
             void checkMotorStatus();
             void pullExistingTrajectories();
@@ -88,5 +93,5 @@ class RoboyTrajectoriesControl:
             vector<QSlider*> setpoint_slider_widget;
             vector<QLineEdit*> setpoint_widget;
             QLineEdit* scale;
-            const string TRAJECTORIES_PATH = "/home/roboy/Downloads/";
+            const string TRAJECTORIES_PATH = "/home/root/trajectories/";
 };
