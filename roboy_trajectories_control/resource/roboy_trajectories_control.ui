@@ -26,9 +26,9 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>10</y>
+      <y>0</y>
       <width>531</width>
-      <height>431</height>
+      <height>441</height>
      </rect>
     </property>
     <property name="title">
@@ -40,7 +40,7 @@
        <x>280</x>
        <y>60</y>
        <width>231</width>
-       <height>271</height>
+       <height>231</height>
       </rect>
      </property>
      <property name="dragDropMode">
@@ -64,7 +64,7 @@
      <property name="geometry">
       <rect>
        <x>410</x>
-       <y>380</y>
+       <y>350</y>
        <width>99</width>
        <height>27</height>
       </rect>
@@ -77,7 +77,7 @@
      <property name="geometry">
       <rect>
        <x>280</x>
-       <y>380</y>
+       <y>350</y>
        <width>48</width>
        <height>27</height>
       </rect>
@@ -87,7 +87,7 @@
      <property name="geometry">
       <rect>
        <x>340</x>
-       <y>390</y>
+       <y>360</y>
        <width>67</width>
        <height>17</height>
       </rect>
@@ -99,9 +99,9 @@
     <widget class="QPushButton" name="playBehavior">
      <property name="geometry">
       <rect>
-       <x>20</x>
-       <y>350</y>
-       <width>221</width>
+       <x>140</x>
+       <y>310</y>
+       <width>101</width>
        <height>27</height>
       </rect>
      </property>
@@ -114,7 +114,7 @@
       <rect>
        <x>20</x>
        <y>310</y>
-       <width>221</width>
+       <width>101</width>
        <height>27</height>
       </rect>
      </property>
@@ -122,17 +122,56 @@
       <string>Clear all</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="refreshTrajectories">
+    <widget class="QPushButton" name="addRelax">
      <property name="geometry">
       <rect>
        <x>280</x>
-       <y>340</y>
+       <y>310</y>
        <width>231</width>
        <height>27</height>
       </rect>
      </property>
      <property name="text">
-      <string>Refresh trajectories</string>
+      <string>Add relax muscles action</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="refreshTrajectories">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>390</y>
+       <width>231</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Refresh exisiting trajectories</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="saveBehavior">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>350</y>
+       <width>221</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Save behavior as...</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="loadBehavior">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>390</y>
+       <width>221</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Load exisiting behavior...</string>
      </property>
     </widget>
    </widget>

@@ -33,7 +33,9 @@
 //#include <roboy_communication_control/StopRecordTrajectory.h>
 #include <roboy_communication_control/PerformMovement.h>
 #include <roboy_communication_control/PerformBehavior.h>
-#include <roboy_communication_control/ListTrajectories.h>
+#include <roboy_communication_control/PerformActions.h>
+#include <roboy_communication_control/ListItems.h>
+#include <roboy_communication_control/Behavior.h>
 #include <roboy_communication_middleware/MotorCommand.h>
 #include <roboy_communication_middleware/MotorStatus.h>
 #include <roboy_communication_middleware/SetInt16.h>
@@ -60,30 +62,36 @@ class RoboyTrajectoriesControl:
                                          const qt_gui_cpp::Settings &instance_settings);
 
         public Q_SLOTS:
+            void pullExistingTrajectories();
+            void pullExistingBehaviors();
             void onExistingTrajectoriesItemClicked(QListWidgetItem* item);
             void onScheduledBehaviorItemClicked(QListWidgetItem* item);
             void refreshTrajectoriesButtonClicked();
             void playTrajectoriesButtonClicked();
             void clearAllTrajectoriesButtonClicked();
             void addPauseButtonClicked();
+            void addRelaxButtonClicked();
             void relaxAllMusclesButtonClicked();
             void startInitializationButtonClicked();
             void startRecordTrajectoryButtonClicked();
             void stopRecordTrajectoryButtonClicked();
+            void saveBehaviorButtonClicked();
+            void loadBehaviorButtonClicked();
             void setPauseDuration(int duration);
         private:
             Ui::RoboyTrajectoriesControl ui;
             QWidget *widget_;
             ros::NodeHandlePtr nh;
             ros::Publisher motorCommandPublisher, startRecordTrajectoryPublisher,
-                    stopRecordTrajectoryPublisher;
+                    stopRecordTrajectoryPublisher, saveBehaviorPublisher;
             ros::Subscriber motorStatusSubscriber, jointStatusSubscriber, motorCommandSubscriber;
             ros::ServiceClient motorControlServiceClient, emergencyStopServiceClient,
                     performMovementServiceClient, setDisplacementForAllServiceClient,
-                    executeBehaviorServiceClient, listExistingTrajectoriesServiceClient;
+                    executeActionsServiceClient, listExistingTrajectoriesServiceClient,
+                    listExistingBehaviorsServiceClient, expandBehaviorServiceClient;
             void checkMotorStatus();
-            void pullExistingTrajectories();
             void motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
+
         private:
             bool stopButton;
             int pauseDuration; // in seconds
@@ -94,5 +102,8 @@ class RoboyTrajectoriesControl:
             vector<QSlider*> setpoint_slider_widget;
             vector<QLineEdit*> setpoint_widget;
             QLineEdit* scale;
-            const string TRAJECTORIES_PATH = "/home/root/trajectories/";
+            const string trajectories_path = "/home/root/trajectories/";
+            const string behaviors_path = "/home/root/behaviors/";
+            vector<string> getCurrentActions();
+            vector<string> expandBehavior(string name);
 };

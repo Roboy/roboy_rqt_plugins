@@ -23,11 +23,16 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     connect(ui.playBehavior, SIGNAL(clicked()), this, SLOT(playTrajectoriesButtonClicked()));
     connect(ui.refreshTrajectories, SIGNAL(clicked()), this, SLOT(refreshTrajectoriesButtonClicked()));
     connect(ui.addPause, SIGNAL(clicked()), this, SLOT(addPauseButtonClicked()));
+    connect(ui.addRelax, SIGNAL(clicked()), this, SLOT(addRelaxButtonClicked()));
     connect(ui.relaxAll, SIGNAL(clicked()), this, SLOT(relaxAllMusclesButtonClicked()));
     connect(ui.startInit, SIGNAL(clicked()), this, SLOT(startInitializationButtonClicked()));
     connect(ui.startRecord, SIGNAL(clicked()), this, SLOT(startRecordTrajectoryButtonClicked()));
     connect(ui.stopRecord, SIGNAL(clicked()), this, SLOT(stopRecordTrajectoryButtonClicked()));
+    connect(ui.saveBehavior, SIGNAL(clicked()), this, SLOT(saveBehaviorButtonClicked()));
+    connect(ui.loadBehavior, SIGNAL(clicked()), this, SLOT(loadBehaviorButtonClicked()));
+
     connect(ui.pauseDuration, SIGNAL(valueChanged(int)), this, SLOT(setPauseDuration(int)));
+
     connect(ui.existingTrajectories, SIGNAL(itemClicked(QListWidgetItem*)),
             this, SLOT(onExistingTrajectoriesItemClicked(QListWidgetItem*)));
     connect(ui.scheduledBehavior, SIGNAL(itemClicked(QListWidgetItem*)),
@@ -37,6 +42,7 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     ui.clearBehavior->setEnabled(false);
     ui.addPause->setEnabled(false);
     ui.stopRecord->setEnabled(false);
+    ui.saveBehavior->setEnabled(false);
 
     nh = ros::NodeHandlePtr(new ros::NodeHandle);
     if (!ros::isInitialized()) {
@@ -49,13 +55,16 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     emergencyStopServiceClient = nh->serviceClient<std_srvs::SetBool>("/roboy/middleware/EmergencyStop");
     setDisplacementForAllServiceClient = nh->serviceClient<roboy_communication_middleware::SetInt16>("/roboy/middleware/SetDisplacementForAll");
     performMovementServiceClient = nh->serviceClient<roboy_communication_control::PerformMovement>("/roboy/control/ReplayTrajectory");
-    executeBehaviorServiceClient = nh->serviceClient<roboy_communication_control::PerformBehavior>("/roboy/control/ExecuteBehavior");
-    listExistingTrajectoriesServiceClient = nh->serviceClient<roboy_communication_control::ListTrajectories>("roboy/control/ListExistingTrajectories");
+    executeActionsServiceClient = nh->serviceClient<roboy_communication_control::PerformActions>("/roboy/control/ExecuteActions");
+    listExistingTrajectoriesServiceClient = nh->serviceClient<roboy_communication_control::ListItems>("roboy/control/ListExistingTrajectories");
+    listExistingBehaviorsServiceClient = nh->serviceClient<roboy_communication_control::ListItems>("roboy/control/ListExistingTrajectories");
+    expandBehaviorServiceClient = nh->serviceClient<roboy_communication_control::ListItems>("roboy/control/ExpandBehavior");
 
     motorStatusSubscriber = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyTrajectoriesControl::motorStatusCallback, this);
 
     startRecordTrajectoryPublisher = nh->advertise<roboy_communication_control::StartRecordTrajectory>("/roboy/control/StartRecordTrajectory", 1);
     stopRecordTrajectoryPublisher = nh->advertise<std_msgs::Empty>("/roboy/control/StopRecordTrajectory", 1);
+    saveBehaviorPublisher = nh->advertise<roboy_communication_control::Behavior>("/roboy/control/SaveBehavior", 1);
 //    motorCommandPublisher = nh->advertise<roboy_communication_middleware::motorCommand>("/roboy/middleware/MotorCommand", 1);
 
     checkMotorStatus();
@@ -93,9 +102,8 @@ void RoboyTrajectoriesControl::motorStatusCallback(const roboy_communication_mid
 
 void RoboyTrajectoriesControl::pullExistingTrajectories() {
 
-    // TODO ros service to get the list from FPGA
-    roboy_communication_control::ListTrajectories srv;
-    srv.request.folder = TRAJECTORIES_PATH;
+    roboy_communication_control::ListItems srv;
+    srv.request.name = trajectories_path;
     listExistingTrajectoriesServiceClient.call(srv);
 
     // empty list
@@ -104,13 +112,46 @@ void RoboyTrajectoriesControl::pullExistingTrajectories() {
         ui.existingTrajectories->takeItem(0);
     }
     vector<QString> trajectories;
-    for (string t: srv.response.trajectories) {
+    for (string t: srv.response.items) {
         trajectories.push_back(QString::fromStdString(t));
     }
     QStringList existingTrajectories = QStringList::fromVector(QVector<QString>::fromStdVector(trajectories));
     ui.existingTrajectories->addItems(existingTrajectories);
 
 }
+
+void RoboyTrajectoriesControl::pullExistingBehaviors() {
+
+    QStringList q;
+    q.push_back("1on");
+    q.push_back("wet");
+    QInputDialog *dialog = new QInputDialog();
+    bool accepted;
+    QString item = dialog->getItem(0, "Title", "Label:", q, 0, false, &accepted);
+
+    if (accepted && !item.isEmpty()) {
+        vector<string> trajectories = expandBehavior(item.toStdString());
+
+    }
+
+//    roboy_communication_control::ListItems srv;
+//    srv.request.folder = behaviors_path;
+//    listExistingTrajectoriesServiceClient.call(srv);
+//
+//    // empty list
+//    while(ui.existingTrajectories->count()>0)
+//    {
+//        ui.existingTrajectories->takeItem(0);
+//    }
+//    vector<QString> trajectories;
+//    for (string t: srv.response.trajectories) {
+//        trajectories.push_back(QString::fromStdString(t));
+//    }
+//    QStringList existingTrajectories = QStringList::fromVector(QVector<QString>::fromStdVector(trajectories));
+//    ui.existingTrajectories->addItems(existingTrajectories);
+
+}
+
 
 void RoboyTrajectoriesControl::onExistingTrajectoriesItemClicked(QListWidgetItem* item) {
     QListWidgetItem* newItem = new QListWidgetItem();
@@ -119,10 +160,16 @@ void RoboyTrajectoriesControl::onExistingTrajectoriesItemClicked(QListWidgetItem
     ui.scheduledBehavior->addItem(newItem);
     ui.clearBehavior->setEnabled(true);
     ui.playBehavior->setEnabled(true);
+    ui.saveBehavior->setEnabled(true);
 };
 
 void RoboyTrajectoriesControl::onScheduledBehaviorItemClicked(QListWidgetItem* item) {
     ui.scheduledBehavior->takeItem(ui.scheduledBehavior->row(item));
+    if (ui.scheduledBehavior->count()==0) {
+        ui.clearBehavior->setEnabled(false);
+        ui.playBehavior->setEnabled(false);
+        ui.saveBehavior->setEnabled(false);
+    }
 };
 
 void RoboyTrajectoriesControl::refreshTrajectoriesButtonClicked() {
@@ -136,6 +183,16 @@ void RoboyTrajectoriesControl::addPauseButtonClicked() {
     item->setWhatsThis("pause");
     ui.scheduledBehavior->addItem(item);
     ui.pauseDuration->setValue(0);
+    ui.clearBehavior->setEnabled(true);
+    ui.playBehavior->setEnabled(true);
+    ui.saveBehavior->setEnabled(true);
+}
+
+void RoboyTrajectoriesControl::addRelaxButtonClicked() {
+    QListWidgetItem * item = new QListWidgetItem();
+    item->setText("relax muscles");
+    item->setWhatsThis("relax");
+    ui.scheduledBehavior->addItem(item);
     ui.clearBehavior->setEnabled(true);
     ui.playBehavior->setEnabled(true);
 }
@@ -155,26 +212,16 @@ void RoboyTrajectoriesControl::clearAllTrajectoriesButtonClicked() {
     {
         ui.scheduledBehavior->takeItem(0);
     }
+    ui.saveBehavior->setEnabled(false);
+    ui.playBehavior->setEnabled(false);
+    ui.clearBehavior->setEnabled(false);
 }
 
 void RoboyTrajectoriesControl::playTrajectoriesButtonClicked() {
-    vector<string> actions;
-    for(int i = 0; i < ui.scheduledBehavior->count(); ++i)
-    {
-        QListWidgetItem* item = ui.scheduledBehavior->item(i);
-        string actionName = item->text().toStdString();
-        if (item->whatsThis().contains("trajectory")) {
-            actions.push_back(actionName);
-        }
-        else if (item->whatsThis().contains("pause")) {
-            string delimiter = "s";
-            actions.push_back(actionName.substr(0, actionName.find(delimiter))+"_pause");
-        }
-    }
-
-    roboy_communication_control::PerformBehavior srv;
+    vector<string> actions = getCurrentActions();
+    roboy_communication_control::PerformActions srv;
     srv.request.actions = actions;
-    executeBehaviorServiceClient.call(srv);
+    executeActionsServiceClient.call(srv);
 
 }
 
@@ -215,12 +262,114 @@ void RoboyTrajectoriesControl::startRecordTrajectoryButtonClicked() {
     }
 }
 
+void RoboyTrajectoriesControl::saveBehaviorButtonClicked() {
+
+    roboy_communication_control::Behavior msg;
+    bool ok;
+    msg.name = (QInputDialog::getText(0, "Save behavior as...",
+                                         "Name:", QLineEdit::Normal,
+                                         "", &ok)).toStdString();
+    if (ok && msg.name.length()!=0) {
+        replace( msg.name.begin(), msg.name.end(), ' ', '_');
+        msg.name.erase(std::remove(msg.name.begin(), msg.name.end(), ','), msg.name.end());
+    } else {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Error","No behavior name specified");
+        messageBox.setFixedSize(500,200);
+        return;
+    }
+
+    msg.actions = getCurrentActions();
+
+    saveBehaviorPublisher.publish(msg);
+}
+
+void RoboyTrajectoriesControl::loadBehaviorButtonClicked() {
+
+    roboy_communication_control::ListItems srv;
+    srv.request.name = behaviors_path;
+    listExistingBehaviorsServiceClient.call(srv);
+
+    vector<QString> trajectories;
+    for (string t: srv.response.items) {
+        trajectories.push_back(QString::fromStdString(t));
+    }
+    QStringList existingBehaviors = QStringList::fromVector(QVector<QString>::fromStdVector(trajectories));
+    QInputDialog *dialog = new QInputDialog();
+    bool accepted;
+    QString item = dialog->getItem(0, "Load behavior...", "Behavior:", existingBehaviors, 0, false, &accepted);
+
+    if (accepted && !item.isEmpty()) {
+        vector<string> actions = expandBehavior(item.toStdString());
+        while(ui.scheduledBehavior->count()>0)
+        {
+            ui.scheduledBehavior->takeItem(0);
+        }
+        for (string action: actions) {
+            QListWidgetItem* item = new QListWidgetItem();
+            item->setText(QString::fromStdString(action));
+            if (action.find("pause") != std::string::npos) {
+                item->setWhatsThis("pause");
+                item->setText(QString::fromStdString(action.substr(0, action.find("_"))+"s pause"));
+                ROS_INFO_STREAM(action.substr(0, action.find("_"))+"s pause");
+            }
+            else if (action.find("relax") != std::string::npos) {
+                item->setWhatsThis("relax");
+                item->setText("relax");
+            }
+            else {
+                item->setWhatsThis("trajectory");
+                item->setText(QString::fromStdString(action));
+            }
+            //TODO investigate why previously added (before load) items vanish
+            ui.scheduledBehavior->addItem(item);
+        }
+
+        ui.saveBehavior->setEnabled(true);
+        ui.playBehavior->setEnabled(true);
+        ui.clearBehavior->setEnabled(true);
+    }
+
+
+}
+
 void RoboyTrajectoriesControl::stopRecordTrajectoryButtonClicked() {
     std_msgs::Empty msg;
     stopRecordTrajectoryPublisher.publish(msg);
     ui.startRecord->setEnabled(true);
     ui.stopRecord->setEnabled(false);
     ui.newTrajectoryName->clear();
+
+}
+
+vector<string> RoboyTrajectoriesControl::getCurrentActions() {
+    vector<string> actions;
+    for(int i = 0; i < ui.scheduledBehavior->count(); ++i)
+    {
+        QListWidgetItem* item = ui.scheduledBehavior->item(i);
+        string actionName = item->text().toStdString();
+        if (item->whatsThis().contains("trajectory")) {
+            actions.push_back(actionName);
+        }
+        else if (item->whatsThis().contains("pause")) {
+            string delimiter = "s";
+            actions.push_back(actionName.substr(0, actionName.find(delimiter))+"_pause");
+        }
+        else if (item->whatsThis().contains("relax")) {
+            actions.push_back("relax");
+        }
+
+    }
+
+    return actions;
+}
+
+vector<string> RoboyTrajectoriesControl::expandBehavior(string name) {
+    roboy_communication_control::ListItems srv;
+    srv.request.name = name;
+    expandBehaviorServiceClient.call(srv);
+
+    return srv.response.items;
 
 }
 
