@@ -17,8 +17,6 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     // add widget to the user interface
     context.addWidget(widget_);
 
-
-
     connect(ui.clearBehavior, SIGNAL(clicked()), this, SLOT(clearAllTrajectoriesButtonClicked()));
     connect(ui.playBehavior, SIGNAL(clicked()), this, SLOT(playTrajectoriesButtonClicked()));
     connect(ui.refreshTrajectories, SIGNAL(clicked()), this, SLOT(refreshTrajectoriesButtonClicked()));
@@ -44,6 +42,22 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     ui.stopRecord->setEnabled(false);
     ui.saveBehavior->setEnabled(false);
 
+    // TODO get rid of this!!
+    motorStatusViews.push_back(ui.motorStatus0);
+    motorStatusViews.push_back(ui.motorStatus1);
+    motorStatusViews.push_back(ui.motorStatus2);
+    motorStatusViews.push_back(ui.motorStatus3);
+    motorStatusViews.push_back(ui.motorStatus4);
+    motorStatusViews.push_back(ui.motorStatus5);
+    for (auto view: motorStatusViews) {
+        view->setScene(new QGraphicsScene(this));
+    }
+
+    QDialog* dialog;
+    dialog->setParent(widget_);
+    ui.setupUi(dialog);
+    dialog->show();
+
     nh = ros::NodeHandlePtr(new ros::NodeHandle);
     if (!ros::isInitialized()) {
         int argc = 0;
@@ -67,7 +81,6 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     saveBehaviorPublisher = nh->advertise<roboy_communication_control::Behavior>("/roboy/control/SaveBehavior", 1);
 //    motorCommandPublisher = nh->advertise<roboy_communication_middleware::motorCommand>("/roboy/middleware/MotorCommand", 1);
 
-    checkMotorStatus();
     pullExistingTrajectories();
 
 }
@@ -86,18 +99,20 @@ void RoboyTrajectoriesControl::restoreSettings(const qt_gui_cpp::Settings &plugi
     // v = instance_settings.value(k)
 }
 
-void RoboyTrajectoriesControl::checkMotorStatus() {
-    //TODO connect motor status listener
-    QGraphicsScene* scene = new QGraphicsScene(this);
-    QBrush greenBrush(Qt::green);
-
-    QGraphicsView* view = widget_->findChild<QGraphicsView *>("motorStatus0");
-    view->setScene(scene);
-    view->setBackgroundBrush(greenBrush);
-}
-
 void RoboyTrajectoriesControl::motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
-    // TODO check if motor online
+
+    QBrush greenBrush(Qt::green);
+    QBrush redBrush(Qt::red);
+
+    for (int i=0; i<total_number_of_motors; i++)
+    {
+        if (msg->current.at(i) > 0) {
+            motorStatusViews.at(i)->setBackgroundBrush(greenBrush);
+        }
+        else {
+            motorStatusViews.at(i)->setBackgroundBrush(redBrush);
+        }
+    }
 }
 
 void RoboyTrajectoriesControl::pullExistingTrajectories() {

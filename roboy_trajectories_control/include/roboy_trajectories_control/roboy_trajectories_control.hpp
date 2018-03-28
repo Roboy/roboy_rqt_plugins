@@ -81,6 +81,7 @@ class RoboyTrajectoriesControl:
         private:
             Ui::RoboyTrajectoriesControl ui;
             QWidget *widget_;
+            vector<QGraphicsView*> motorStatusViews;
             ros::NodeHandlePtr nh;
             ros::Publisher motorCommandPublisher, startRecordTrajectoryPublisher,
                     stopRecordTrajectoryPublisher, saveBehaviorPublisher;
