@@ -4,7 +4,7 @@ project( roboy_trajectories_control)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -g")
 
 find_package(catkin REQUIRED COMPONENTS common_utilities roscpp roslint rqt_gui rqt_gui_cpp std_msgs
-        roboy_communication_middleware roboy_communication_control)
+        roboy_communication_middleware roboy_communication_control actionlib actionlib_msgs)
 # FIND_PACKAGE(yaml-cpp REQUIRED)
 
  include_directories( include )

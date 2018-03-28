@@ -29,7 +29,7 @@
 #include <std_msgs/Empty.h>
 #include <roboy_communication_control/StartRecordTrajectory.h>
 //#include <roboy_communication_control/StopRecordTrajectoryAction.h>
-//#include <roboy_communication_control/StartRecordTrajectoryAction.h>
+#include <roboy_communication_control/StartRecordTrajectoryAction.h>
 //#include <roboy_communication_control/StopRecordTrajectory.h>
 #include <roboy_communication_control/PerformMovement.h>
 #include <roboy_communication_control/PerformBehavior.h>
@@ -39,7 +39,7 @@
 #include <roboy_communication_middleware/MotorCommand.h>
 #include <roboy_communication_middleware/MotorStatus.h>
 #include <roboy_communication_middleware/SetInt16.h>
-#include <actionlib/client/simple_action_client.h>
+#include <actionlib/server/simple_action_server.h>
 
 #endif
 
@@ -107,4 +107,5 @@ class RoboyTrajectoriesControl:
             const string behaviors_path = "/home/root/behaviors/";
             vector<string> getCurrentActions();
             vector<string> expandBehavior(string name);
+
 };

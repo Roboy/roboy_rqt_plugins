@@ -6,6 +6,14 @@ RoboyTrajectoriesControl::RoboyTrajectoriesControl()
     setObjectName("RoboyTrajectoriesControl");
 }
 
+typedef actionlib::SimpleActionServer<roboy_communication_control::StartRecordTrajectoryAction> Server;
+
+void execute(const roboy_communication_control::StartRecordTrajectoryGoalConstPtr& goal, Server* as)  // Note: "Action" is not appended to DoDishes here
+{
+    // Do lots of awesome groundbreaking robot stuff here
+    as->setSucceeded();
+}
+
 void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     // access standalone command line arguments
@@ -53,10 +61,10 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
         view->setScene(new QGraphicsScene(this));
     }
 
-    QDialog* dialog;
-    dialog->setParent(widget_);
-    ui.setupUi(dialog);
-    dialog->show();
+//    QDialog* dialog;
+//    dialog->setParent(widget_);
+//    ui.setupUi(dialog);
+//    dialog->show();
 
     nh = ros::NodeHandlePtr(new ros::NodeHandle);
     if (!ros::isInitialized()) {
@@ -80,8 +88,11 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     stopRecordTrajectoryPublisher = nh->advertise<std_msgs::Empty>("/roboy/control/StopRecordTrajectory", 1);
     saveBehaviorPublisher = nh->advertise<roboy_communication_control::Behavior>("/roboy/control/SaveBehavior", 1);
 //    motorCommandPublisher = nh->advertise<roboy_communication_middleware::motorCommand>("/roboy/middleware/MotorCommand", 1);
+    ros::AsyncSpinner spinner(2); // Use 4 threads
+    spinner.start();
 
     pullExistingTrajectories();
+    Server server(*nh, "do_dishes", boost::bind(&execute, _1, &server), false);
 
 }
 
