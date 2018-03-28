@@ -57,6 +57,7 @@ private:
     ros::NodeHandlePtr nh;
     ros::Publisher motorCommand;
     ros::ServiceClient motorControl, motorConfig, emergencyStop;
+    boost::shared_ptr<ros::AsyncSpinner> spinner;
 private:
     bool stopButton;
     vector<double> setpoint;
