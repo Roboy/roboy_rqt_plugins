@@ -35,6 +35,9 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
         ros::init(argc, argv, "motor_command_rqt_plugin");
     }
 
+    spinner.reset(new ros::AsyncSpinner(2));
+    spinner->start();
+
     if(nh->hasParam("number_of_fpgas")){
         nh->getParam("number_of_fpgas",number_of_fpgas);
         ROS_INFO("found number_of_fpgas %d on parameter server", number_of_fpgas);

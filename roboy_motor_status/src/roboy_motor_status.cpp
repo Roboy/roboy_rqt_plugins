@@ -25,19 +25,19 @@ void RoboyMotorStatus::initPlugin(qt_gui_cpp::PluginContext &context) {
         ui.current_plot->addGraph();
         ui.current_plot->graph(motor)->setPen(QPen(color_pallette[motor]));
     }
-    ui.position_plot->xAxis->setLabel("x");
+    ui.position_plot->xAxis->setLabel("time[s]");
     ui.position_plot->yAxis->setLabel("ticks");
     ui.position_plot->replot();
 
-    ui.velocity_plot->xAxis->setLabel("x");
+    ui.velocity_plot->xAxis->setLabel("time[s]");
     ui.velocity_plot->yAxis->setLabel("ticks/s");
     ui.velocity_plot->replot();
 
-    ui.displacement_plot->xAxis->setLabel("x");
+    ui.displacement_plot->xAxis->setLabel("time[s]");
     ui.displacement_plot->yAxis->setLabel("ticks");
     ui.displacement_plot->replot();
 
-    ui.current_plot->xAxis->setLabel("x");
+    ui.current_plot->xAxis->setLabel("time[s]");
     ui.current_plot->yAxis->setLabel("mA");
     ui.current_plot->replot();
 
@@ -50,6 +50,11 @@ void RoboyMotorStatus::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyMotorStatus::MotorStatus, this);
     QObject::connect(this, SIGNAL(newData()), this, SLOT(plotData()));
+
+    spinner.reset(new ros::AsyncSpinner(2));
+    spinner->start();
+
+    start_time = ros::Time::now();
 }
 
 void RoboyMotorStatus::shutdownPlugin() {
@@ -68,12 +73,13 @@ void RoboyMotorStatus::restoreSettings(const qt_gui_cpp::Settings &plugin_settin
 
 void RoboyMotorStatus::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
     ROS_DEBUG_THROTTLE(5, "receiving motor status");
-    time.push_back(counter++);
+    ros::Duration delta = (ros::Time::now()-start_time);
+    time.push_back(delta.toSec());
     for (uint motor = 0; motor < msg->position.size(); motor++) {
         motorData[msg->id][motor][0].push_back(msg->position[motor]);
         motorData[msg->id][motor][1].push_back(msg->velocity[motor]);
         motorData[msg->id][motor][2].push_back(msg->displacement[motor]);
-        motorData[msg->id][motor][3].push_back(msg->pwmRef[motor]);
+        motorData[msg->id][motor][3].push_back(msg->current[motor]);
         if (motorData[msg->id][motor][0].size() > samples_per_plot) {
             motorData[msg->id][motor][0].pop_front();
             motorData[msg->id][motor][1].pop_front();
@@ -84,7 +90,7 @@ void RoboyMotorStatus::MotorStatus(const roboy_communication_middleware::MotorSt
     if (time.size() > samples_per_plot)
         time.pop_front();
 
-    if (counter % 10 == 0)
+    if ((counter++) % 20 == 0)
             Q_EMIT newData();
 }
 

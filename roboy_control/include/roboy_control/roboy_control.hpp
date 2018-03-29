@@ -4,7 +4,7 @@
 
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
-#include <roboy_motor_command/ui_roboy_motor_command.h>
+#include <roboy_control/ui_roboy_control.h>
 #include <roboy_communication_middleware/ControlMode.h>
 #include <roboy_communication_middleware/MotorCommand.h>
 #include <roboy_communication_middleware/MotorConfigService.h>
@@ -27,11 +27,11 @@
 
 using namespace std;
 
-class RoboyMotorCommand
+class RoboyControl
         : public rqt_gui_cpp::Plugin, MotorConfig {
     Q_OBJECT
 public:
-    RoboyMotorCommand();
+    RoboyControl();
 
     virtual void initPlugin(qt_gui_cpp::PluginContext &context);
 
@@ -43,28 +43,11 @@ public:
     virtual void restoreSettings(const qt_gui_cpp::Settings &plugin_settings,
                                  const qt_gui_cpp::Settings &instance_settings);
 public Q_SLOTS:
-    void stopButtonAllClicked();
-    void setPointChanged();
-    void setPointChangedSlider();
-    void setPointAllChanged();
-    void setPointAllChangedSlider();
-    void controlModeChanged();
-    void update_config();
-    void loadMotorConfig();
+    void stopButtonClicked();
 private:
-    Ui::RoboyMotorCommand ui;
+    Ui::RoboyControl ui;
     QWidget *widget_;
     ros::NodeHandlePtr nh;
-    ros::Publisher motorCommand;
-    ros::ServiceClient motorControl, motorConfig, emergencyStop;
-    boost::shared_ptr<ros::AsyncSpinner> spinner;
 private:
-    bool stopButton;
-    vector<double> setpoint;
-    vector<int> control_mode;
-    int total_number_of_motors = 0, number_of_fpgas = 1;
-    vector<QRadioButton*> pos, vel, dis, force;
-    vector<QSlider*> setpoint_slider_widget;
-    vector<QLineEdit*> setpoint_widget;
-    QLineEdit* scale;
+    map<string,vector<QPushButton*>> motor;
 };

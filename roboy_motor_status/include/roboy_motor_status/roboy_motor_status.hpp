@@ -9,11 +9,9 @@
 #include <QWidget>
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
+#include <common_utilities/CommonDefinitions.h>
 
 #endif
-
-#define NUMBER_OF_MOTORS_PER_FPGA 14
-#define NUMBER_OF_FPGAS 6
 
 class RoboyMotorStatus
         : public rqt_gui_cpp::Plugin {
@@ -50,4 +48,6 @@ private:
                                  Qt::darkBlue, Qt::darkCyan, Qt::darkMagenta, Qt::darkYellow, Qt::black, Qt::gray};
     ros::NodeHandlePtr nh;
     ros::Subscriber motorStatus;
+    ros::Time start_time;
+    boost::shared_ptr<ros::AsyncSpinner> spinner;
 };
