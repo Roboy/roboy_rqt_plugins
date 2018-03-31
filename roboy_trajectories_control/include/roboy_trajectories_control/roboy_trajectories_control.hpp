@@ -27,11 +27,14 @@
 #include <common_utilities/MotorConfig.hpp>
 #include <std_srvs/SetBool.h>
 #include <std_msgs/Empty.h>
+#include <std_msgs/Bool.h>
 #include <roboy_communication_control/StartRecordTrajectory.h>
 //#include <roboy_communication_control/StopRecordTrajectoryAction.h>
 #include <roboy_communication_control/StartRecordTrajectoryAction.h>
 //#include <roboy_communication_control/StopRecordTrajectory.h>
 #include <roboy_communication_control/PerformMovement.h>
+#include <roboy_communication_control/PerformMovementAction.h>
+#include <roboy_communication_control/PerformMovementsAction.h>
 #include <roboy_communication_control/PerformBehavior.h>
 #include <roboy_communication_control/PerformActions.h>
 #include <roboy_communication_control/ListItems.h>
@@ -39,7 +42,7 @@
 #include <roboy_communication_middleware/MotorCommand.h>
 #include <roboy_communication_middleware/MotorStatus.h>
 #include <roboy_communication_middleware/SetInt16.h>
-#include <actionlib/server/simple_action_server.h>
+#include <actionlib/client/simple_action_client.h>
 
 #endif
 
@@ -75,6 +78,7 @@ class RoboyTrajectoriesControl:
             void startInitializationButtonClicked();
             void startRecordTrajectoryButtonClicked();
             void stopRecordTrajectoryButtonClicked();
+            void stopBehaviorButtonClicked();
             void saveBehaviorButtonClicked();
             void loadBehaviorButtonClicked();
             void setPauseDuration(int duration);
@@ -84,12 +88,14 @@ class RoboyTrajectoriesControl:
             vector<QGraphicsView*> motorStatusViews;
             ros::NodeHandlePtr nh;
             ros::Publisher motorCommandPublisher, startRecordTrajectoryPublisher,
-                    stopRecordTrajectoryPublisher, saveBehaviorPublisher;
+                    stopRecordTrajectoryPublisher, saveBehaviorPublisher, enablePlaybackPublisher;
             ros::Subscriber motorStatusSubscriber, jointStatusSubscriber, motorCommandSubscriber;
             ros::ServiceClient motorControlServiceClient, emergencyStopServiceClient,
                     performMovementServiceClient, setDisplacementForAllServiceClient,
                     executeActionsServiceClient, listExistingTrajectoriesServiceClient,
                     listExistingBehaviorsServiceClient, expandBehaviorServiceClient;
+            actionlib::SimpleActionClient<roboy_communication_control::PerformMovementAction> performMovement_ac;
+            actionlib::SimpleActionClient<roboy_communication_control::PerformMovementsAction> performMovements_ac;
             void checkMotorStatus();
             void motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
 

@@ -2,17 +2,26 @@
 
 
 RoboyTrajectoriesControl::RoboyTrajectoriesControl()
-        : rqt_gui_cpp::Plugin(), widget_(0) {
-    setObjectName("RoboyTrajectoriesControl");
+        : rqt_gui_cpp::Plugin(),
+          widget_(0),
+          performMovements_ac("movements_server", true),
+          performMovement_ac("movement_server", true)
+           {
+               setObjectName("RoboyTrajectoriesControl");
+               ROS_INFO("Waiting for action server to start.");
+               // wait for the action server to start
+               performMovements_ac.waitForServer();
+               performMovement_ac.waitForServer();
+               ROS_INFO_STREAM("connected");
 }
 
-typedef actionlib::SimpleActionServer<roboy_communication_control::StartRecordTrajectoryAction> Server;
+//typedef actionlib::SimpleActionServer<roboy_communication_control::StartRecordTrajectoryAction> Server;
 
-void execute(const roboy_communication_control::StartRecordTrajectoryGoalConstPtr& goal, Server* as)  // Note: "Action" is not appended to DoDishes here
-{
-    // Do lots of awesome groundbreaking robot stuff here
-    as->setSucceeded();
-}
+//void execute(const roboy_communication_control::StartRecordTrajectoryGoalConstPtr& goal, Server* as)  // Note: "Action" is not appended to DoDishes here
+//{
+//    // Do lots of awesome groundbreaking robot stuff here
+//    as->setSucceeded();
+//}
 
 void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
 
@@ -27,6 +36,7 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     connect(ui.clearBehavior, SIGNAL(clicked()), this, SLOT(clearAllTrajectoriesButtonClicked()));
     connect(ui.playBehavior, SIGNAL(clicked()), this, SLOT(playTrajectoriesButtonClicked()));
+    connect(ui.stopBehavior, SIGNAL(clicked()), this, SLOT(stopBehaviorButtonClicked()));
     connect(ui.refreshTrajectories, SIGNAL(clicked()), this, SLOT(refreshTrajectoriesButtonClicked()));
     connect(ui.addPause, SIGNAL(clicked()), this, SLOT(addPauseButtonClicked()));
     connect(ui.addRelax, SIGNAL(clicked()), this, SLOT(addRelaxButtonClicked()));
@@ -61,10 +71,6 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
         view->setScene(new QGraphicsScene(this));
     }
 
-//    QDialog* dialog;
-//    dialog->setParent(widget_);
-//    ui.setupUi(dialog);
-//    dialog->show();
 
     nh = ros::NodeHandlePtr(new ros::NodeHandle);
     if (!ros::isInitialized()) {
@@ -87,12 +93,23 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     startRecordTrajectoryPublisher = nh->advertise<roboy_communication_control::StartRecordTrajectory>("/roboy/control/StartRecordTrajectory", 1);
     stopRecordTrajectoryPublisher = nh->advertise<std_msgs::Empty>("/roboy/control/StopRecordTrajectory", 1);
     saveBehaviorPublisher = nh->advertise<roboy_communication_control::Behavior>("/roboy/control/SaveBehavior", 1);
+    enablePlaybackPublisher = nh->advertise<std_msgs::Bool>("/roboy/control/EnablePlayback", 1);
+
+    if (!performMovements_ac.isServerConnected()) {
+        ROS_ERROR("perform movements action server does not exist");
+    }
+    if (!performMovement_ac.isServerConnected()) {
+        ROS_ERROR("perform movement action server does not exist");
+    }
+
+    // TODO wait for existence of services?
+
 //    motorCommandPublisher = nh->advertise<roboy_communication_middleware::motorCommand>("/roboy/middleware/MotorCommand", 1);
-    ros::AsyncSpinner spinner(2); // Use 4 threads
+    ros::AsyncSpinner spinner(0);
     spinner.start();
 
     pullExistingTrajectories();
-    Server server(*nh, "do_dishes", boost::bind(&execute, _1, &server), false);
+//    Server server(*nh, "do_dishes", boost::bind(&execute, _1, &server), false);
 
 }
 
@@ -244,10 +261,22 @@ void RoboyTrajectoriesControl::clearAllTrajectoriesButtonClicked() {
 }
 
 void RoboyTrajectoriesControl::playTrajectoriesButtonClicked() {
+    std_msgs::Bool msg;
+    msg.data = true;
+    enablePlaybackPublisher.publish(msg);
+
     vector<string> actions = getCurrentActions();
-    roboy_communication_control::PerformActions srv;
-    srv.request.actions = actions;
-    executeActionsServiceClient.call(srv);
+
+    roboy_communication_control::PerformMovementsGoal goal;
+    goal.actions = actions;
+    performMovements_ac.sendGoal(goal);
+
+}
+
+void RoboyTrajectoriesControl::stopBehaviorButtonClicked() {
+    std_msgs::Bool msg;
+    msg.data = false;
+    enablePlaybackPublisher.publish(msg);
 
 }
 

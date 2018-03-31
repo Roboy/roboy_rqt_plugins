@@ -42,15 +42,20 @@ include_directories(
 )
 
 add_library( roboy_trajectories_control src/roboy_trajectories_control.cpp ${roboy_trajectories_control_MOCS} ${roboy_trajectories_control_UIS_H}
-)
+        src/actions_client.cpp src/actions_server.cpp)
 
 add_dependencies(roboy_trajectories_control roboy_communication_middleware_gencpp roboy_communication_control_gencpp)
 
 target_link_libraries(roboy_trajectories_control ${catkin_LIBRARIES} )
 
-# add_executable( speed_test src/speed_test.cpp)
-# add_dependencies(speed_test roboy_communication_middleware_gencpp)
-# target_link_libraries(speed_test ${catkin_LIBRARIES} )
+ add_executable( actions_client src/actions_client.cpp)
+ add_dependencies(actions_client roboy_communication_control_gencpp)
+ target_link_libraries(actions_client ${catkin_LIBRARIES} )
+
+
+#add_executable( actions_server src/actions_server.cpp)
+#add_dependencies(actions_server roboy_communication_control_gencpp)
+#target_link_libraries(actions_server ${catkin_LIBRARIES} )
 # target_link_libraries(roboy_trajectories_control ${YAML_CPP_LIBRARIES} -ldl)
 
 if("${qt_gui_cpp_USE_QT_MAJOR_VERSION} " STREQUAL "5 ")
