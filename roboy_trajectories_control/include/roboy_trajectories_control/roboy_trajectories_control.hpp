@@ -82,6 +82,7 @@ class RoboyTrajectoriesControl:
             void saveBehaviorButtonClicked();
             void loadBehaviorButtonClicked();
             void setPauseDuration(int duration);
+            void setTimeUnits(int idx);
         private:
             Ui::RoboyTrajectoriesControl ui;
             QWidget *widget_;
@@ -102,6 +103,7 @@ class RoboyTrajectoriesControl:
         private:
             bool stopButton;
             int pauseDuration; // in seconds
+            int timeFactor=1;
             vector<double> setpoint;
             vector<int> control_mode;
             int total_number_of_motors = 6, number_of_fpgas = 1;

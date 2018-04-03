@@ -8,20 +8,16 @@ RoboyTrajectoriesControl::RoboyTrajectoriesControl()
           performMovement_ac("movement_server", true)
            {
                setObjectName("RoboyTrajectoriesControl");
-               ROS_INFO("Waiting for action server to start.");
+//               ROS_INFO("Waiting for action server to start.");
                // wait for the action server to start
-               performMovements_ac.waitForServer();
-               performMovement_ac.waitForServer();
-               ROS_INFO_STREAM("connected");
+               ros::Duration timeout(2);
+               performMovements_ac.waitForServer(timeout);
+               performMovement_ac.waitForServer(timeout);
+               if (!performMovement_ac.isServerConnected() || !performMovements_ac.isServerConnected())
+               {
+                   ROS_WARN("Could not connect to the action server. Movements might not be available");
+               }
 }
-
-//typedef actionlib::SimpleActionServer<roboy_communication_control::StartRecordTrajectoryAction> Server;
-
-//void execute(const roboy_communication_control::StartRecordTrajectoryGoalConstPtr& goal, Server* as)  // Note: "Action" is not appended to DoDishes here
-//{
-//    // Do lots of awesome groundbreaking robot stuff here
-//    as->setSucceeded();
-//}
 
 void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
 
@@ -48,6 +44,7 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     connect(ui.loadBehavior, SIGNAL(clicked()), this, SLOT(loadBehaviorButtonClicked()));
 
     connect(ui.pauseDuration, SIGNAL(valueChanged(int)), this, SLOT(setPauseDuration(int)));
+    connect(ui.timeUnits, SIGNAL(currentIndexChanged(int)), this, SLOT(setTimeUnits(int)));
 
     connect(ui.existingTrajectories, SIGNAL(itemClicked(QListWidgetItem*)),
             this, SLOT(onExistingTrajectoriesItemClicked(QListWidgetItem*)));
@@ -59,6 +56,11 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     ui.addPause->setEnabled(false);
     ui.stopRecord->setEnabled(false);
     ui.saveBehavior->setEnabled(false);
+    ui.stopBehavior->setEnabled(false);
+    ui.timeUnits->addItem("secs");
+    ui.timeUnits->addItem("mins");
+    ui.timeUnits->addItem("hours");
+    ui.timeUnits->addItem("days");
 
     // TODO get rid of this!!
     motorStatusViews.push_back(ui.motorStatus0);
@@ -95,12 +97,12 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     saveBehaviorPublisher = nh->advertise<roboy_communication_control::Behavior>("/roboy/control/SaveBehavior", 1);
     enablePlaybackPublisher = nh->advertise<std_msgs::Bool>("/roboy/control/EnablePlayback", 1);
 
-    if (!performMovements_ac.isServerConnected()) {
-        ROS_ERROR("perform movements action server does not exist");
-    }
-    if (!performMovement_ac.isServerConnected()) {
-        ROS_ERROR("perform movement action server does not exist");
-    }
+//    if (!performMovements_ac.isServerConnected()) {
+//        ROS_ERROR("perform movements action server does not exist");
+//    }
+//    if (!performMovement_ac.isServerConnected()) {
+//        ROS_ERROR("perform movement action server does not exist");
+//    }
 
     // TODO wait for existence of services?
 
@@ -220,7 +222,7 @@ void RoboyTrajectoriesControl::refreshTrajectoriesButtonClicked() {
 }
 
 void RoboyTrajectoriesControl::addPauseButtonClicked() {
-    string pauseMsg(to_string(pauseDuration) + "s pause");
+    string pauseMsg(to_string(timeFactor*pauseDuration) + "s pause");
     QListWidgetItem * item = new QListWidgetItem();
     item->setText(QString::fromStdString(pauseMsg));
     item->setWhatsThis("pause");
@@ -240,7 +242,23 @@ void RoboyTrajectoriesControl::addRelaxButtonClicked() {
     ui.playBehavior->setEnabled(true);
 }
 
+void RoboyTrajectoriesControl::setTimeUnits(int idx) {
+    if (ui.timeUnits->currentText().contains("secs")) {
+        timeFactor = 1;
+    }
+    if (ui.timeUnits->currentText().contains("mins")) {
+        timeFactor = 60;
+    }
+    else if (ui.timeUnits->currentText().contains("hours")) {
+        timeFactor = 3600;
+    }
+    else if (ui.timeUnits->currentText().contains("days")) {
+        timeFactor = 24*3600;
+    }
+}
+
 void RoboyTrajectoriesControl::setPauseDuration(int duration) {
+
     if (duration>0) {
         ui.addPause->setEnabled(true);
         pauseDuration = duration;
@@ -258,6 +276,7 @@ void RoboyTrajectoriesControl::clearAllTrajectoriesButtonClicked() {
     ui.saveBehavior->setEnabled(false);
     ui.playBehavior->setEnabled(false);
     ui.clearBehavior->setEnabled(false);
+    ui.stopBehavior->setEnabled(false);
 }
 
 void RoboyTrajectoriesControl::playTrajectoriesButtonClicked() {
@@ -270,6 +289,7 @@ void RoboyTrajectoriesControl::playTrajectoriesButtonClicked() {
     roboy_communication_control::PerformMovementsGoal goal;
     goal.actions = actions;
     performMovements_ac.sendGoal(goal);
+    ui.stopBehavior->setEnabled(true);
 
 }
 
