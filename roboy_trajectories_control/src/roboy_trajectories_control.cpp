@@ -57,10 +57,13 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     ui.stopRecord->setEnabled(false);
     ui.saveBehavior->setEnabled(false);
     ui.stopBehavior->setEnabled(false);
+
     ui.timeUnits->addItem("secs");
     ui.timeUnits->addItem("mins");
     ui.timeUnits->addItem("hours");
     ui.timeUnits->addItem("days");
+
+    ui.progressBar->hide();
 
     // TODO get rid of this!!
     motorStatusViews.push_back(ui.motorStatus0);
@@ -91,11 +94,13 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     expandBehaviorServiceClient = nh->serviceClient<roboy_communication_control::ListItems>("roboy/control/ExpandBehavior");
 
     motorStatusSubscriber = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyTrajectoriesControl::motorStatusCallback, this);
+    performMovementsResultSubscriber = nh->subscribe("/movements_server/result", 1, &RoboyTrajectoriesControl::performMovementsResultCallback, this);
 
     startRecordTrajectoryPublisher = nh->advertise<roboy_communication_control::StartRecordTrajectory>("/roboy/control/StartRecordTrajectory", 1);
     stopRecordTrajectoryPublisher = nh->advertise<std_msgs::Empty>("/roboy/control/StopRecordTrajectory", 1);
     saveBehaviorPublisher = nh->advertise<roboy_communication_control::Behavior>("/roboy/control/SaveBehavior", 1);
     enablePlaybackPublisher = nh->advertise<std_msgs::Bool>("/roboy/control/EnablePlayback", 1);
+
 
 //    if (!performMovements_ac.isServerConnected()) {
 //        ROS_ERROR("perform movements action server does not exist");
@@ -127,6 +132,10 @@ void RoboyTrajectoriesControl::saveSettings(qt_gui_cpp::Settings &plugin_setting
 void RoboyTrajectoriesControl::restoreSettings(const qt_gui_cpp::Settings &plugin_settings,
                                        const qt_gui_cpp::Settings &instance_settings) {
     // v = instance_settings.value(k)
+}
+
+void RoboyTrajectoriesControl::performMovementsResultCallback(const roboy_communication_control::PerformMovementsActionResult::ConstPtr &msg) {
+    ui.progressBar->hide();
 }
 
 void RoboyTrajectoriesControl::motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
@@ -164,39 +173,6 @@ void RoboyTrajectoriesControl::pullExistingTrajectories() {
     ui.existingTrajectories->addItems(existingTrajectories);
 
 }
-
-void RoboyTrajectoriesControl::pullExistingBehaviors() {
-
-    QStringList q;
-    q.push_back("1on");
-    q.push_back("wet");
-    QInputDialog *dialog = new QInputDialog();
-    bool accepted;
-    QString item = dialog->getItem(0, "Title", "Label:", q, 0, false, &accepted);
-
-    if (accepted && !item.isEmpty()) {
-        vector<string> trajectories = expandBehavior(item.toStdString());
-
-    }
-
-//    roboy_communication_control::ListItems srv;
-//    srv.request.folder = behaviors_path;
-//    listExistingTrajectoriesServiceClient.call(srv);
-//
-//    // empty list
-//    while(ui.existingTrajectories->count()>0)
-//    {
-//        ui.existingTrajectories->takeItem(0);
-//    }
-//    vector<QString> trajectories;
-//    for (string t: srv.response.trajectories) {
-//        trajectories.push_back(QString::fromStdString(t));
-//    }
-//    QStringList existingTrajectories = QStringList::fromVector(QVector<QString>::fromStdVector(trajectories));
-//    ui.existingTrajectories->addItems(existingTrajectories);
-
-}
-
 
 void RoboyTrajectoriesControl::onExistingTrajectoriesItemClicked(QListWidgetItem* item) {
     QListWidgetItem* newItem = new QListWidgetItem();
@@ -280,6 +256,9 @@ void RoboyTrajectoriesControl::clearAllTrajectoriesButtonClicked() {
 }
 
 void RoboyTrajectoriesControl::playTrajectoriesButtonClicked() {
+    ui.progressBar->show();
+    ui.progressBar->setMaximum(0);
+    ui.progressBar->setMinimum(0);
     std_msgs::Bool msg;
     msg.data = true;
     enablePlaybackPublisher.publish(msg);

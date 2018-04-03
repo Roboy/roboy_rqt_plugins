@@ -35,6 +35,7 @@
 #include <roboy_communication_control/PerformMovement.h>
 #include <roboy_communication_control/PerformMovementAction.h>
 #include <roboy_communication_control/PerformMovementsAction.h>
+#include <roboy_communication_control/PerformMovementsActionResult.h>
 #include <roboy_communication_control/PerformBehavior.h>
 #include <roboy_communication_control/PerformActions.h>
 #include <roboy_communication_control/ListItems.h>
@@ -90,7 +91,8 @@ class RoboyTrajectoriesControl:
             ros::NodeHandlePtr nh;
             ros::Publisher motorCommandPublisher, startRecordTrajectoryPublisher,
                     stopRecordTrajectoryPublisher, saveBehaviorPublisher, enablePlaybackPublisher;
-            ros::Subscriber motorStatusSubscriber, jointStatusSubscriber, motorCommandSubscriber;
+            ros::Subscriber motorStatusSubscriber, jointStatusSubscriber, motorCommandSubscriber,
+                    performMovementsResultSubscriber;
             ros::ServiceClient motorControlServiceClient, emergencyStopServiceClient,
                     performMovementServiceClient, setDisplacementForAllServiceClient,
                     executeActionsServiceClient, listExistingTrajectoriesServiceClient,
@@ -99,6 +101,7 @@ class RoboyTrajectoriesControl:
             actionlib::SimpleActionClient<roboy_communication_control::PerformMovementsAction> performMovements_ac;
             void checkMotorStatus();
             void motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
+            void performMovementsResultCallback(const roboy_communication_control::PerformMovementsActionResult::ConstPtr &msg);
 
         private:
             bool stopButton;
