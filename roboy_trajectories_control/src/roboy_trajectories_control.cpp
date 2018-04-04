@@ -5,7 +5,9 @@ RoboyTrajectoriesControl::RoboyTrajectoriesControl()
         : rqt_gui_cpp::Plugin(),
           widget_(0),
           performMovements_ac("movements_server", true),
-          performMovement_ac("movement_server", true)
+          performMovement_ac("movement_server", true),
+          greenBrush(Qt::green),
+          redBrush(Qt::red)
            {
                setObjectName("RoboyTrajectoriesControl");
 //               ROS_INFO("Waiting for action server to start.");
@@ -74,8 +76,9 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     motorStatusViews.push_back(ui.motorStatus5);
     for (auto view: motorStatusViews) {
         view->setScene(new QGraphicsScene(this));
+        view->setBackgroundBrush(redBrush);
+        motorOnline.push_back(false);
     }
-
 
     nh = ros::NodeHandlePtr(new ros::NodeHandle);
     if (!ros::isInitialized()) {
@@ -139,17 +142,16 @@ void RoboyTrajectoriesControl::performMovementsResultCallback(const roboy_commun
 }
 
 void RoboyTrajectoriesControl::motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
-
-    QBrush greenBrush(Qt::green);
-    QBrush redBrush(Qt::red);
-
+    
     for (int i=0; i<total_number_of_motors; i++)
     {
-        if (msg->current.at(i) > 0) {
+        if (msg->current.at(i) > 0 && !motorOnline.at(i)) {
             motorStatusViews.at(i)->setBackgroundBrush(greenBrush);
+            motorOnline.at(i) = true;
         }
-        else {
+        else if (msg->current.at(i) < 0 && motorOnline.at(i)){
             motorStatusViews.at(i)->setBackgroundBrush(redBrush);
+            motorOnline.at(i) = false;
         }
     }
 }

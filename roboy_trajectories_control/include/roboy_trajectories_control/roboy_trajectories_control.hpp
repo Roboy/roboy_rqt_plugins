@@ -22,6 +22,7 @@
 #include <QListWidget>
 #include <QTextEdit>
 #include <QMessageBox>
+#include <QBrush>
 #include <map>
 #include <common_utilities/CommonDefinitions.h>
 #include <common_utilities/MotorConfig.hpp>
@@ -118,5 +119,9 @@ class RoboyTrajectoriesControl:
             const string behaviors_path = "/home/root/behaviors/";
             vector<string> getCurrentActions();
             vector<string> expandBehavior(string name);
+            QBrush greenBrush;//(Qt::green);
+            QBrush redBrush;//(Qt::red);
+            vector<bool> motorOnline; // motor status
+
 
 };
