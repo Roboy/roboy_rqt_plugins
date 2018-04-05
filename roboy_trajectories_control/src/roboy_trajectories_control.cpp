@@ -142,7 +142,7 @@ void RoboyTrajectoriesControl::performMovementsResultCallback(const roboy_commun
 }
 
 void RoboyTrajectoriesControl::motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
-    
+
     for (int i=0; i<total_number_of_motors; i++)
     {
         if (msg->current.at(i) > 0 && !motorOnline.at(i)) {

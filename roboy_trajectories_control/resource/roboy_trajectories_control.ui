@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>593</width>
-    <height>746</height>
+    <height>735</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,6 +22,208 @@
      <height>391</height>
     </rect>
    </property>
+   <widget class="QGroupBox" name="groupBox_3">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>-30</y>
+      <width>531</width>
+      <height>461</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Trajectories</string>
+    </property>
+    <widget class="QListWidget" name="existingTrajectories">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>60</y>
+       <width>231</width>
+       <height>231</height>
+      </rect>
+     </property>
+     <property name="dragDropMode">
+      <enum>QAbstractItemView::NoDragDrop</enum>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="scheduledBehavior">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>60</y>
+       <width>221</width>
+       <height>231</height>
+      </rect>
+     </property>
+     <property name="dragDropMode">
+      <enum>QAbstractItemView::NoDragDrop</enum>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="addPause">
+     <property name="geometry">
+      <rect>
+       <x>418</x>
+       <y>350</y>
+       <width>91</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Add pause</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="pauseDuration">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>350</y>
+       <width>48</width>
+       <height>27</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="playBehavior">
+     <property name="geometry">
+      <rect>
+       <x>100</x>
+       <y>310</y>
+       <width>71</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Play</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="clearBehavior">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>310</y>
+       <width>71</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Clear all</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="addRelax">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>310</y>
+       <width>231</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Add relax muscles action</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="refreshTrajectories">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>390</y>
+       <width>231</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Refresh exisiting trajectories</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="saveBehavior">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>350</y>
+       <width>221</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Save behavior as...</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="loadBehavior">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>390</y>
+       <width>221</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Load exisiting behavior...</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_8">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>40</y>
+       <width>141</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Planned Behavior</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_9">
+     <property name="geometry">
+      <rect>
+       <x>280</x>
+       <y>40</y>
+       <width>141</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Existing Trajectories</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="stopBehavior">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>310</y>
+       <width>61</width>
+       <height>27</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Stop</string>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="timeUnits">
+     <property name="geometry">
+      <rect>
+       <x>340</x>
+       <y>350</y>
+       <width>71</width>
+       <height>27</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QProgressBar" name="progressBar">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>430</y>
+       <width>481</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="value">
+      <number>24</number>
+     </property>
+    </widget>
+   </widget>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <property name="geometry">
@@ -46,8 +248,8 @@
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>660</y>
+     <x>20</x>
+     <y>600</y>
      <width>541</width>
      <height>71</height>
     </rect>
@@ -198,9 +400,9 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>490</y>
+     <y>480</y>
      <width>551</width>
-     <height>131</height>
+     <height>101</height>
     </rect>
    </property>
    <property name="title">
@@ -210,7 +412,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>40</y>
+      <y>20</y>
       <width>181</width>
       <height>27</height>
      </rect>
@@ -223,7 +425,7 @@
     <property name="geometry">
      <rect>
       <x>210</x>
-      <y>40</y>
+      <y>20</y>
       <width>151</width>
       <height>27</height>
      </rect>
@@ -236,7 +438,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>90</y>
+      <y>50</y>
       <width>271</width>
       <height>31</height>
      </rect>
@@ -253,7 +455,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>290</x>
-      <y>90</y>
+      <y>50</y>
       <width>99</width>
       <height>31</height>
      </rect>
@@ -266,7 +468,7 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>410</x>
-      <y>90</y>
+      <y>50</y>
       <width>99</width>
       <height>31</height>
      </rect>
@@ -280,7 +482,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>640</y>
+     <y>580</y>
      <width>551</width>
      <height>20</height>
     </rect>
@@ -288,208 +490,6 @@ p, li { white-space: pre-wrap; }
    <property name="orientation">
     <enum>Qt::Horizontal</enum>
    </property>
-  </widget>
-  <widget class="QGroupBox" name="groupBox_3">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>10</y>
-     <width>531</width>
-     <height>461</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Trajectories</string>
-   </property>
-   <widget class="QListWidget" name="existingTrajectories">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>60</y>
-      <width>231</width>
-      <height>231</height>
-     </rect>
-    </property>
-    <property name="dragDropMode">
-     <enum>QAbstractItemView::NoDragDrop</enum>
-    </property>
-   </widget>
-   <widget class="QListWidget" name="scheduledBehavior">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>60</y>
-      <width>221</width>
-      <height>231</height>
-     </rect>
-    </property>
-    <property name="dragDropMode">
-     <enum>QAbstractItemView::NoDragDrop</enum>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="addPause">
-    <property name="geometry">
-     <rect>
-      <x>418</x>
-      <y>350</y>
-      <width>91</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Add pause</string>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="pauseDuration">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>350</y>
-      <width>48</width>
-      <height>27</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="playBehavior">
-    <property name="geometry">
-     <rect>
-      <x>100</x>
-      <y>310</y>
-      <width>71</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Play</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="clearBehavior">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>310</y>
-      <width>71</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Clear all</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="addRelax">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>310</y>
-      <width>231</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Add relax muscles action</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="refreshTrajectories">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>390</y>
-      <width>231</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Refresh exisiting trajectories</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="saveBehavior">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>350</y>
-      <width>221</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Save behavior as...</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="loadBehavior">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>390</y>
-      <width>221</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Load exisiting behavior...</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_8">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>40</y>
-      <width>141</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Planned Behavior</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_9">
-    <property name="geometry">
-     <rect>
-      <x>280</x>
-      <y>40</y>
-      <width>141</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Existing Trajectories</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="stopBehavior">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
-      <y>310</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Stop</string>
-    </property>
-   </widget>
-   <widget class="QComboBox" name="timeUnits">
-    <property name="geometry">
-     <rect>
-      <x>340</x>
-      <y>350</y>
-      <width>71</width>
-      <height>27</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QProgressBar" name="progressBar">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>430</y>
-      <width>481</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="value">
-     <number>24</number>
-    </property>
-   </widget>
   </widget>
   <widget class="Line" name="line_3">
    <property name="geometry">
