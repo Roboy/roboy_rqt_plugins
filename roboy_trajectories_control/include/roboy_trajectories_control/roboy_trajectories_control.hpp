@@ -29,6 +29,7 @@
 #include <std_srvs/SetBool.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Int32.h>
 #include <roboy_communication_control/StartRecordTrajectory.h>
 //#include <roboy_communication_control/StopRecordTrajectoryAction.h>
 #include <roboy_communication_control/StartRecordTrajectoryAction.h>
@@ -85,13 +86,16 @@ class RoboyTrajectoriesControl:
             void loadBehaviorButtonClicked();
             void setPauseDuration(int duration);
             void setTimeUnits(int idx);
+            void setPredisplacementButtonClicked();
+            void setPredisplacement(int value);
         private:
             Ui::RoboyTrajectoriesControl ui;
             QWidget *widget_;
             vector<QGraphicsView*> motorStatusViews;
             ros::NodeHandlePtr nh;
             ros::Publisher motorCommandPublisher, startRecordTrajectoryPublisher,
-                    stopRecordTrajectoryPublisher, saveBehaviorPublisher, enablePlaybackPublisher;
+                    stopRecordTrajectoryPublisher, saveBehaviorPublisher, enablePlaybackPublisher,
+                    preDisplacementPublisher;
             ros::Subscriber motorStatusSubscriber, jointStatusSubscriber, motorCommandSubscriber,
                     performMovementsResultSubscriber;
             ros::ServiceClient motorControlServiceClient, emergencyStopServiceClient,
@@ -107,6 +111,7 @@ class RoboyTrajectoriesControl:
         private:
             bool stopButton;
             int pauseDuration; // in seconds
+            int preDisplacement;
             int timeFactor=1;
             vector<double> setpoint;
             vector<int> control_mode;

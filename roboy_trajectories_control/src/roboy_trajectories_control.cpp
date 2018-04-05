@@ -44,8 +44,10 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     connect(ui.stopRecord, SIGNAL(clicked()), this, SLOT(stopRecordTrajectoryButtonClicked()));
     connect(ui.saveBehavior, SIGNAL(clicked()), this, SLOT(saveBehaviorButtonClicked()));
     connect(ui.loadBehavior, SIGNAL(clicked()), this, SLOT(loadBehaviorButtonClicked()));
+    connect(ui.setPredisplacement,SIGNAL(clicked()), this, SLOT(setPredisplacementButtonClicked()));
 
     connect(ui.pauseDuration, SIGNAL(valueChanged(int)), this, SLOT(setPauseDuration(int)));
+    connect(ui.predisplacement, SIGNAL(valueChanged(int)), this, SLOT(setPredisplacement(int)));
     connect(ui.timeUnits, SIGNAL(currentIndexChanged(int)), this, SLOT(setTimeUnits(int)));
 
     connect(ui.existingTrajectories, SIGNAL(itemClicked(QListWidgetItem*)),
@@ -103,6 +105,7 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     stopRecordTrajectoryPublisher = nh->advertise<std_msgs::Empty>("/roboy/control/StopRecordTrajectory", 1);
     saveBehaviorPublisher = nh->advertise<roboy_communication_control::Behavior>("/roboy/control/SaveBehavior", 1);
     enablePlaybackPublisher = nh->advertise<std_msgs::Bool>("/roboy/control/EnablePlayback", 1);
+    preDisplacementPublisher = nh->advertise<std_msgs::Int32>("/roboy/middleware/PreDisplacement", 1);
 
 
 //    if (!performMovements_ac.isServerConnected()) {
@@ -220,6 +223,11 @@ void RoboyTrajectoriesControl::addRelaxButtonClicked() {
     ui.playBehavior->setEnabled(true);
 }
 
+void RoboyTrajectoriesControl::setPredisplacementButtonClicked() {
+    std_msgs::Int32 msg;
+    msg.data = preDisplacement;
+    preDisplacementPublisher.publish(msg);
+}
 void RoboyTrajectoriesControl::setTimeUnits(int idx) {
     if (ui.timeUnits->currentText().contains("secs")) {
         timeFactor = 1;
@@ -244,6 +252,15 @@ void RoboyTrajectoriesControl::setPauseDuration(int duration) {
         ui.addPause->setEnabled(false);
     }
 
+}
+
+void RoboyTrajectoriesControl::setPredisplacement(int value) {
+    if (value>0) {
+        ui.setPredisplacement->setEnabled(true);
+        preDisplacement = value;
+    } else {
+        ui.setPredisplacement->setEnabled(false);
+    }
 }
 
 void RoboyTrajectoriesControl::clearAllTrajectoriesButtonClicked() {
@@ -367,7 +384,7 @@ void RoboyTrajectoriesControl::loadBehaviorButtonClicked() {
             if (action.find("pause") != std::string::npos) {
                 item->setWhatsThis("pause");
                 item->setText(QString::fromStdString(action.substr(0, action.find("_"))+"s pause"));
-                ROS_INFO_STREAM(action.substr(0, action.find("_"))+"s pause");
+//                ROS_INFO_STREAM(action.substr(0, action.find("_"))+"s pause");
             }
             else if (action.find("relax") != std::string::npos) {
                 item->setWhatsThis("relax");

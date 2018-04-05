@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>593</width>
-    <height>735</height>
+    <height>685</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -400,7 +400,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>480</y>
+     <y>490</y>
      <width>551</width>
      <height>101</height>
     </rect>
@@ -413,7 +413,7 @@
      <rect>
       <x>10</x>
       <y>20</y>
-      <width>181</width>
+      <width>121</width>
       <height>27</height>
      </rect>
     </property>
@@ -424,9 +424,9 @@
    <widget class="QPushButton" name="startInit">
     <property name="geometry">
      <rect>
-      <x>210</x>
+      <x>140</x>
       <y>20</y>
-      <width>151</width>
+      <width>111</width>
       <height>27</height>
      </rect>
     </property>
@@ -438,7 +438,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>50</y>
+      <y>60</y>
       <width>271</width>
       <height>31</height>
      </rect>
@@ -455,26 +455,49 @@ p, li { white-space: pre-wrap; }
     <property name="geometry">
      <rect>
       <x>290</x>
-      <y>50</y>
-      <width>99</width>
+      <y>60</y>
+      <width>121</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string>Start Record</string>
+     <string>Start record</string>
     </property>
    </widget>
    <widget class="QPushButton" name="stopRecord">
     <property name="geometry">
      <rect>
-      <x>410</x>
-      <y>50</y>
-      <width>99</width>
+      <x>420</x>
+      <y>60</y>
+      <width>121</width>
       <height>31</height>
      </rect>
     </property>
     <property name="text">
-     <string>Stop Record</string>
+     <string>Stop record</string>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="predisplacement">
+    <property name="geometry">
+     <rect>
+      <x>360</x>
+      <y>20</y>
+      <width>48</width>
+      <height>27</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="setPredisplacement">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>20</y>
+      <width>121</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Set predisplacement</string>
     </property>
    </widget>
   </widget>
