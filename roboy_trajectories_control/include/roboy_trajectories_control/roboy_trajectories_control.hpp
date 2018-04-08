@@ -22,12 +22,15 @@
 #include <QListWidget>
 #include <QTextEdit>
 #include <QMessageBox>
+#include <QBrush>
 #include <map>
 #include <common_utilities/CommonDefinitions.h>
 #include <common_utilities/MotorConfig.hpp>
 #include <std_srvs/SetBool.h>
 #include <std_msgs/Empty.h>
+#include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
+#include <std_msgs/Int32.h>
 #include <roboy_communication_control/StartRecordTrajectory.h>
 //#include <roboy_communication_control/StopRecordTrajectoryAction.h>
 #include <roboy_communication_control/StartRecordTrajectoryAction.h>
@@ -48,6 +51,8 @@
 #endif
 
 using namespace std;
+typedef actionlib::SimpleActionClient<roboy_communication_control::PerformMovementsAction> MovementsAC;
+typedef actionlib::SimpleActionClient<roboy_communication_control::PerformMovementAction> MovementAC;
 
 class RoboyTrajectoriesControl:
         public rqt_gui_cpp::Plugin, MotorConfig {
@@ -65,6 +70,11 @@ class RoboyTrajectoriesControl:
             virtual void restoreSettings(const qt_gui_cpp::Settings &plugin_settings,
                                          const qt_gui_cpp::Settings &instance_settings);
 
+            vector<string> listExistingBehaviors();
+            vector<string> expandBehavior(string name);
+            void saveBehavior(string name, vector<string> action);
+
+
         public Q_SLOTS:
             void pullExistingTrajectories();
             void pullExistingBehaviors();
@@ -75,6 +85,7 @@ class RoboyTrajectoriesControl:
             void clearAllTrajectoriesButtonClicked();
             void addPauseButtonClicked();
             void addRelaxButtonClicked();
+            void addSyncButtonClicked();
             void relaxAllMusclesButtonClicked();
             void startInitializationButtonClicked();
             void startRecordTrajectoryButtonClicked();
@@ -84,28 +95,39 @@ class RoboyTrajectoriesControl:
             void loadBehaviorButtonClicked();
             void setPauseDuration(int duration);
             void setTimeUnits(int idx);
+            void setPredisplacementButtonClicked();
+            void setPredisplacement(int value);
         private:
             Ui::RoboyTrajectoriesControl ui;
             QWidget *widget_;
             vector<QGraphicsView*> motorStatusViews;
             ros::NodeHandlePtr nh;
             ros::Publisher motorCommandPublisher, startRecordTrajectoryPublisher,
-                    stopRecordTrajectoryPublisher, saveBehaviorPublisher, enablePlaybackPublisher;
-            ros::Subscriber motorStatusSubscriber, jointStatusSubscriber, motorCommandSubscriber,
-                    performMovementsResultSubscriber;
-            ros::ServiceClient motorControlServiceClient, emergencyStopServiceClient,
+                    stopRecordTrajectoryPublisher, saveBehaviorPublisher, enablePlaybackPublisher,
+                    preDisplacementPublisher;
+            ros::Subscriber motorStatusSubscriber, jointStatusSubscriber, motorCommandSubscriber;
+            map<string,ros::Subscriber> performMovementsResultSubscriber;
+            map<string,ros::ServiceClient> motorControlServiceClient, emergencyStopServiceClient,
                     performMovementServiceClient, setDisplacementForAllServiceClient,
-                    executeActionsServiceClient, listExistingTrajectoriesServiceClient,
-                    listExistingBehaviorsServiceClient, expandBehaviorServiceClient;
-            actionlib::SimpleActionClient<roboy_communication_control::PerformMovementAction> performMovement_ac;
-            actionlib::SimpleActionClient<roboy_communication_control::PerformMovementsAction> performMovements_ac;
+                    executeActionsServiceClient, listExistingTrajectoriesServiceClient;
+//            ros::ServiceClient listExistingBehaviorsServiceClient, expandBehaviorServiceClient;
+
+//            actionlib::SimpleActionClient<roboy_communication_control::PerformMovementsAction> lsh_movements_ac, rsh_movements_ac,
+//                    legs_movements_ac, lsp_movements_ac, rsp_movements_ac, head_movements_ac;
+//            actionlib::SimpleActionClient<roboy_communication_control::PerformMovementAction> lsh_movement_ac, rsh_movement_ac,
+//                    legs_movement_ac, lsp_movement_ac, rsp_movement_ac, head_movement_ac;
+
+            map<string,actionlib::SimpleActionClient<roboy_communication_control::PerformMovementAction>*> performMovement_ac;
+            map<string,actionlib::SimpleActionClient<roboy_communication_control::PerformMovementsAction>*> performMovements_ac;
             void checkMotorStatus();
             void motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
             void performMovementsResultCallback(const roboy_communication_control::PerformMovementsActionResult::ConstPtr &msg);
+            void initializeRosCommunication();
 
         private:
             bool stopButton;
             int pauseDuration; // in seconds
+            int preDisplacement;
             int timeFactor=1;
             vector<double> setpoint;
             vector<int> control_mode;
@@ -115,8 +137,13 @@ class RoboyTrajectoriesControl:
             vector<QLineEdit*> setpoint_widget;
             QLineEdit* scale;
             const string trajectories_path = "/home/root/trajectories/";
-            const string behaviors_path = "/home/root/behaviors/";
+            const string behaviors_path = "/home/roboy/behaviors/";
             vector<string> getCurrentActions();
-            vector<string> expandBehavior(string name);
+            QBrush greenBrush;//(Qt::green);
+            QBrush redBrush;//(Qt::red);
+            vector<bool> motorOnline; // motor status
+            vector<QCheckBox*> activeBodyParts;
+            const vector<string> bodyParts = {"head", "shoulder_left", "spine_left", "shoulder_right", "spine_right", "legs"};
+
 
 };
