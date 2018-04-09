@@ -62,7 +62,7 @@ private:
     bool stopButton;
     vector<double> setpoint;
     vector<int> control_mode;
-    int total_number_of_motors = 0, number_of_fpgas = 1;
+    int total_number_of_motors = 0, number_of_fpgas = 6;
     vector<QRadioButton*> pos, vel, dis, force;
     vector<QSlider*> setpoint_slider_widget;
     vector<QLineEdit*> setpoint_widget;

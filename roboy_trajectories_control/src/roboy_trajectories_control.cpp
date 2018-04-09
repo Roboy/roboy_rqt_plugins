@@ -193,9 +193,10 @@ void RoboyTrajectoriesControl::motorStatusCallback(const roboy_communication_mid
 void RoboyTrajectoriesControl::pullExistingTrajectories() {
 
     vector<QString> trajectories;
-    roboy_communication_control::ListItems srv;
-    srv.request.name = trajectories_path;
+
     for (auto part: bodyParts) {
+        roboy_communication_control::ListItems srv;
+        srv.request.name = trajectories_path;
         listExistingTrajectoriesServiceClient[part].call(srv);
 
         for (string t: srv.response.items) {
