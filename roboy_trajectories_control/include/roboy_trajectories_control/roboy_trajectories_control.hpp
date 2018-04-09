@@ -48,6 +48,15 @@
 #include <roboy_communication_middleware/SetInt16.h>
 #include <actionlib/client/simple_action_client.h>
 
+#define HEAD 0
+#define SPINE_LEFT 1
+#define SPINE_RIGHT 2
+#define LEGS 3
+// the two shoulders have to have these ids, because the right shoulder has mirrored motor units, which results in
+// negative displacement on compression of the spring and needs to be dealt with in fpga PID controllers
+#define SHOULDER_LEFT 4
+#define SHOULDER_RIGHT 5
+
 #endif
 
 using namespace std;
@@ -70,6 +79,7 @@ class RoboyTrajectoriesControl:
             virtual void restoreSettings(const qt_gui_cpp::Settings &plugin_settings,
                                          const qt_gui_cpp::Settings &instance_settings);
 
+            QGraphicsScene* scene;
             vector<string> listExistingBehaviors();
             vector<string> expandBehavior(string name);
             void saveBehavior(string name, vector<string> action);
@@ -100,7 +110,6 @@ class RoboyTrajectoriesControl:
         private:
             Ui::RoboyTrajectoriesControl ui;
             QWidget *widget_;
-            vector<QGraphicsView*> motorStatusViews;
             ros::NodeHandlePtr nh;
             ros::Publisher motorCommandPublisher, startRecordTrajectoryPublisher,
                     stopRecordTrajectoryPublisher, saveBehaviorPublisher, enablePlaybackPublisher,
@@ -125,13 +134,15 @@ class RoboyTrajectoriesControl:
             void initializeRosCommunication();
 
         private:
+            const vector<string> bodyParts = {"head",  "spine_left",  "spine_right", "legs", "shoulder_left", "shoulder_right"};
             bool stopButton;
             int pauseDuration; // in seconds
             int preDisplacement;
             int timeFactor=1;
             vector<double> setpoint;
             vector<int> control_mode;
-            int total_number_of_motors = 6, number_of_fpgas = 1;
+            vector<int> total_number_of_motors;
+//            number_of_fpgas = 1;
             vector<QRadioButton*> pos, vel, dis, force;
             vector<QSlider*> setpoint_slider_widget;
             vector<QLineEdit*> setpoint_widget;
@@ -141,9 +152,9 @@ class RoboyTrajectoriesControl:
             vector<string> getCurrentActions();
             QBrush greenBrush;//(Qt::green);
             QBrush redBrush;//(Qt::red);
-            vector<bool> motorOnline; // motor status
+            vector<vector<bool>> motorStatus; // motor status
             vector<QCheckBox*> activeBodyParts;
-            const vector<string> bodyParts = {"head", "shoulder_left", "spine_left", "shoulder_right", "spine_right", "legs"};
+
 
 
 };

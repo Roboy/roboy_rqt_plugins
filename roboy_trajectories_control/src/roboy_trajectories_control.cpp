@@ -5,7 +5,7 @@
 RoboyTrajectoriesControl::RoboyTrajectoriesControl()
         : rqt_gui_cpp::Plugin(),
           widget_(0),
-
+//          motorStatus(bodyParts.size()),
           greenBrush(Qt::green),
           redBrush(Qt::red)
            {
@@ -14,62 +14,35 @@ RoboyTrajectoriesControl::RoboyTrajectoriesControl()
                // wait for the action server to start
                 ros::Duration timeout(0.2);
 
-//                MovementsAC legs_movements_ac("legs_movements_server", true);
-//                MovementsAC  lsh_movements_ac("shoulder_left_movements_server", true);
-//                MovementsAC rsh_movements_ac("shoulder_right_movements_server", true);
-//                MovementsAC lsp_movements_ac("spine_left_movements_server", true);
-//                MovementsAC rsp_movements_ac("spine_right_movements_server", true);
-//                MovementsAC head_movements_ac("head_movements_server", true);
-//                MovementAC legs_movement_ac("legs_movement_server", true);
-//                MovementAC lsh_movement_ac("shoulder_left_movement_server", true);
-//                MovementAC rsh_movement_ac("shoulder_right_movement_server", true);
-//                MovementAC  lsp_movement_ac("spine_left_movement_server", true);
-//                MovementAC  rsp_movement_ac("spine_right_movement_server", true);
-//                MovementAC  head_movement_ac("head_movement_server", true);
-//
-//                lsh_movement_ac.waitForServer();
-//    auto x = new MovementsAC("shoulder_left_movements_server", true);
-
                 for (auto part: bodyParts)
                 {
                     performMovements_ac[part] = new MovementsAC(part+"_movements_server", true);
                 }
 
-//                performMovements_ac["shoulder_right"] = rsh_movements_ac;
-//                performMovements_ac["spine_left"] = lsp_movements_ac;
-//                performMovements_ac["spine_right"] = rsp_movements_ac;
-//                performMovements_ac["head"] = head_movements_ac;
-//                performMovements_ac["legs"] = legs_movements_ac;
-//
-//                performMovement_ac["shoulder_left"] = lsh_movement_ac;
-//                performMovement_ac["shoulder_right"] = rsh_movement_ac;
-//                performMovement_ac["spine_left"] = lsp_movement_ac;
-//                performMovement_ac["spine_right"] = rsp_movement_ac;
-//                performMovement_ac["head"] = head_movement_ac;
-//                performMovement_ac["legs"] = legs_movement_ac;
-
                 for (auto ac: performMovement_ac) {
                     ac.second->waitForServer(timeout);
                     if (!ac.second->isServerConnected()) {
-                        ROS_WARN_STREAM("Could not connect to the action server" + ac.first + ". Movements might not be available");
+                        ROS_WARN_STREAM("Could not connect to the action server " + ac.first + ". Movements might not be available");
                     }
                 }
 
                 for (auto ac: performMovements_ac) {
                     ac.second->waitForServer(timeout);
                     if (!ac.second->isServerConnected()) {
-                        ROS_WARN_STREAM("Could not connect to the action server of" + ac.first + ". Movements might not be available");
+                        ROS_WARN_STREAM("Could not connect to the action server " + ac.first + ". Movements might not be available");
                     }
                 }
 
-//                for (auto ac: performMovement_ac) {
-//                    ac.second.waitForServer(timeout);
-//                }
-//
-//               if (!performMovement_ac["shoulder_left"].isServerConnected() || !performMovements_ac["shoulder_left"].isServerConnected())
-//               {
-//                   ROS_WARN("Could not connect to the action server. Movements might not be available");
-//               }
+                total_number_of_motors.reserve(bodyParts.size());
+                total_number_of_motors[HEAD] = 4;
+                total_number_of_motors[SHOULDER_LEFT] = 13;
+                total_number_of_motors[SHOULDER_RIGHT] = 13;
+                total_number_of_motors[SPINE_LEFT] = 3;
+                total_number_of_motors[SPINE_RIGHT] = 3;
+                total_number_of_motors[LEGS] = 12;
+
+
+
 }
 
 void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
@@ -81,6 +54,9 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     ui.setupUi(widget_);
     // add widget to the user interface
     context.addWidget(widget_);
+
+    scene = new QGraphicsScene(widget_);
+    scene->setBackgroundBrush(redBrush);
 
     connect(ui.clearBehavior, SIGNAL(clicked()), this, SLOT(clearAllTrajectoriesButtonClicked()));
     connect(ui.playBehavior, SIGNAL(clicked()), this, SLOT(playTrajectoriesButtonClicked()));
@@ -120,27 +96,21 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     ui.progressBar->hide();
 
-    // TODO get rid of this!!
-    motorStatusViews.push_back(ui.motorStatus0);
-    motorStatusViews.push_back(ui.motorStatus1);
-    motorStatusViews.push_back(ui.motorStatus2);
-    motorStatusViews.push_back(ui.motorStatus3);
-    motorStatusViews.push_back(ui.motorStatus4);
-    motorStatusViews.push_back(ui.motorStatus5);
-    for (auto view: motorStatusViews) {
-        view->setScene(new QGraphicsScene(this));
-        view->setBackgroundBrush(redBrush);
-        motorOnline.push_back(false);
-    }
+    for (int i=0; i<bodyParts.size(); i++) {
 
-    activeBodyParts.push_back(ui.head);
-    activeBodyParts.push_back(ui.rshoulder);
-    activeBodyParts.push_back(ui.lshoulder);
-    activeBodyParts.push_back(ui.rspine);
-    activeBodyParts.push_back(ui.lspine);
-    activeBodyParts.push_back(ui.legs);
-    for (auto part: activeBodyParts) {
-        part->setChecked(true);
+        activeBodyParts.push_back(widget_->findChild<QCheckBox*>(QString::fromStdString(bodyParts[i])));
+        activeBodyParts[i]->setChecked(true);
+
+        motorStatus.push_back(vector<bool>(total_number_of_motors[i]));
+        for (int j=0; j<total_number_of_motors[i]; j++) {
+            QGraphicsView* view = widget_->findChild<QGraphicsView *>(QString::fromStdString(bodyParts[i]+"_m"+to_string(j)));
+//            ROS_INFO_STREAM(view->whatsThis().toStdString());
+
+            view->setScene(scene);
+//            view->setBackgroundBrush(redBrush);
+//            ROS_INFO_STREAM(view->objectName().toStdString());
+            motorStatus[i].push_back(false);
+        }
     }
 
     nh = ros::NodeHandlePtr(new ros::NodeHandle);
@@ -150,26 +120,11 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
         ros::init(argc, argv, "trajectories_control_rqt_plugin");
     }
 
-//    motorControlServiceClient = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/middleware/ControlMode");
     initializeRosCommunication();
-
-
-
-//    if (!performMovements_ac.isServerConnected()) {
-//        ROS_ERROR("perform movements action server does not exist");
-//    }
-//    if (!performMovement_ac.isServerConnected()) {
-//        ROS_ERROR("perform movement action server does not exist");
-//    }
-
-    // TODO wait for existence of services?
-
-//    motorCommandPublisher = nh->advertise<roboy_communication_middleware::motorCommand>("/roboy/middleware/MotorCommand", 1);
     ros::AsyncSpinner spinner(0);
     spinner.start();
 
     pullExistingTrajectories();
-//    Server server(*nh, "do_dishes", boost::bind(&execute, _1, &server), false);
 
 }
 
@@ -209,6 +164,8 @@ void RoboyTrajectoriesControl::initializeRosCommunication() {
     enablePlaybackPublisher = nh->advertise<std_msgs::Bool>("/roboy/control/EnablePlayback", 1);
     preDisplacementPublisher = nh->advertise<std_msgs::Int32>("/roboy/middleware/PreDisplacement", 1);
 
+    // TODO warn if service doesnt exist
+
 }
 
 void RoboyTrajectoriesControl::performMovementsResultCallback(const roboy_communication_control::PerformMovementsActionResult::ConstPtr &msg) {
@@ -218,15 +175,17 @@ void RoboyTrajectoriesControl::performMovementsResultCallback(const roboy_commun
 
 void RoboyTrajectoriesControl::motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
 
-    for (int i=0; i<total_number_of_motors; i++)
+    for (int i=0; i<total_number_of_motors[msg->id]; i++)
     {
-        if (msg->current.at(i) > 0 && !motorOnline.at(i)) {
-            motorStatusViews.at(i)->setBackgroundBrush(greenBrush);
-            motorOnline.at(i) = true;
+        if (msg->current.at(i) > 0 && !motorStatus[msg->id][i]) {
+            widget_->findChild<QGraphicsView *>(
+                    QString::fromStdString(bodyParts[msg->id]+"_m"+to_string(i)))->setBackgroundBrush(greenBrush);
+            motorStatus[msg->id][i] = true;
         }
-        else if (msg->current.at(i) < 0 && motorOnline.at(i)){
-            motorStatusViews.at(i)->setBackgroundBrush(redBrush);
-            motorOnline.at(i) = false;
+        else if (msg->current.at(i) < 0 && motorStatus[msg->id][i]){
+            widget_->findChild<QGraphicsView *>(
+                    QString::fromStdString(bodyParts[msg->id]+"_m"+to_string(i)))->setBackgroundBrush(redBrush);
+            motorStatus[msg->id][i] = false;
         }
     }
 }
@@ -446,7 +405,7 @@ void RoboyTrajectoriesControl::startRecordTrajectoryButtonClicked() {
         replace( msg.name.begin(), msg.name.end(), ' ', '_');
         msg.name.erase(std::remove(msg.name.begin(), msg.name.end(), ','), msg.name.end());
         // TODO provide selection of motors to record
-        vector<int8_t> ids(total_number_of_motors);
+        vector<int8_t> ids(total_number_of_motors[0]);
         iota(begin(ids), end(ids), 0);
         msg.idList = ids;
         for (auto part: activeBodyParts) {
