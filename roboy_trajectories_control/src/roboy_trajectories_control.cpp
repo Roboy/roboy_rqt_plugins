@@ -321,6 +321,7 @@ void RoboyTrajectoriesControl::clearAllTrajectoriesButtonClicked() {
 
 void RoboyTrajectoriesControl::playTrajectoriesButtonClicked() {
 
+    addSyncButtonClicked();
     ui.progressBar->show();
     ui.progressBar->setMaximum(0);
     ui.progressBar->setMinimum(0);
@@ -332,33 +333,34 @@ void RoboyTrajectoriesControl::playTrajectoriesButtonClicked() {
     map<string,roboy_communication_control::PerformMovementsGoal> goals;
     for (auto action: actions) {
         if (action=="sync") {
+
             //TODO sync here
             for (auto ac: performMovements_ac)
             {
                 auto currentGoal = goals[ac.first];
                 if (currentGoal.actions.size() != 0) {
+                    ROS_INFO_STREAM(ac.first);
+                    ROS_INFO_STREAM(currentGoal.actions[0]);
                     ac.second->sendGoal(goals[ac.first]);
+                    goals[ac.first].actions = {};
                 }
             }
 
-            for (auto ac: performMovements_ac)
-            {
-                ac.second->waitForResult();
-            }
+//            for (auto ac: performMovements_ac)
+//            {
+//                ac.second->waitForResult();
+//            }
 
         }
         else {
             for (auto part: bodyParts) {
-                roboy_communication_control::PerformMovementsGoal goal;
                 // send only the relevant body parts to the corresponding actions servers
                 if (action.find(part) != string::npos ||
                     action.find("relax") != string::npos ||
                     action.find("pause") != string::npos)
                     {
-                        goal.actions.push_back(action);
+                        goals[part].actions.push_back(action);
                     }
-
-                goals[part] = goal;
             }
         }
     }
