@@ -211,6 +211,7 @@ void RoboyTrajectoriesControl::pullExistingTrajectories() {
     }
 
     QStringList existingTrajectories = QStringList::fromVector(QVector<QString>::fromStdVector(trajectories));
+    existingTrajectories.sort();
     ui.existingTrajectories->addItems(existingTrajectories);
 
 }
@@ -536,6 +537,10 @@ vector<string> RoboyTrajectoriesControl::listExistingBehaviors() {
     vector<string> res;
     DIR* dirp = opendir(behaviors_path.c_str());
     struct dirent * dp;
+    if (!dirp) {
+        mkdir(behaviors_path.c_str(), S_IRWXU|S_IRWXG|S_IRWXO);
+        dirp = opendir(behaviors_path.c_str());
+    }
     while ((dp = readdir(dirp)) != NULL) {
         if(dp->d_type!=DT_DIR) {
             res.push_back(dp->d_name);
