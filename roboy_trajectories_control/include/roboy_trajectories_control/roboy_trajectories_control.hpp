@@ -82,7 +82,7 @@ class RoboyTrajectoriesControl:
             QGraphicsScene* scene;
             vector<string> listExistingBehaviors();
             vector<string> expandBehavior(string name);
-            void saveBehavior(string name, vector<string> action);
+            void saveBehavior(string name, vector<string> actions);
 
 
         public Q_SLOTS:

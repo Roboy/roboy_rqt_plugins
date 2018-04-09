@@ -425,14 +425,14 @@ void RoboyTrajectoriesControl::startRecordTrajectoryButtonClicked() {
 
 void RoboyTrajectoriesControl::saveBehaviorButtonClicked() {
 
-    roboy_communication_control::Behavior msg;
+    addSyncButtonClicked();
     bool ok;
-    msg.name = (QInputDialog::getText(0, "Save behavior as...",
+    string name = (QInputDialog::getText(0, "Save behavior as...",
                                          "Name:", QLineEdit::Normal,
                                          "", &ok)).toStdString();
-    if (ok && msg.name.length()!=0) {
-        replace( msg.name.begin(), msg.name.end(), ' ', '_');
-        msg.name.erase(std::remove(msg.name.begin(), msg.name.end(), ','), msg.name.end());
+    if (ok && name.length()!=0) {
+        replace( name.begin(), name.end(), ' ', '_');
+        name.erase(std::remove(name.begin(), name.end(), ','), name.end());
     } else {
         QMessageBox messageBox;
         messageBox.critical(0,"Error","No behavior name specified");
@@ -440,9 +440,15 @@ void RoboyTrajectoriesControl::saveBehaviorButtonClicked() {
         return;
     }
 
-    msg.actions = getCurrentActions();
+    vector<string> actions = getCurrentActions();
+    saveBehavior(name, actions);
 
-    saveBehaviorPublisher.publish(msg);
+}
+
+void RoboyTrajectoriesControl::saveBehavior(string name, vector<string> actions) {
+    ofstream output_file(behaviors_path+name);
+    ostream_iterator<std::string> output_iterator(output_file, "\n");
+    std::copy(actions.begin(), actions.end(), output_iterator);
 }
 
 void RoboyTrajectoriesControl::loadBehaviorButtonClicked() {
