@@ -76,22 +76,36 @@ void RoboyMotorStatus::MotorStatus(const roboy_communication_middleware::MotorSt
     ros::Duration delta = (ros::Time::now()-start_time);
     time.push_back(delta.toSec());
     for (uint motor = 0; motor < msg->position.size(); motor++) {
-        motorData[msg->id][motor][0].push_back(msg->position[motor]);
-        motorData[msg->id][motor][1].push_back(msg->velocity[motor]);
-        motorData[msg->id][motor][2].push_back(msg->displacement[motor]);
-        motorData[msg->id][motor][3].push_back(msg->current[motor]);
-        if (motorData[msg->id][motor][0].size() > samples_per_plot) {
-            motorData[msg->id][motor][0].pop_front();
-            motorData[msg->id][motor][1].pop_front();
-            motorData[msg->id][motor][2].pop_front();
-            motorData[msg->id][motor][3].pop_front();
+        std::vector<int>::iterator it = std::find (active_motors[msg->id].begin(), active_motors[msg->id].end(), motor);
+        if (it != active_motors[msg->id].end()) {
+            motorData[msg->id][motor][0].push_back(msg->position[motor]);
+            motorData[msg->id][motor][1].push_back(msg->velocity[motor]);
+            motorData[msg->id][motor][2].push_back(msg->displacement[motor]);
+            motorData[msg->id][motor][3].push_back(msg->current[motor]);
+            if (motorData[msg->id][motor][0].size() > samples_per_plot) {
+                motorData[msg->id][motor][0].pop_front();
+                motorData[msg->id][motor][1].pop_front();
+                motorData[msg->id][motor][2].pop_front();
+                motorData[msg->id][motor][3].pop_front();
+            }
         }
     }
     if (time.size() > samples_per_plot)
         time.pop_front();
 
-    if ((counter++) % 20 == 0)
-            Q_EMIT newData();
+    if ((counter++) % 20 == 0){
+        Q_EMIT newData();
+    }
+
+    if(counter%1000 == 0){
+        if(msg->id == ui.fpga->value()) {
+            if (msg->power_sense)
+                ui.power_sense->setStyleSheet("background-color:green;");
+            else
+                ui.power_sense->setStyleSheet("background-color:red;");
+        }
+        rescale();
+    }
 }
 
 void RoboyMotorStatus::plotData() {
@@ -100,23 +114,63 @@ void RoboyMotorStatus::plotData() {
         ui.velocity_plot->graph(motor)->setData(time, motorData[ui.fpga->value()][motor][1]);
         ui.displacement_plot->graph(motor)->setData(time, motorData[ui.fpga->value()][motor][2]);
         ui.current_plot->graph(motor)->setData(time, motorData[ui.fpga->value()][motor][3]);
-
-        if (motor == 0) {
-            ui.position_plot->graph(motor)->rescaleAxes();
-            ui.velocity_plot->graph(motor)->rescaleAxes();
-            ui.displacement_plot->graph(motor)->rescaleAxes();
-            ui.current_plot->graph(motor)->rescaleAxes();
-        } else {
-            ui.position_plot->graph(motor)->rescaleAxes(true);
-            ui.velocity_plot->graph(motor)->rescaleAxes(true);
-            ui.displacement_plot->graph(motor)->rescaleAxes(true);
-            ui.current_plot->graph(motor)->rescaleAxes(true);
-        }
     }
+
+    ui.position_plot->xAxis->rescale();
+    ui.velocity_plot->xAxis->rescale();
+    ui.displacement_plot->xAxis->rescale();
+    ui.current_plot->xAxis->rescale();
+
     ui.position_plot->replot();
     ui.velocity_plot->replot();
     ui.displacement_plot->replot();
     ui.current_plot->replot();
+}
+
+void RoboyMotorStatus::rescale(){
+    double minima[NUMBER_OF_MOTORS_PER_FPGA][4], maxima[NUMBER_OF_MOTORS_PER_FPGA][4];
+    uint minimal_motor[4] = {0,0,0,0}, maximal_motor[4] = {0,0,0,0};
+    for(uint type=0;type<4;type++) {
+        for (uint motor = 0; motor < NUMBER_OF_MOTORS_PER_FPGA; motor++) {
+            minima[motor][type] = 0;
+            maxima[motor][type] = 0;
+            for (auto val:motorData[ui.fpga->value()][motor][type]) {
+                if (val < minima[motor][type])
+                    minima[motor][type] = val;
+                if (val > maxima[motor][type])
+                    maxima[motor][type] = val;
+            }
+        }
+
+        for (uint motor = 1; motor < NUMBER_OF_MOTORS_PER_FPGA; motor++) {
+            if (minima[motor][type] < minima[minimal_motor[type]][type])
+                minimal_motor[type] = motor;
+            if (maxima[motor][type] < maxima[maximal_motor[type]][type])
+                maximal_motor[type] = motor;
+        }
+    }
+
+    for (uint motor = 0; motor < NUMBER_OF_MOTORS_PER_FPGA; motor++) {
+        if (minimal_motor[0] == motor||maximal_motor[0] == motor)
+            ui.position_plot->graph(motor)->rescaleAxes();
+        if (minimal_motor[1] == motor||maximal_motor[1] == motor)
+            ui.velocity_plot->graph(motor)->rescaleAxes();
+        if (minimal_motor[2] == motor||maximal_motor[2] == motor)
+            ui.displacement_plot->graph(motor)->rescaleAxes();
+        if (minimal_motor[3] == motor||maximal_motor[3] == motor)
+            ui.current_plot->graph(motor)->rescaleAxes();
+    }
+
+    for (uint motor = 0; motor < NUMBER_OF_MOTORS_PER_FPGA; motor++) {
+        if (minimal_motor[0] != motor||maximal_motor[0] != motor)
+            ui.position_plot->graph(motor)->rescaleAxes(true);
+        if (minimal_motor[1] != motor||maximal_motor[1] != motor)
+            ui.velocity_plot->graph(motor)->rescaleAxes(true);
+        if (minimal_motor[2] != motor||maximal_motor[2] != motor)
+            ui.displacement_plot->graph(motor)->rescaleAxes(true);
+        if (minimal_motor[3] != motor||maximal_motor[3] != motor)
+            ui.current_plot->graph(motor)->rescaleAxes(true);
+    }
 }
 
 PLUGINLIB_DECLARE_CLASS(roboy_motor_status, RoboyMotorStatus, RoboyMotorStatus, rqt_gui_cpp::Plugin)

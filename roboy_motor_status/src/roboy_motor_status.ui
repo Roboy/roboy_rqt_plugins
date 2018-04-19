@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>562</width>
-    <height>469</height>
+    <width>283</width>
+    <height>911</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,8 +26,8 @@
   <widget class="QCustomPlot" name="velocity_plot" native="true">
    <property name="geometry">
     <rect>
-     <x>280</x>
-     <y>30</y>
+     <x>0</x>
+     <y>250</y>
      <width>281</width>
      <height>221</height>
     </rect>
@@ -37,7 +37,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>250</y>
+     <y>470</y>
      <width>281</width>
      <height>221</height>
     </rect>
@@ -46,8 +46,8 @@
   <widget class="QCustomPlot" name="current_plot" native="true">
    <property name="geometry">
     <rect>
-     <x>280</x>
-     <y>250</y>
+     <x>0</x>
+     <y>690</y>
      <width>281</width>
      <height>221</height>
     </rect>
@@ -56,7 +56,7 @@
   <widget class="QSpinBox" name="fpga">
    <property name="geometry">
     <rect>
-     <x>518</x>
+     <x>200</x>
      <y>0</y>
      <width>41</width>
      <height>30</height>
@@ -69,7 +69,7 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>470</x>
+     <x>152</x>
      <y>0</y>
      <width>41</width>
      <height>31</height>
@@ -84,7 +84,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>321</width>
+     <width>131</width>
      <height>31</height>
     </rect>
    </property>
@@ -98,6 +98,22 @@
    </property>
    <property name="text">
     <string>MOTOR STATUS</string>
+   </property>
+  </widget>
+  <widget class="QFrame" name="power_sense">
+   <property name="geometry">
+    <rect>
+     <x>250</x>
+     <y>0</y>
+     <width>31</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
    </property>
   </widget>
  </widget>
