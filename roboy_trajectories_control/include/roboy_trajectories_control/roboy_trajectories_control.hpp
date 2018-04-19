@@ -33,7 +33,7 @@
 #include <std_msgs/Int32.h>
 #include <roboy_communication_control/StartRecordTrajectory.h>
 //#include <roboy_communication_control/StopRecordTrajectoryAction.h>
-#include <roboy_communication_control/StartRecordTrajectoryAction.h>
+//#include <roboy_communication_control/StartRecordTrajectoryAction.h>
 //#include <roboy_communication_control/StopRecordTrajectory.h>
 #include <roboy_communication_control/PerformMovement.h>
 #include <roboy_communication_control/PerformMovementAction.h>
@@ -117,8 +117,10 @@ class RoboyTrajectoriesControl:
             ros::Subscriber motorStatusSubscriber, jointStatusSubscriber, motorCommandSubscriber;
             map<string,ros::Subscriber> performMovementsResultSubscriber;
             map<string,ros::ServiceClient> motorControlServiceClient, emergencyStopServiceClient,
-                    performMovementServiceClient, setDisplacementForAllServiceClient,
+                    performMovementServiceClient,
                     executeActionsServiceClient, listExistingTrajectoriesServiceClient;
+            vector<ros::ServiceClient> setDisplacementForAllServiceClient;
+
 //            ros::ServiceClient listExistingBehaviorsServiceClient, expandBehaviorServiceClient;
 
 //            actionlib::SimpleActionClient<roboy_communication_control::PerformMovementsAction> lsh_movements_ac, rsh_movements_ac,
