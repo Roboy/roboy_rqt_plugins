@@ -37,12 +37,8 @@ RoboyTrajectoriesControl::RoboyTrajectoriesControl()
                 total_number_of_motors[HEAD] = 4;
                 total_number_of_motors[SHOULDER_LEFT] = 13;
                 total_number_of_motors[SHOULDER_RIGHT] = 13;
-                total_number_of_motors[SPINE_LEFT] = 3;
-                total_number_of_motors[SPINE_RIGHT] = 3;
-                total_number_of_motors[LEGS] = 12;
-
-
-
+                total_number_of_motors[SPINE_LEFT] = 9;
+                total_number_of_motors[SPINE_RIGHT] = 9;
 }
 
 void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {

@@ -56,7 +56,7 @@ private:
     QWidget *widget_;
     ros::NodeHandlePtr nh;
     ros::Publisher motorCommand;
-    ros::ServiceClient motorControl[5], motorConfig, emergencyStop;
+    ros::ServiceClient motorControl[5], motorConfig[5], emergencyStop[5];
     boost::shared_ptr<ros::AsyncSpinner> spinner;
 private:
     bool stopButton;

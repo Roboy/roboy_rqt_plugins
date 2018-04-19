@@ -93,10 +93,19 @@ void RoboyMotorStatus::MotorStatus(const roboy_communication_middleware::MotorSt
     if (time.size() > samples_per_plot)
         time.pop_front();
 
-    if ((counter++) % 20 == 0)
-            Q_EMIT newData();
-    if(counter%1000 == 0)
+    if ((counter++) % 20 == 0){
+        Q_EMIT newData();
+    }
+
+    if(counter%1000 == 0){
+        if(msg->id == ui.fpga->value()) {
+            if (msg->power_sense)
+                ui.power_sense->setStyleSheet("background-color:green;");
+            else
+                ui.power_sense->setStyleSheet("background-color:red;");
+        }
         rescale();
+    }
 }
 
 void RoboyMotorStatus::plotData() {
