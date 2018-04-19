@@ -1145,7 +1145,7 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="spine_left_m4">
+   <widget class="QGraphicsView" name="spine_left_m8">
     <property name="geometry">
      <rect>
       <x>200</x>
@@ -1181,7 +1181,7 @@ p, li { white-space: pre-wrap; }
      <string>M9</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="spine_left_m5">
+   <widget class="QGraphicsView" name="spine_left_m9">
     <property name="geometry">
      <rect>
       <x>250</x>
@@ -1204,7 +1204,7 @@ p, li { white-space: pre-wrap; }
      <string>M8</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="spine_left_m3">
+   <widget class="QGraphicsView" name="spine_left_m7">
     <property name="geometry">
      <rect>
       <x>150</x>
@@ -1214,7 +1214,7 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="spine_left_m7">
+   <widget class="QGraphicsView" name="spine_left_m11">
     <property name="geometry">
      <rect>
       <x>350</x>
@@ -1250,7 +1250,7 @@ p, li { white-space: pre-wrap; }
      <string>M12</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="spine_left_m8">
+   <widget class="QGraphicsView" name="spine_left_m12">
     <property name="geometry">
      <rect>
       <x>400</x>
@@ -1273,7 +1273,7 @@ p, li { white-space: pre-wrap; }
      <string>M11</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="spine_left_m6">
+   <widget class="QGraphicsView" name="spine_left_m10">
     <property name="geometry">
      <rect>
       <x>300</x>
@@ -1365,7 +1365,7 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="spine_right_m3">
+   <widget class="QGraphicsView" name="spine_right_m7">
     <property name="geometry">
      <rect>
       <x>150</x>
@@ -1375,7 +1375,7 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="spine_right_m4">
+   <widget class="QGraphicsView" name="spine_right_m8">
     <property name="geometry">
      <rect>
       <x>200</x>
@@ -1411,7 +1411,7 @@ p, li { white-space: pre-wrap; }
      <string>M7</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="spine_right_m5">
+   <widget class="QGraphicsView" name="spine_right_m9">
     <property name="geometry">
      <rect>
       <x>250</x>
@@ -1434,7 +1434,7 @@ p, li { white-space: pre-wrap; }
      <string>M9</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="spine_right_m6">
+   <widget class="QGraphicsView" name="spine_right_m10">
     <property name="geometry">
      <rect>
       <x>300</x>
@@ -1444,7 +1444,7 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="spine_right_m7">
+   <widget class="QGraphicsView" name="spine_right_m11">
     <property name="geometry">
      <rect>
       <x>350</x>
@@ -1480,7 +1480,7 @@ p, li { white-space: pre-wrap; }
      <string>M10</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="spine_right_m8">
+   <widget class="QGraphicsView" name="spine_right_m12">
     <property name="geometry">
      <rect>
       <x>400</x>
