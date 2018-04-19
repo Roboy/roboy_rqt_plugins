@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>834</width>
-    <height>772</height>
+    <height>707</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -224,9 +224,6 @@
      </property>
     </widget>
    </widget>
-   <zorder>groupBox_3</zorder>
-   <zorder>label_9</zorder>
-   <zorder>existingTrajectories</zorder>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <property name="geometry">
@@ -252,7 +249,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>450</y>
+     <y>430</y>
      <width>551</width>
      <height>101</height>
     </rect>
@@ -303,12 +300,17 @@ p, li { white-space: pre-wrap; }
      <string>Stop record</string>
     </property>
    </widget>
+   <zorder>newTrajectoryName</zorder>
+   <zorder>startRecord</zorder>
+   <zorder>stopRecord</zorder>
+   <zorder>line_2</zorder>
+   <zorder>spine_left_motors</zorder>
   </widget>
   <widget class="Line" name="line">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>510</y>
+     <y>490</y>
      <width>781</width>
      <height>20</height>
     </rect>
@@ -321,7 +323,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>430</y>
+     <y>420</y>
      <width>781</width>
      <height>20</height>
     </rect>
@@ -333,8 +335,8 @@ p, li { white-space: pre-wrap; }
   <widget class="QGroupBox" name="head_motors">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>530</y>
+     <x>510</x>
+     <y>500</y>
      <width>201</width>
      <height>51</height>
     </rect>
@@ -442,7 +444,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>590</y>
+     <y>600</y>
      <width>651</width>
      <height>61</height>
     </rect>
@@ -1065,9 +1067,9 @@ p, li { white-space: pre-wrap; }
   <widget class="QGroupBox" name="spine_left_motors">
    <property name="geometry">
     <rect>
-     <x>250</x>
-     <y>530</y>
-     <width>141</width>
+     <x>30</x>
+     <y>500</y>
+     <width>491</width>
      <height>51</height>
     </rect>
    </property>
@@ -1143,13 +1145,151 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
    </widget>
+   <widget class="QGraphicsView" name="spine_left_m4">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>30</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_67">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>30</y>
+      <width>21</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>M7</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_76">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>30</y>
+      <width>31</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>M9</string>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="spine_left_m5">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>30</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_77">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>30</y>
+      <width>31</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>M8</string>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="spine_left_m3">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>30</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="spine_left_m7">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>30</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_78">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>30</y>
+      <width>31</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>M10</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_79">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>30</y>
+      <width>31</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>M12</string>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="spine_left_m8">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>30</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_80">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>30</y>
+      <width>31</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>M11</string>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="spine_left_m6">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>30</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QGroupBox" name="spine_right_motors">
    <property name="geometry">
     <rect>
-     <x>420</x>
-     <y>530</y>
-     <width>141</width>
+     <x>30</x>
+     <y>550</y>
+     <width>491</width>
      <height>51</height>
     </rect>
    </property>
@@ -1225,128 +1365,7 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
    </widget>
-  </widget>
-  <widget class="Line" name="line_2">
-   <property name="geometry">
-    <rect>
-     <x>230</x>
-     <y>540</y>
-     <width>16</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Vertical</enum>
-   </property>
-  </widget>
-  <widget class="Line" name="line_4">
-   <property name="geometry">
-    <rect>
-     <x>400</x>
-     <y>540</y>
-     <width>16</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Vertical</enum>
-   </property>
-  </widget>
-  <widget class="QGroupBox" name="legs_motors">
-   <property name="geometry">
-    <rect>
-     <x>30</x>
-     <y>710</y>
-     <width>651</width>
-     <height>61</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Legs</string>
-   </property>
-   <widget class="QLabel" name="label_63">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>30</y>
-      <width>21</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>M0</string>
-    </property>
-   </widget>
-   <widget class="QGraphicsView" name="legs_m0">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>30</y>
-      <width>16</width>
-      <height>16</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_64">
-    <property name="geometry">
-     <rect>
-      <x>70</x>
-      <y>30</y>
-      <width>31</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>M1</string>
-    </property>
-   </widget>
-   <widget class="QGraphicsView" name="legs_m1">
-    <property name="geometry">
-     <rect>
-      <x>50</x>
-      <y>30</y>
-      <width>16</width>
-      <height>16</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_65">
-    <property name="geometry">
-     <rect>
-      <x>120</x>
-      <y>30</y>
-      <width>21</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>M2</string>
-    </property>
-   </widget>
-   <widget class="QGraphicsView" name="legs_m2">
-    <property name="geometry">
-     <rect>
-      <x>100</x>
-      <y>30</y>
-      <width>16</width>
-      <height>16</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_66">
-    <property name="geometry">
-     <rect>
-      <x>170</x>
-      <y>30</y>
-      <width>31</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>M3</string>
-    </property>
-   </widget>
-   <widget class="QGraphicsView" name="legs_m3">
+   <widget class="QGraphicsView" name="spine_right_m3">
     <property name="geometry">
      <rect>
       <x>150</x>
@@ -1356,89 +1375,7 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="legs_m11">
-    <property name="geometry">
-     <rect>
-      <x>550</x>
-      <y>30</y>
-      <width>16</width>
-      <height>16</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QGraphicsView" name="legs_m10">
-    <property name="geometry">
-     <rect>
-      <x>500</x>
-      <y>30</y>
-      <width>16</width>
-      <height>16</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QGraphicsView" name="legs_m9">
-    <property name="geometry">
-     <rect>
-      <x>450</x>
-      <y>30</y>
-      <width>16</width>
-      <height>16</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_68">
-    <property name="geometry">
-     <rect>
-      <x>470</x>
-      <y>30</y>
-      <width>31</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>M9</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_69">
-    <property name="geometry">
-     <rect>
-      <x>570</x>
-      <y>30</y>
-      <width>31</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>M11</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_70">
-    <property name="geometry">
-     <rect>
-      <x>520</x>
-      <y>30</y>
-      <width>31</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>M10</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_71">
-    <property name="geometry">
-     <rect>
-      <x>220</x>
-      <y>30</y>
-      <width>31</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>M4</string>
-    </property>
-   </widget>
-   <widget class="QGraphicsView" name="legs_m4">
+   <widget class="QGraphicsView" name="spine_right_m4">
     <property name="geometry">
      <rect>
       <x>200</x>
@@ -1448,36 +1385,10 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
    </widget>
-   <widget class="QLabel" name="label_72">
+   <widget class="QLabel" name="label_81">
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>30</y>
-      <width>31</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>M6</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_73">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>30</y>
-      <width>31</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>M5</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_74">
-    <property name="geometry">
-     <rect>
-      <x>420</x>
+      <x>220</x>
       <y>30</y>
       <width>31</width>
       <height>17</height>
@@ -1487,42 +1398,12 @@ p, li { white-space: pre-wrap; }
      <string>M8</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="legs_m6">
+   <widget class="QLabel" name="label_82">
     <property name="geometry">
      <rect>
-      <x>300</x>
+      <x>170</x>
       <y>30</y>
-      <width>16</width>
-      <height>16</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QGraphicsView" name="legs_m8">
-    <property name="geometry">
-     <rect>
-      <x>400</x>
-      <y>30</y>
-      <width>16</width>
-      <height>16</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QGraphicsView" name="legs_m7">
-    <property name="geometry">
-     <rect>
-      <x>350</x>
-      <y>30</y>
-      <width>16</width>
-      <height>16</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_75">
-    <property name="geometry">
-     <rect>
-      <x>370</x>
-      <y>30</y>
-      <width>31</width>
+      <width>21</width>
       <height>17</height>
      </rect>
     </property>
@@ -1530,7 +1411,7 @@ p, li { white-space: pre-wrap; }
      <string>M7</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="legs_m5">
+   <widget class="QGraphicsView" name="spine_right_m5">
     <property name="geometry">
      <rect>
       <x>250</x>
@@ -1540,12 +1421,107 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
    </widget>
+   <widget class="QLabel" name="label_83">
+    <property name="geometry">
+     <rect>
+      <x>270</x>
+      <y>30</y>
+      <width>31</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>M9</string>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="spine_right_m6">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>30</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="spine_right_m7">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>30</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_84">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>30</y>
+      <width>31</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>M11</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_85">
+    <property name="geometry">
+     <rect>
+      <x>320</x>
+      <y>30</y>
+      <width>31</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>M10</string>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="spine_right_m8">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>30</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_86">
+    <property name="geometry">
+     <rect>
+      <x>420</x>
+      <y>30</y>
+      <width>31</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>M12</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="Line" name="line_2">
+   <property name="geometry">
+    <rect>
+     <x>480</x>
+     <y>510</y>
+     <width>16</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Vertical</enum>
+   </property>
   </widget>
   <widget class="QCheckBox" name="head">
    <property name="geometry">
     <rect>
      <x>600</x>
-     <y>450</y>
+     <y>430</y>
      <width>97</width>
      <height>22</height>
     </rect>
@@ -1561,7 +1537,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>600</x>
-     <y>470</y>
+     <y>450</y>
      <width>121</width>
      <height>22</height>
     </rect>
@@ -1577,7 +1553,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>700</x>
-     <y>470</y>
+     <y>450</y>
      <width>131</width>
      <height>22</height>
     </rect>
@@ -1593,7 +1569,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>600</x>
-     <y>490</y>
+     <y>470</y>
      <width>81</width>
      <height>22</height>
     </rect>
@@ -1609,7 +1585,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>700</x>
-     <y>490</y>
+     <y>470</y>
      <width>111</width>
      <height>22</height>
     </rect>
@@ -1625,7 +1601,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>700</x>
-     <y>450</y>
+     <y>430</y>
      <width>91</width>
      <height>22</height>
     </rect>

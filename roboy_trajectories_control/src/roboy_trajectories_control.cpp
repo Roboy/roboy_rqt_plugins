@@ -33,12 +33,12 @@ RoboyTrajectoriesControl::RoboyTrajectoriesControl()
                     }
                 }
 
-                total_number_of_motors.reserve(bodyParts.size());
-                total_number_of_motors[HEAD] = 4;
-                total_number_of_motors[SHOULDER_LEFT] = 13;
-                total_number_of_motors[SHOULDER_RIGHT] = 13;
-                total_number_of_motors[SPINE_LEFT] = 9;
-                total_number_of_motors[SPINE_RIGHT] = 9;
+//                total_number_of_motors.reserve(bodyParts.size());
+//                total_number_of_motors[HEAD] = 4;
+//                total_number_of_motors[SHOULDER_LEFT] = 13;
+//                total_number_of_motors[SHOULDER_RIGHT] = 13;
+//                total_number_of_motors[SPINE_LEFT] = 9;
+//                total_number_of_motors[SPINE_RIGHT] = 9;
 }
 
 void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
@@ -97,15 +97,16 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
         activeBodyParts.push_back(widget_->findChild<QCheckBox*>(QString::fromStdString(bodyParts[i])));
         activeBodyParts[i]->setChecked(true);
 
-        motorStatus.push_back(vector<bool>(total_number_of_motors[i]));
-        for (int j=0; j<total_number_of_motors[i]; j++) {
-            QGraphicsView* view = widget_->findChild<QGraphicsView *>(QString::fromStdString(bodyParts[i]+"_m"+to_string(j)));
+        motorStatus.push_back(vector<bool>(active_motors[i].back()+1));
+        for(auto it = active_motors[i].begin(); it != active_motors[i].end(); it++ )
+        {
+            QGraphicsView* view = widget_->findChild<QGraphicsView *>(QString::fromStdString(bodyParts[i]+"_m"+to_string(*it)));
 //            ROS_INFO_STREAM(view->whatsThis().toStdString());
 
             view->setScene(scene);
 //            view->setBackgroundBrush(redBrush);
 //            ROS_INFO_STREAM(view->objectName().toStdString());
-            motorStatus[i].push_back(false);
+            motorStatus[i].at(*it) = false;
         }
     }
 
@@ -143,8 +144,6 @@ void RoboyTrajectoriesControl::initializeRosCommunication() {
     for (auto body_part: bodyParts) {
         emergencyStopServiceClient[body_part] = nh->serviceClient<std_srvs::SetBool>("/roboy/" + body_part + "/middleware/EmergencyStop");
         setDisplacementForAllServiceClient.push_back(nh->serviceClient<roboy_communication_middleware::SetInt16>("/roboy/" + body_part + "/middleware/SetDisplacementForAll"));
-        performMovementServiceClient[body_part] = nh->serviceClient<roboy_communication_control::PerformMovement>("/roboy/" + body_part + "/control/ReplayTrajectory");
-        executeActionsServiceClient[body_part] = nh->serviceClient<roboy_communication_control::PerformActions>("/roboy/" + body_part + "/control/ExecuteActions");
         listExistingTrajectoriesServiceClient[body_part] = nh->serviceClient<roboy_communication_control::ListItems>("/roboy/" + body_part + "/control/ListExistingTrajectories");
 
         performMovementsResultSubscriber[body_part] = nh->subscribe("/"+body_part+"_movements_server/result", 1, &RoboyTrajectoriesControl::performMovementsResultCallback, this);
@@ -171,17 +170,18 @@ void RoboyTrajectoriesControl::performMovementsResultCallback(const roboy_commun
 
 void RoboyTrajectoriesControl::motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
 
-    for (int i=0; i<total_number_of_motors[msg->id]; i++)
+//    for (int i=0; i<active_motors[msg->id].size(); i++)
+    for(auto it = active_motors[msg->id].begin(); it != active_motors[msg->id].end(); it++ )
     {
-        if (msg->current.at(i) > 0 && !motorStatus[msg->id][i]) {
+        if (msg->current.at(*it) > 0 && !motorStatus[msg->id][*it]) {
             widget_->findChild<QGraphicsView *>(
-                    QString::fromStdString(bodyParts[msg->id]+"_m"+to_string(i)))->setBackgroundBrush(greenBrush);
-            motorStatus[msg->id][i] = true;
+                    QString::fromStdString(bodyParts[msg->id]+"_m"+to_string(*it)))->setBackgroundBrush(greenBrush);
+            motorStatus[msg->id][*it] = true;
         }
-        else if (msg->current.at(i) < 0 && motorStatus[msg->id][i]){
+        else if (msg->current.at(*it) < 0 && motorStatus[msg->id][*it]){
             widget_->findChild<QGraphicsView *>(
-                    QString::fromStdString(bodyParts[msg->id]+"_m"+to_string(i)))->setBackgroundBrush(redBrush);
-            motorStatus[msg->id][i] = false;
+                    QString::fromStdString(bodyParts[msg->id]+"_m"+to_string(*it)))->setBackgroundBrush(redBrush);
+            motorStatus[msg->id][*it] = false;
         }
     }
 }
@@ -392,7 +392,7 @@ void RoboyTrajectoriesControl::startInitializationButtonClicked() {
         if (part->isChecked()) {
             auto partName = part->whatsThis().toStdString();
             int id = find(bodyParts.begin(), bodyParts.end(), partName) - bodyParts.begin();
-            if (id==0) {
+            if (id==HEAD) {
                 srv.request.setpoint = 20;
             }
             setDisplacementForAllServiceClient[id].call(srv);
@@ -419,9 +419,8 @@ void RoboyTrajectoriesControl::startRecordTrajectoryButtonClicked() {
         int i = 0;
         for (auto part: activeBodyParts) {
             if (part->isChecked()) {
-                vector<int8_t> ids(total_number_of_motors[i]);
-                iota(begin(ids), end(ids), 0);
-                msg.idList = ids;
+                copy(active_motors[i].begin(), active_motors[i].end(),
+                          std::back_inserter(msg.idList));
                 msg.body_parts.push_back(part->whatsThis().toStdString());
             }
             i++;

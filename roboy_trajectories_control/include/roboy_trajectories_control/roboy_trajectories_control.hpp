@@ -32,12 +32,9 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int32.h>
 #include <roboy_communication_control/StartRecordTrajectory.h>
-#include <roboy_communication_control/PerformMovement.h>
 #include <roboy_communication_control/PerformMovementAction.h>
 #include <roboy_communication_control/PerformMovementsAction.h>
 #include <roboy_communication_control/PerformMovementsActionResult.h>
-#include <roboy_communication_control/PerformBehavior.h>
-#include <roboy_communication_control/PerformActions.h>
 #include <roboy_communication_control/ListItems.h>
 #include <roboy_communication_control/Behavior.h>
 #include <roboy_communication_middleware/MotorCommand.h>
@@ -124,7 +121,6 @@ class RoboyTrajectoriesControl:
             void initializeRosCommunication();
 
         private:
-            const vector<string> bodyParts = {"head",  "spine_left",  "spine_right", "legs", "shoulder_left", "shoulder_right"};
             bool stopButton;
             int pauseDuration; // in seconds
             int preDisplacement;
