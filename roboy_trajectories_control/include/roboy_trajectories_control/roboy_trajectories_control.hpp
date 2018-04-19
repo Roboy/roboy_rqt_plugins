@@ -32,8 +32,6 @@
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int32.h>
 #include <roboy_communication_control/StartRecordTrajectory.h>
-//#include <roboy_communication_control/StopRecordTrajectoryAction.h>
-#include <roboy_communication_control/StartRecordTrajectoryAction.h>
 //#include <roboy_communication_control/StopRecordTrajectory.h>
 #include <roboy_communication_control/PerformMovement.h>
 #include <roboy_communication_control/PerformMovementAction.h>
@@ -47,15 +45,6 @@
 #include <roboy_communication_middleware/MotorStatus.h>
 #include <roboy_communication_middleware/SetInt16.h>
 #include <actionlib/client/simple_action_client.h>
-
-#define HEAD 0
-#define SPINE_LEFT 1
-#define SPINE_RIGHT 2
-#define LEGS 3
-// the two shoulders have to have these ids, because the right shoulder has mirrored motor units, which results in
-// negative displacement on compression of the spring and needs to be dealt with in fpga PID controllers
-#define SHOULDER_LEFT 4
-#define SHOULDER_RIGHT 5
 
 #endif
 

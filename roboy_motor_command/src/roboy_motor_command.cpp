@@ -45,6 +45,8 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     total_number_of_motors = number_of_fpgas*NUMBER_OF_MOTORS_PER_FPGA;
 
+    vector<string> body_parts = {"h","spl","spr","shl","shr"};
+
     for(uint fpga = 0; fpga<number_of_fpgas; fpga++) {
         for (uint motor = 0; motor < NUMBER_OF_MOTORS_PER_FPGA; motor++) {
             QWidget *widget = new QWidget(motor_command_scrollarea);
@@ -55,16 +57,24 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
             widget->setLayout(new QHBoxLayout(widget));
 
             QLabel *label = new QLabel(widget);
-            sprintf(str, "%d/%d", fpga, motor);
-            label->setFixedSize(30,30);
+            sprintf(str, "%s/%d", body_parts[fpga].c_str(), motor);
+            label->setFixedSize(40,30);
             label->setText(str);
             widget->layout()->addWidget(label);
+
+            bool active = true;
+
+            vector<int>::iterator it = find (active_motors[fpga].begin(), active_motors[fpga].end(), motor);
+            if (it == active_motors[fpga].end())
+                active = false;
 
             QRadioButton *p = new QRadioButton(widget);
             p->setText("pos");
             p->setFixedSize(60,30);
             p->setCheckable(true);
             p->setObjectName("pos");
+            if(!active)
+                p->setEnabled(false);
             pos.push_back(p);
             QObject::connect(p, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
 
@@ -75,6 +85,8 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
             v->setFixedSize(60,30);
             v->setCheckable(true);
             v->setObjectName("vel");
+            if(!active)
+                v->setEnabled(false);
             widget->layout()->addWidget(v);
             vel.push_back(v);
             QObject::connect(v, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
@@ -85,6 +97,8 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
             d->setCheckable(true);
             d->setObjectName("dis");
             d->setChecked(true);
+            if(!active)
+                d->setEnabled(false);
             setpoint.push_back(0);
             control_mode.push_back(DISPLACEMENT);
             widget->layout()->addWidget(d);
@@ -96,12 +110,16 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
             f->setFixedSize(60,30);
             f->setCheckable(true);
             f->setObjectName("force");
+            if(!active)
+                f->setEnabled(false);
             widget->layout()->addWidget(f);
             force.push_back(f);
             QObject::connect(f, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
 
             QLineEdit *line = new QLineEdit(widget);
             line->setFixedSize(100,30);
+            if(!active)
+                line->setEnabled(false);
             widget->layout()->addWidget(line);
             setpoint_widget.push_back(line);
             QObject::connect(line, SIGNAL(editingFinished()), this, SLOT(setPointChanged()));
@@ -110,8 +128,11 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
             QSlider *slider = new QSlider(Qt::Orientation::Horizontal,widget);
             slider->setFixedSize(100,30);
             slider->setValue(50);
+            if(!active)
+                slider->setEnabled(false);
             widget->layout()->addWidget(slider);
             setpoint_slider_widget.push_back(slider);
+
             QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(setPointChangedSlider()));
 
             motor_command_scrollarea->layout()->addWidget(widget);
@@ -125,7 +146,11 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
     scale = widget_->findChild<QLineEdit *>("motor_scale");
 
     motorCommand = nh->advertise<roboy_communication_middleware::MotorCommand>("/roboy/middleware/MotorCommand", 1);
-    motorControl = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/middleware/ControlMode");
+    motorControl[0] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/head/middleware/ControlMode");
+    motorControl[1] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/spine_left/middleware/ControlMode");
+    motorControl[2] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/spine_right/middleware/ControlMode");
+    motorControl[3] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/shoulder_left/middleware/ControlMode");
+    motorControl[4] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/shoulder_right/middleware/ControlMode");
     motorConfig = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/middleware/MotorConfig");
     emergencyStop = nh->serviceClient<std_srvs::SetBool>("/roboy/middleware/EmergencyStop");
 
@@ -354,8 +379,16 @@ void RoboyMotorCommand::controlModeChanged(){
         return;
     }
     msg.request.setPoint = setpoint_slider_widget.back()->value() * motor_scale;
-    if(!motorControl.call(msg))
-        ROS_ERROR("failed to change control mode, is emergency stop active?! are the fpgas connected?!");
+    if(!motorControl[0].call(msg))
+        ROS_ERROR("failed to change control mode of head, is emergency stop active?! are the fpgas connected?!");
+    if(!motorControl[1].call(msg))
+        ROS_ERROR("failed to change control mode of spine_left, is emergency stop active?! are the fpgas connected?!");
+    if(!motorControl[2].call(msg))
+        ROS_ERROR("failed to change control mode of spine_right, is emergency stop active?! are the fpgas connected?!");
+    if(!motorControl[3].call(msg))
+        ROS_ERROR("failed to change control mode of shoulder_left, is emergency stop active?! are the fpgas connected?!");
+    if(!motorControl[4].call(msg))
+        ROS_ERROR("failed to change control mode of shoulder_right, is emergency stop active?! are the fpgas connected?!");
 }
 
 void RoboyMotorCommand::update_config(){

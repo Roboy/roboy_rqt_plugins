@@ -31,6 +31,7 @@ public:
 
 public Q_SLOTS:
     void plotData();
+    void rescale();
 private:
     void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
 Q_SIGNALS:
