@@ -166,6 +166,8 @@ void RoboyTrajectoriesControl::initializeRosCommunication() {
 void RoboyTrajectoriesControl::performMovementsResultCallback(const roboy_communication_control::PerformMovementsActionResult::ConstPtr &msg) {
     // TODO many parts with various duration time
     ui.progressBar->hide();
+    ui.startInit->setEnabled(true);
+    ui.relaxAll->setEnabled(true);
 }
 
 void RoboyTrajectoriesControl::motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
@@ -319,6 +321,10 @@ void RoboyTrajectoriesControl::clearAllTrajectoriesButtonClicked() {
 void RoboyTrajectoriesControl::playTrajectoriesButtonClicked() {
 
     addSyncButtonClicked();
+
+    ui.startInit->setEnabled(false);
+    ui.relaxAll->setEnabled(false);
+    
     ui.progressBar->show();
     ui.progressBar->setMaximum(0);
     ui.progressBar->setMinimum(0);
