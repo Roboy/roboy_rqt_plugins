@@ -73,38 +73,39 @@ void RoboyMotorStatus::restoreSettings(const qt_gui_cpp::Settings &plugin_settin
 
 void RoboyMotorStatus::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
     ROS_DEBUG_THROTTLE(5, "receiving motor status");
-    ros::Duration delta = (ros::Time::now()-start_time);
-    time.push_back(delta.toSec());
-    for (uint motor = 0; motor < msg->position.size(); motor++) {
-        std::vector<int>::iterator it = std::find (active_motors[msg->id].begin(), active_motors[msg->id].end(), motor);
-        if (it != active_motors[msg->id].end()) {
-            motorData[msg->id][motor][0].push_back(msg->position[motor]);
-            motorData[msg->id][motor][1].push_back(msg->velocity[motor]);
-            motorData[msg->id][motor][2].push_back(msg->displacement[motor]);
-            motorData[msg->id][motor][3].push_back(msg->current[motor]);
-            if (motorData[msg->id][motor][0].size() > samples_per_plot) {
-                motorData[msg->id][motor][0].pop_front();
-                motorData[msg->id][motor][1].pop_front();
-                motorData[msg->id][motor][2].pop_front();
-                motorData[msg->id][motor][3].pop_front();
+    if(msg->id == ui.fpga->value()) {
+        ros::Duration delta = (ros::Time::now() - start_time);
+        time.push_back(delta.toSec());
+        for (uint motor = 0; motor < msg->position.size(); motor++) {
+            std::vector<int>::iterator it = std::find(active_motors[msg->id].begin(), active_motors[msg->id].end(),
+                                                      motor);
+            if (it != active_motors[msg->id].end()) {
+                motorData[msg->id][motor][0].push_back(msg->position[motor]);
+                motorData[msg->id][motor][1].push_back(msg->velocity[motor]);
+                motorData[msg->id][motor][2].push_back(msg->displacement[motor]);
+                motorData[msg->id][motor][3].push_back(msg->current[motor]);
+                if (motorData[msg->id][motor][0].size() > samples_per_plot) {
+                    motorData[msg->id][motor][0].pop_front();
+                    motorData[msg->id][motor][1].pop_front();
+                    motorData[msg->id][motor][2].pop_front();
+                    motorData[msg->id][motor][3].pop_front();
+                }
             }
         }
-    }
-    if (time.size() > samples_per_plot)
-        time.pop_front();
+        if (time.size() > samples_per_plot)
+            time.pop_front();
 
-    if ((counter++) % 20 == 0){
-        Q_EMIT newData();
-    }
+        if ((counter++) % 20 == 0) {
+            Q_EMIT newData();
+        }
 
-    if(counter%1000 == 0){
-        if(msg->id == ui.fpga->value()) {
+        if (counter % 1000 == 0) {
             if (msg->power_sense)
                 ui.power_sense->setStyleSheet("background-color:green;");
             else
                 ui.power_sense->setStyleSheet("background-color:red;");
+            rescale();
         }
-        rescale();
     }
 }
 
