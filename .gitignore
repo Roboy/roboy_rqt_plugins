@@ -1,2 +1,4 @@
 doxyxml/
 html/
+.idea
+cmake-build-debug/
