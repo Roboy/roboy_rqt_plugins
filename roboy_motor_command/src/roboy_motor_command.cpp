@@ -458,10 +458,22 @@ void RoboyMotorCommand::update_config(){
         ROS_ERROR("forwardGain not valid");
         return;
     }
+    int outputDivider = ui.outputDivider->text().toInt(&ok);
+    if(!ok) {
+        ROS_ERROR("outputDivider not valid");
+        return;
+    }
     roboy_communication_middleware::MotorConfigService msg;
+    int motor_config_control_mode= 0;
+    if(ui.pos_motor_config->isChecked())
+        motor_config_control_mode = POSITION;
+    if(ui.vel_motor_config->isChecked())
+        motor_config_control_mode = VELOCITY;
+    if(ui.dis_motor_config->isChecked())
+        motor_config_control_mode = DISPLACEMENT;
     for(int i=0;i<NUMBER_OF_MOTORS_PER_FPGA;i++){
         msg.request.config.motors.push_back(i);
-        msg.request.config.control_mode.push_back(control_mode[i]);
+        msg.request.config.control_mode.push_back(motor_config_control_mode);
         msg.request.config.outputPosMax.push_back(outputPosMax);
         msg.request.config.outputNegMax.push_back(outputNegMax);
         msg.request.config.spPosMax.push_back(spPosMax);
@@ -473,7 +485,7 @@ void RoboyMotorCommand::update_config(){
         msg.request.config.Ki.push_back(Ki);
         msg.request.config.Kd.push_back(Kd);
         msg.request.config.forwardGain.push_back(forwardGain);
-        msg.request.setPoints.push_back(setpoint[i]);
+        msg.request.config.outputDivider.push_back(outputDivider);
     }
     for(uint fpga=0;fpga<5;fpga++)
         motorConfig[fpga].call(msg);

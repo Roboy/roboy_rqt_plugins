@@ -99,7 +99,7 @@ void RoboyMotorStatus::MotorStatus(const roboy_communication_middleware::MotorSt
             Q_EMIT newData();
         }
 
-        if (counter % 1000 == 0) {
+        if (counter % 100 == 0) {
             if (msg->power_sense)
                 ui.power_sense->setStyleSheet("background-color:green;");
             else

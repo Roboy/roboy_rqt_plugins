@@ -1650,9 +1650,9 @@ p, li { white-space: pre-wrap; }
   <widget class="QPushButton" name="setPredisplacement">
    <property name="geometry">
     <rect>
-     <x>650</x>
+     <x>670</x>
      <y>120</y>
-     <width>161</width>
+     <width>141</width>
      <height>27</height>
     </rect>
    </property>
@@ -1665,9 +1665,12 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>600</x>
      <y>120</y>
-     <width>48</width>
+     <width>71</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="maximum">
+    <number>500</number>
    </property>
   </widget>
  </widget>
