@@ -82,7 +82,7 @@ class RoboyTrajectoriesControl:
             void addRelaxButtonClicked();
             void addSyncButtonClicked();
             void relaxAllMusclesButtonClicked();
-            void startInitializationButtonClicked();
+            void allToDisplacementButtonClicked();
             void startRecordTrajectoryButtonClicked();
             void stopRecordTrajectoryButtonClicked();
             void stopBehaviorButtonClicked();
@@ -123,7 +123,7 @@ class RoboyTrajectoriesControl:
         private:
             bool stopButton;
             int pauseDuration; // in seconds
-            int preDisplacement;
+            int preDisplacement = 50;
             int timeFactor=1;
             vector<double> setpoint;
             vector<int> control_mode;

@@ -62,7 +62,7 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     connect(ui.addRelax, SIGNAL(clicked()), this, SLOT(addRelaxButtonClicked()));
     connect(ui.addSync, SIGNAL(clicked()), this, SLOT(addSyncButtonClicked()));
     connect(ui.relaxAll, SIGNAL(clicked()), this, SLOT(relaxAllMusclesButtonClicked()));
-    connect(ui.startInit, SIGNAL(clicked()), this, SLOT(startInitializationButtonClicked()));
+    connect(ui.allToDisplacement, SIGNAL(clicked()), this, SLOT(allToDisplacementButtonClicked()));
     connect(ui.startRecord, SIGNAL(clicked()), this, SLOT(startRecordTrajectoryButtonClicked()));
     connect(ui.stopRecord, SIGNAL(clicked()), this, SLOT(stopRecordTrajectoryButtonClicked()));
     connect(ui.saveBehavior, SIGNAL(clicked()), this, SLOT(saveBehaviorButtonClicked()));
@@ -184,6 +184,7 @@ void RoboyTrajectoriesControl::motorStatusCallback(const roboy_communication_mid
             motorStatus[msg->id][*it] = false;
         }
     }
+
 }
 
 void RoboyTrajectoriesControl::pullExistingTrajectories() {
@@ -385,16 +386,16 @@ void RoboyTrajectoriesControl::relaxAllMusclesButtonClicked() {
     }
 }
 
-void RoboyTrajectoriesControl::startInitializationButtonClicked() {
+void RoboyTrajectoriesControl::allToDisplacementButtonClicked() {
     roboy_communication_middleware::SetInt16 srv;
-    srv.request.setpoint = 50;
+    srv.request.setpoint = preDisplacement;
     for (auto part: activeBodyParts) {
         if (part->isChecked()) {
             auto partName = part->whatsThis().toStdString();
             int id = find(bodyParts.begin(), bodyParts.end(), partName) - bodyParts.begin();
-            if (id==HEAD) {
-                srv.request.setpoint = 20;
-            }
+//            if (id==HEAD) {
+//                srv.request.setpoint = 20;
+//            }
             setDisplacementForAllServiceClient[id].call(srv);
         }
     }

@@ -1618,10 +1618,10 @@ p, li { white-space: pre-wrap; }
     </rect>
    </property>
    <property name="text">
-    <string>Relax all muscles</string>
+    <string>relax all muscles</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="startInit">
+  <widget class="QPushButton" name="allToDisplacement">
    <property name="geometry">
     <rect>
      <x>600</x>
@@ -1631,7 +1631,7 @@ p, li { white-space: pre-wrap; }
     </rect>
    </property>
    <property name="text">
-    <string>All to displacement 50</string>
+    <string>all to displacement</string>
    </property>
   </widget>
   <widget class="QPushButton" name="refreshTrajectories">
@@ -1657,7 +1657,7 @@ p, li { white-space: pre-wrap; }
     </rect>
    </property>
    <property name="text">
-    <string>Set predisplacement</string>
+    <string>set predisplacement</string>
    </property>
   </widget>
   <widget class="QSpinBox" name="predisplacement">
@@ -1671,6 +1671,9 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="maximum">
     <number>500</number>
+   </property>
+   <property name="value">
+    <number>50</number>
    </property>
   </widget>
  </widget>
