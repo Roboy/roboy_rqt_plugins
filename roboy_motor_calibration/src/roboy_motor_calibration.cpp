@@ -422,7 +422,7 @@ void RoboyMotorCalibration::estimateMyoMuscleSpringParameters() {
     milliseconds ms_start = duration_cast<milliseconds>(system_clock::now().time_since_epoch()), ms_stop, t0, t1;
     ofstream outfile;
     char str[100];
-    sprintf(str, "springParameters_calibration_motor%d.csv", ui.motor->value());
+    sprintf(str, "springParameters_calibration_fpga%d_motor%d.csv", ui.fpga->value(), ui.motor->value());
     outfile.open(str);
     if (!outfile.is_open()) {
         cout << "could not open file " << str << " for writing, aborting!" << endl;
@@ -436,9 +436,10 @@ void RoboyMotorCalibration::estimateMyoMuscleSpringParameters() {
     msg.motors.push_back(ui.motor->value());
 
     vector<double> x, y;
-
+    float f = setpoint_min;
+    bool up = true;
     do {
-        float f = (rand() / (float) RAND_MAX) * (setpoint_max - setpoint_min) + setpoint_min;
+//        float f = (rand() / (float) RAND_MAX) * (setpoint_max - setpoint_min) + setpoint_min;
         msg.setPoints.clear();
         msg.setPoints.push_back(f);
         motorCommand.publish(msg);
@@ -446,7 +447,7 @@ void RoboyMotorCalibration::estimateMyoMuscleSpringParameters() {
         do {// wait a bit until force is applied
             // update control
             t1 = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-        } while ((t1 - t0).count() < 1500);
+        } while ((t1 - t0).count() < 300);
 
         x.push_back(motorData[DISPLACEMENT].back());
         y.push_back(loadCellLoad.back());
@@ -454,6 +455,11 @@ void RoboyMotorCalibration::estimateMyoMuscleSpringParameters() {
         outfile << x.back() << ", " << y.back() << endl;
         ms_stop = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
         cout << "setPoint: \t" << f << "\tmotorSpring:\t" << x.back() << "\tload:\t" << y.back() << endl;
+        if(f>setpoint_max && up)
+            up = false;
+        if(f<0 && !up)
+            up= true;
+        f += up?1:-1;
     } while ((ms_stop - ms_start).count() < timeout && x.size() < numberOfDataPoints);
 
     coeffs_displacement2force[ui.fpga->value()][ui.motor->value()].clear();
@@ -500,7 +506,7 @@ void RoboyMotorCalibration::estimateMyoMuscleSpringParameters() {
 
     QVector<double> displacement_graph;
     for (uint i = 0; i < x.size(); i++) {
-        displacement_graph.push_back(displacement2force(y[i],ui.fpga->value(),ui.motor->value()));
+        displacement_graph.push_back(force2displacement(y[i],ui.fpga->value(),ui.motor->value()));
     }
 
     ui.force_displacement->graph(1)->setData(load, displacement_graph);
@@ -618,11 +624,12 @@ void RoboyMotorCalibration::plotData() {
             }
             ui.load->graph(0)->setData(time, loadCellLoad);
             ui.load->graph(1)->setData(time, motorDataCalibrated[MYOMUSLCE]);
-            ui.load->xAxis->rescale();
+            ui.load->graph(0)->rescaleAxes();
+//            ui.load->xAxis->rescale();
 
             ui.adc_value->graph(0)->setData(time, loadCellValue);
-//            ui.adc_value->graph(0)->rescaleAxes();
-            ui.adc_value->xAxis->rescale();
+            ui.adc_value->graph(0)->rescaleAxes();
+//            ui.adc_value->xAxis->rescale();
 
             ui.displacement->graph(0)->setData(timeMotorData[DISPLACEMENT], motorData[DISPLACEMENT]);
             ui.displacement->graph(0)->rescaleAxes();
@@ -676,9 +683,9 @@ void RoboyMotorCalibration::loadConfig() {
 
 void RoboyMotorCalibration::fitCurve() {
     char str[200];
-    sprintf(str, "About to overwrite existing spring parameters for motor %d", ui.motor->value());
+    sprintf(str, "About to overwrite existing spring parameters for fpga %d motor %d", ui.fpga->value(), ui.motor->value());
     QMessageBox::information(widget_, tr(str),
-                             "Make sure you have selected the correct motor in the GUI");
+                             "Make sure you have selected the correct motor and fpga in the GUI");
 
     QString fileName = QFileDialog::getOpenFileName(widget_, tr("Open Calibration CSV file"), "",
                                                     tr("Calibration Data (*.csv);;All Files (*)"));
