@@ -31,8 +31,6 @@
 
 #endif
 
-#define NUMBER_OF_FPGAS 6
-
 using namespace std;
 using namespace chrono;
 
@@ -101,7 +99,7 @@ private:
     mutex mux;
     boost::shared_ptr<boost::thread> calibration_thread, udp_thread;
     QVector<double> time;
-    int counter = 0, samples_per_plot = 300;
+    int counter = 0, samples_per_plot = 200;
     QVector<double> loadCellLoad, loadCellValue;
     map<int,QVector<double>> motorData, motorDataCalibrated, timeMotorData;
     map<int,double> offset;

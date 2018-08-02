@@ -234,7 +234,7 @@ void RoboyMotorCommand::setPointChanged(){
             msg.id = motor / NUMBER_OF_MOTORS_PER_FPGA;
             msg.motors.push_back(motor % NUMBER_OF_MOTORS_PER_FPGA);
             if (control_mode[motor] == FORCE) {
-                double displacement = force2displacement(setPoint, motor);
+                double displacement = force2displacement(setPoint, msg.id, motor);
                 msg.setPoints.push_back(displacement);
             } else {
                 msg.setPoints.push_back(setPoint);
@@ -267,7 +267,7 @@ void RoboyMotorCommand::setPointChangedSlider(){
             msg.id = motor / NUMBER_OF_MOTORS_PER_FPGA;
             msg.motors.push_back(motor % NUMBER_OF_MOTORS_PER_FPGA);
             if (control_mode[motor] == FORCE) {
-                double displacement = force2displacement(setPoint, motor);
+                double displacement = force2displacement(setPoint, msg.id, motor);
                 msg.setPoints.push_back(displacement);
             } else {
                 msg.setPoints.push_back(setPoint);
@@ -300,7 +300,7 @@ void RoboyMotorCommand::setPointAllChanged(){
             msg.id = motor / NUMBER_OF_MOTORS_PER_FPGA;
             msg.motors.push_back(motor % NUMBER_OF_MOTORS_PER_FPGA);
             if (control_mode[motor] == FORCE) {
-                double displacement = force2displacement(setPoint, motor);
+                double displacement = force2displacement(setPoint, msg.id, motor);
                 msg.setPoints.push_back(displacement);
             } else {
                 msg.setPoints.push_back(setPoint);
@@ -334,7 +334,7 @@ void RoboyMotorCommand::setPointAllChangedSlider(){
             msg.id = motor / NUMBER_OF_MOTORS_PER_FPGA;
             msg.motors.push_back(motor % NUMBER_OF_MOTORS_PER_FPGA);
             if (control_mode[motor] == FORCE) {
-                double displacement = force2displacement(setPoint, motor);
+                double displacement = force2displacement(setPoint, msg.id, motor);
                 msg.setPoints.push_back(displacement);
             } else {
                 msg.setPoints.push_back(setPoint);

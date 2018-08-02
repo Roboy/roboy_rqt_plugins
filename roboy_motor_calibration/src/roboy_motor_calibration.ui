@@ -254,7 +254,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>100</string>
+    <string>200</string>
    </property>
   </widget>
   <widget class="QSpinBox" name="motor">
@@ -422,7 +422,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>4</string>
+    <string>1</string>
    </property>
   </widget>
   <widget class="QCustomPlot" name="force_displacement" native="true">
@@ -544,7 +544,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>/home/roboy/workspace/roboy_middleware/src/roboy_rqt_plugins/roboy_motor_calibration/config/roboyArm.yaml</string>
+    <string>/home/letrend/workspace/roboy_middleware/src/roboy_rqt_plugins/roboy_motor_calibration/config/roboy.yaml</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="timeout">
@@ -557,7 +557,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>500000</string>
+    <string>60000</string>
    </property>
   </widget>
   <widget class="QPushButton" name="stop_button_all">
