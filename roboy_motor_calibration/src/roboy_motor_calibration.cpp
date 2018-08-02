@@ -146,6 +146,12 @@ void RoboyMotorCalibration::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     offset[POSITION] = 0;
     offset[ANGLEABSOLUT] = 0;
+
+    uint32_t ip;
+    inet_pton(AF_INET, "192.168.255.255", &ip);
+    udp.reset(new UDPSocket(8000));
+    udp_thread.reset(new boost::thread(&RoboyMotorCalibration::receiveUDPLoadCellValues, this));
+    udp_thread->detach();
 }
 
 void RoboyMotorCalibration::shutdownPlugin() {
@@ -182,22 +188,11 @@ void RoboyMotorCalibration::MotorCalibration(){
         switch(ui.tabWidget->currentIndex()){
             case 0: {
                 ROS_INFO("starting motor calibration for myoMuscle");
-                ui.displacement_force->xAxis->setLabel("displacement[ticks]");
-                ui.force_displacement->yAxis->setLabel("displacement[ticks]");
-                roboy_communication_middleware::MotorCalibrationService msg;
-                msg.request.fpga = ui.fpga->value();
-                msg.request.motor = ui.motor->value();
-                msg.request.degree = text["degree"]->text().toInt();
-                msg.request.numberOfDataPoints = text["data_points"]->text().toInt();
-                msg.request.timeout = text["timeout"]->text().toInt();
-                msg.request.displacement_min = text["setpoint_min"]->text().toInt();
-                msg.request.displacement_max = text["setpoint_max"]->text().toInt();
-                motorCalibration.call(msg);
-                estimateSpringParameters(msg.response.load, msg.response.displacement,
-                                         coeffs_displacement2force[msg.request.motor],
-                                         coeffs_force2displacement[msg.request.motor]);
-
-                writeConfig(text["motor_config_path"]->text().toStdString());
+                ui.displacement_force->xAxis->setLabel("displacement[degree]");
+                ui.force_displacement->yAxis->setLabel("displacement[degree]");
+                calibration_thread.reset(new boost::thread(&RoboyMotorCalibration::estimateMyoMuscleSpringParameters, this));
+                calibration_thread->detach();
+//                writeConfig(text["motor_config_path"]->text().toStdString());
                 break;
             }
             case 1:{
@@ -296,6 +291,28 @@ void RoboyMotorCalibration::ADCvalue(const roboy_communication_middleware::ADCva
 
     if (counter % 10 == 0)
             Q_EMIT newData();
+}
+
+void RoboyMotorCalibration::receiveUDPLoadCellValues(){
+    ROS_INFO("start receiving udp");
+    while(ros::ok()){
+        if(udp->receiveUDP()==4){
+            uint32_t data = (uint32_t)((uint8_t)udp->buf[3]<<24|(uint8_t)udp->buf[2]<<16|(uint8_t)udp->buf[1]<<8|(uint8_t)udp->buf[0]);
+            float val = unpack754_32(data);
+//            ROS_DEBUG_THROTTLE(1,"received %f", val);
+            lock_guard<mutex> lock(mux);
+            time.push_back(counter++);
+            loadCellLoad.push_back(val);
+            if (loadCellLoad.size() > samples_per_plot) {
+                loadCellLoad.pop_front();
+            }
+
+            if (time.size() > samples_per_plot)
+                time.pop_front();
+            Q_EMIT newData();
+        }
+    }
+    ROS_INFO("stop receiving udp");
 }
 
 void RoboyMotorCalibration::polynomialRegression(int degree, vector<double> &x, vector<double> &y,
@@ -401,7 +418,7 @@ void RoboyMotorCalibration::estimateSpringParameters(vector<double> &force,
     ui.force_displacement->replot();
 }
 
-void RoboyMotorCalibration::estimateMyoBrickSpringParameters(){
+void RoboyMotorCalibration::estimateMyoMuscleSpringParameters(){
     milliseconds ms_start = duration_cast<milliseconds>(system_clock::now().time_since_epoch()), ms_stop, t0, t1;
     ofstream outfile;
     char str[100];
@@ -472,6 +489,106 @@ void RoboyMotorCalibration::estimateMyoBrickSpringParameters(){
     for(uint i=0;i<x.size();i++){
         double val = coefficients_displacement_force[0];
         for(uint j=1;j<coefficients_displacement_force.size();j++){
+            val += coefficients_displacement_force[j]*pow(dis[i],(double)j);
+        }
+        load_graph.push_back(val);
+    }
+
+    ui.displacement_force->graph(1)->setData(dis, load_graph);
+    ui.displacement_force->graph(1)->rescaleAxes();
+    ui.displacement_force->replot();
+
+    ui.force_displacement->graph(0)->setData( load, dis );
+
+    QVector<double> displacement_graph;
+    for(uint i=0;i<x.size();i++){
+        double val = coefficients_force_displacement[0];
+        for(uint j=1;j<coefficients_force_displacement.size();j++){
+            val += coefficients_force_displacement[j]*pow(y[i],(double)j);
+        }
+        displacement_graph.push_back(val);
+    }
+
+    ui.force_displacement->graph(1)->setData(load, displacement_graph);
+    ui.force_displacement->graph(1)->rescaleAxes();
+    ui.force_displacement->replot();
+}
+
+void RoboyMotorCalibration::estimateMyoBrickSpringParameters(){
+    milliseconds ms_start = duration_cast<milliseconds>(system_clock::now().time_since_epoch()), ms_stop, t0, t1;
+    ofstream outfile;
+    char str[100];
+    sprintf(str, "springParameters_calibration_motor%d.csv", ui.motor->value());
+    outfile.open(str);
+    if (!outfile.is_open()) {
+        cout << "could not open file " << str << " for writing, aborting!" << endl;
+        return;
+    }
+    outfile << "springAngle[degree], load[N]" << endl;
+    float setpoint_max = ui.setpoint_max->text().toFloat(), setpoint_min = ui.setpoint_min->text().toFloat();
+    int timeout = ui.timeout->text().toInt(), degree = ui.degree->text().toInt(), numberOfDataPoints = ui.data_points->text().toInt();
+    roboy_communication_middleware::MotorCommand msg;
+    msg.motors.push_back(ui.motor->value());
+
+    vector<double> x, y;
+
+    do {
+        float f = (rand() / (float) RAND_MAX) * (setpoint_max - setpoint_min) + setpoint_min;
+        msg.setPoints.clear();
+        msg.setPoints.push_back(f);
+        motorCommand.publish(msg);
+        t0 = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+        do {// wait a bit until force is applied
+            // update control
+            t1 = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+        } while ((t1 - t0).count() < 2000);
+
+        x.push_back(motorData[SPRING].back());
+        y.push_back(loadCellLoad.back());
+
+        outfile <<  x.back() << ", " << y.back() << endl;
+        ms_stop = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
+        cout << "setPoint: \t" << f << "\tmotorSpring:\t" << x.back() << "\tload:\t" << y.back() << endl;
+    } while ((ms_stop - ms_start).count() < timeout && x.size() < numberOfDataPoints);
+
+    vector<float> coefficients_displacement_force, coefficients_force_displacement;
+    polynomialRegression(degree, x, y, coefficients_displacement_force);
+    // coefficients_displacement_force
+    outfile << "regression coefficients_displacement_force for polynomial of "<< degree << " degree:" << endl;
+    cout << "regression coefficients_displacement_force for polynomial of "<< degree << " degree:" << endl;
+    for(float coef:coefficients_displacement_force){
+        outfile << coef << "\t";
+        cout << coef << "\t";
+    }
+    outfile << endl;
+    cout << endl;
+    // coefficients_force_displacement
+    polynomialRegression(degree, y, x, coefficients_force_displacement);
+    outfile << "regression coefficients_displacement_force for polynomial of "<< degree << " degree:" << endl;
+    cout << "regression coefficients_displacement_force for polynomial of "<< degree << " degree:" << endl;
+    for(float coef:coefficients_displacement_force){
+        outfile << coef << "\t";
+        cout << coef << "\t";
+    }
+    outfile << endl;
+    cout << endl;
+
+//	polyPar[motor] = coeffs;
+    outfile.close();
+
+    QVector<double> dis = QVector<double>::fromStdVector( x );
+    QVector<double> load = QVector<double>::fromStdVector( y );
+
+    ui.displacement_force->graph(0)->setData(dis, load);
+
+    QVector<double> load_graph;
+    for(uint i=0;i<x.size();i++){
+        double val = coefficients_displacement_force[0];
+        for
+
+
+
+                (uint j=1;j<coefficients_displacement_force.size();j++){
             val += coefficients_displacement_force[j]*pow(dis[i],(double)j);
         }
         load_graph.push_back(val);

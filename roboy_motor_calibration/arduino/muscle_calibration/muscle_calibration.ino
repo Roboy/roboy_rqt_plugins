@@ -5,14 +5,14 @@
 
 const char ssid[] = "roboy";
 const char passwd[]= "wiihackroboy";
-IPAddress broadcastIP(192,168,0,255);
+IPAddress broadcastIP(192,168,255,255);
 WirelessLove *wifi;
 
 const int numRows = 2;
 const int numCols = 16;
 rgb_lcd lcd;
 
-#define calibration_factor -7050.0 //This value is obtained using the SparkFun_HX711_Calibration sketch
+#define calibration_factor 21000 //This value is obtained using the SparkFun_HX711_Calibration sketch
 
 #define DOUT  5
 #define CLK  4
@@ -33,7 +33,7 @@ bool dirty = true;
 #define SCROLLUP 124
 #define SCROLLDOWN 125
 
-int state = STARTMENU;
+int state = MEASURE;
 
 int current_entry = 0;
 const int menu_entries = 4;
@@ -86,7 +86,14 @@ void network(){
   lcd.setCursor(6,1);
   if(wifi->connect(ssid,passwd,broadcastIP)){
     lcd.setRGB(0,255,0);
-    lcd.print("connected");
+    lcd.print("CONNECTED");
+    lcd.setCursor(0,0);
+    lcd.print("UDP");
+    lcd.setCursor(6,1);
+    if(wifi->initUDPSockets())
+      lcd.print("READY");
+    else
+      lcd.print("ERROR");
     dirty = false;
   }else{
     lcd.setRGB(255,0,0);
@@ -109,10 +116,15 @@ void measure(){
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("measure");
+    scale.set_scale(calibration_factor); //This value is obtained by using the SparkFun_HX711_Calibration sketch
+    scale.tare();  //Assuming there is no weight on the scale at start up, reset the scale to 0
   }
   float val = scale.get_units();
   lcd.setCursor(0,1);
   lcd.print(val);
+
+  uint32_t packed = pack754_32(val);
+  wifi->broadcast_send((uint8_t*)&packed, 4);
   dirty = false;
 }
 
@@ -138,9 +150,6 @@ void setup() {
   attachInterrupt(BUTTON1, buttonPressed, CHANGE);
   attachInterrupt(BUTTON2, buttonPressed, CHANGE);
   attachInterrupt(BUTTON3, buttonPressed, CHANGE);
-
-  scale.set_scale(calibration_factor); //This value is obtained by using the SparkFun_HX711_Calibration sketch
-  scale.tare();  //Assuming there is no weight on the scale at start up, reset the scale to 0
   
   lcd.begin(numCols, numRows);
   lcd.print("welcome stranger");
@@ -150,7 +159,7 @@ void setup() {
 
   wifi = new WirelessLove(ssid, passwd, broadcastIP);
   lcd.setCursor(6,1);
-  if(wifi->connected){
+  if(wifi->connected && wifi->initUDPSockets()){
     lcd.setRGB(0,255,0);
     lcd.print("connected");
   }else{

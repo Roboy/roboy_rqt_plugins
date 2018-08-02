@@ -20,6 +20,7 @@
 #include <mutex>
 #include <common_utilities/CommonDefinitions.h>
 #include <common_utilities/MotorConfig.hpp>
+#include <common_utilities/UDPSocket.hpp>
 #include <std_srvs/SetBool.h>
 #include <boost/thread/thread.hpp>
 #include <qcustomplot.h>
@@ -62,6 +63,7 @@ private:
     void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
     void MotorAngle(const roboy_communication_middleware::MotorAngle::ConstPtr &msg);
     void ADCvalue(const roboy_communication_middleware::ADCvalue::ConstPtr &msg);
+    void receiveUDPLoadCellValues();
     /**
 	 * Performs polynomial regression (http://www.bragitoff.com/2015/09/c-program-for-polynomial-fit-least-squares/)
 	 * @param degree (e.g. 2 -> a * x^0 + b * x^1 + c * x^2)
@@ -84,6 +86,7 @@ private:
                                   vector<float> &coefficients_force_displacement);
 
     void estimateMyoBrickSpringParameters();
+    void estimateMyoMuscleSpringParameters();
 Q_SIGNALS:
     void newData();
 
@@ -96,7 +99,7 @@ private:
     ros::ServiceClient motorCalibration, emergencyStop;
 private:
     mutex mux;
-    boost::shared_ptr<boost::thread> calibration_thread;
+    boost::shared_ptr<boost::thread> calibration_thread, udp_thread;
     QVector<double> time;
     int counter = 0, samples_per_plot = 300;
     QVector<double> loadCellLoad, loadCellValue;
@@ -108,6 +111,7 @@ private:
     map<string, QLineEdit*> text;
     QColor color_pallette[14] = {Qt::blue, Qt::red, Qt::green, Qt::cyan, Qt::magenta, Qt::darkGray, Qt::darkRed, Qt::darkGreen,
                                  Qt::darkBlue, Qt::darkCyan, Qt::darkMagenta, Qt::darkYellow, Qt::black, Qt::gray};
+    UDPSocketPtr udp;
     enum{
         POSITION, // this is the raw motor angle
         POSITIONABSOLUT, // this is the motor angle with applied offset
