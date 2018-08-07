@@ -359,6 +359,7 @@ void RoboyMotorCommand::controlModeChanged(){
             pos[motor]->setChecked(true);
         }
         msg.request.control_mode = POSITION;
+        ROS_INFO("changed to POSITION control");
     }
     if(ui.vel->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
@@ -366,6 +367,7 @@ void RoboyMotorCommand::controlModeChanged(){
             vel[motor]->setChecked(true);
         }
         msg.request.control_mode = VELOCITY;
+        ROS_INFO("changed to VELOCITY control");
     }
     if(ui.dis->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
@@ -373,6 +375,7 @@ void RoboyMotorCommand::controlModeChanged(){
             dis[motor]->setChecked(true);
         }
         msg.request.control_mode = DISPLACEMENT;
+        ROS_INFO("changed to DISPLACEMENT control");
     }
     if(ui.force->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
@@ -380,6 +383,7 @@ void RoboyMotorCommand::controlModeChanged(){
             force[motor]->setChecked(true);
         }
         msg.request.control_mode = DISPLACEMENT;
+        ROS_INFO("changed to FORCE control");
     }
 
     bool ok;
