@@ -234,7 +234,7 @@ void RoboyMotorCommand::setPointChanged(){
             msg.id = motor / NUMBER_OF_MOTORS_PER_FPGA;
             msg.motors.push_back(motor % NUMBER_OF_MOTORS_PER_FPGA);
             if (control_mode[motor] == FORCE) {
-                double displacement = force2displacement(setPoint, msg.id, motor);
+                double displacement = force2displacement(setPoint, msg.id, motor % NUMBER_OF_MOTORS_PER_FPGA);
                 msg.setPoints.push_back(displacement);
             } else {
                 msg.setPoints.push_back(setPoint);
@@ -267,7 +267,7 @@ void RoboyMotorCommand::setPointChangedSlider(){
             msg.id = motor / NUMBER_OF_MOTORS_PER_FPGA;
             msg.motors.push_back(motor % NUMBER_OF_MOTORS_PER_FPGA);
             if (control_mode[motor] == FORCE) {
-                double displacement = force2displacement(setPoint, msg.id, motor);
+                double displacement = force2displacement(setPoint, msg.id, motor % NUMBER_OF_MOTORS_PER_FPGA);
                 msg.setPoints.push_back(displacement);
             } else {
                 msg.setPoints.push_back(setPoint);
@@ -300,7 +300,7 @@ void RoboyMotorCommand::setPointAllChanged(){
             msg.id = motor / NUMBER_OF_MOTORS_PER_FPGA;
             msg.motors.push_back(motor % NUMBER_OF_MOTORS_PER_FPGA);
             if (control_mode[motor] == FORCE) {
-                double displacement = force2displacement(setPoint, msg.id, motor);
+                double displacement = force2displacement(setPoint, msg.id, motor % NUMBER_OF_MOTORS_PER_FPGA);
                 msg.setPoints.push_back(displacement);
             } else {
                 msg.setPoints.push_back(setPoint);
@@ -334,7 +334,7 @@ void RoboyMotorCommand::setPointAllChangedSlider(){
             msg.id = motor / NUMBER_OF_MOTORS_PER_FPGA;
             msg.motors.push_back(motor % NUMBER_OF_MOTORS_PER_FPGA);
             if (control_mode[motor] == FORCE) {
-                double displacement = force2displacement(setPoint, msg.id, motor);
+                double displacement = force2displacement(setPoint, msg.id, motor % NUMBER_OF_MOTORS_PER_FPGA);
                 msg.setPoints.push_back(displacement);
             } else {
                 msg.setPoints.push_back(setPoint);
@@ -359,6 +359,7 @@ void RoboyMotorCommand::controlModeChanged(){
             pos[motor]->setChecked(true);
         }
         msg.request.control_mode = POSITION;
+        ROS_INFO("changed to POSITION control");
     }
     if(ui.vel->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
@@ -366,6 +367,7 @@ void RoboyMotorCommand::controlModeChanged(){
             vel[motor]->setChecked(true);
         }
         msg.request.control_mode = VELOCITY;
+        ROS_INFO("changed to VELOCITY control");
     }
     if(ui.dis->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
@@ -373,6 +375,7 @@ void RoboyMotorCommand::controlModeChanged(){
             dis[motor]->setChecked(true);
         }
         msg.request.control_mode = DISPLACEMENT;
+        ROS_INFO("changed to DISPLACEMENT control");
     }
     if(ui.force->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
@@ -380,6 +383,7 @@ void RoboyMotorCommand::controlModeChanged(){
             force[motor]->setChecked(true);
         }
         msg.request.control_mode = DISPLACEMENT;
+        ROS_INFO("changed to FORCE control");
     }
 
     bool ok;

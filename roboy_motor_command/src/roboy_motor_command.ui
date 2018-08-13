@@ -244,7 +244,7 @@
     </rect>
    </property>
    <property name="text">
-    <string extracomment="use this to scale the slider (-100,100)">/home/letrend/workspace/roboy_middleware/src/roboy_rqt_plugins/roboy_motor_calibration/config/roboyArm.yaml</string>
+    <string extracomment="use this to scale the slider (-100,100)">/home/roboy/workspace/roboy_middleware/src/roboy_rqt_plugins/roboy_motor_calibration/config/roboy.yaml</string>
    </property>
    <property name="readOnly">
     <bool>false</bool>
