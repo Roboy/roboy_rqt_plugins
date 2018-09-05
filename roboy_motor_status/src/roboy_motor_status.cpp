@@ -1,4 +1,5 @@
 #include <roboy_motor_status/roboy_motor_status.hpp>
+#include <QtWidgets/QCheckBox>
 
 RoboyMotorStatus::RoboyMotorStatus()
         : rqt_gui_cpp::Plugin(), widget_(0) {
@@ -24,6 +25,11 @@ void RoboyMotorStatus::initPlugin(qt_gui_cpp::PluginContext &context) {
         ui.displacement_plot->graph(motor)->setPen(QPen(color_pallette[motor]));
         ui.current_plot->addGraph();
         ui.current_plot->graph(motor)->setPen(QPen(color_pallette[motor]));
+        char str[20];
+        sprintf(str,"motor_%d",motor);
+        QCheckBox *box = widget_->findChild<QCheckBox*>(str);
+        QObject::connect(box, SIGNAL(stateChanged(int)), this, SLOT(plotMotorChanged()));
+        plotMotor[motor] = true;
     }
     ui.position_plot->xAxis->setLabel("time[s]");
     ui.position_plot->yAxis->setLabel("ticks");
@@ -50,6 +56,7 @@ void RoboyMotorStatus::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyMotorStatus::MotorStatus, this);
     QObject::connect(this, SIGNAL(newData()), this, SLOT(plotData()));
+    QObject::connect(ui.toggle_all, SIGNAL(clicked()), this, SLOT(toggleAll()));
 
     spinner.reset(new ros::AsyncSpinner(2));
     spinner->start();
@@ -79,11 +86,22 @@ void RoboyMotorStatus::MotorStatus(const roboy_communication_middleware::MotorSt
         for (uint motor = 0; motor < msg->position.size(); motor++) {
             std::vector<int>::iterator it = std::find(active_motors[msg->id].begin(), active_motors[msg->id].end(),
                                                       motor);
-            if (it != active_motors[msg->id].end()) {
+            if (it != active_motors[msg->id].end() && plotMotor[motor]) {
                 motorData[msg->id][motor][0].push_back(msg->position[motor]);
                 motorData[msg->id][motor][1].push_back(msg->velocity[motor]);
                 motorData[msg->id][motor][2].push_back(msg->displacement[motor]);
                 motorData[msg->id][motor][3].push_back(msg->current[motor]);
+                if (motorData[msg->id][motor][0].size() > samples_per_plot) {
+                    motorData[msg->id][motor][0].pop_front();
+                    motorData[msg->id][motor][1].pop_front();
+                    motorData[msg->id][motor][2].pop_front();
+                    motorData[msg->id][motor][3].pop_front();
+                }
+            }else{
+                motorData[msg->id][motor][0].push_back(std::numeric_limits<double>::quiet_NaN());
+                motorData[msg->id][motor][1].push_back(std::numeric_limits<double>::quiet_NaN());
+                motorData[msg->id][motor][2].push_back(std::numeric_limits<double>::quiet_NaN());
+                motorData[msg->id][motor][3].push_back(std::numeric_limits<double>::quiet_NaN());
                 if (motorData[msg->id][motor][0].size() > samples_per_plot) {
                     motorData[msg->id][motor][0].pop_front();
                     motorData[msg->id][motor][1].pop_front();
@@ -143,10 +161,10 @@ void RoboyMotorStatus::rescale(){
             }
         }
 
-        for (uint motor = 1; motor < NUMBER_OF_MOTORS_PER_FPGA; motor++) {
-            if (minima[motor][type] < minima[minimal_motor[type]][type])
+        for (uint motor = 0; motor < NUMBER_OF_MOTORS_PER_FPGA; motor++) {
+            if (minima[motor][type] <= minima[minimal_motor[type]][type] && plotMotor[motor])
                 minimal_motor[type] = motor;
-            if (maxima[motor][type] < maxima[maximal_motor[type]][type])
+            if (maxima[motor][type] <= maxima[maximal_motor[type]][type] && plotMotor[motor])
                 maximal_motor[type] = motor;
         }
     }
@@ -171,6 +189,28 @@ void RoboyMotorStatus::rescale(){
             ui.displacement_plot->graph(motor)->rescaleAxes(true);
         if (minimal_motor[3] != motor||maximal_motor[3] != motor)
             ui.current_plot->graph(motor)->rescaleAxes(true);
+    }
+}
+
+void RoboyMotorStatus::plotMotorChanged(){
+    for(int i=0;i<NUMBER_OF_MOTORS_PER_FPGA;i++) {
+        char str[20];
+        sprintf(str,"motor_%d",i);
+        QCheckBox *box = widget_->findChild<QCheckBox*>(str);
+        if(box!=nullptr)
+            plotMotor[i] = box->isChecked();
+    }
+}
+
+void RoboyMotorStatus::toggleAll(){
+    for(int i=0;i<NUMBER_OF_MOTORS_PER_FPGA;i++) {
+        char str[20];
+        sprintf(str,"motor_%d",i);
+        QCheckBox *box = widget_->findChild<QCheckBox*>(str);
+        if(box!=nullptr) {
+            plotMotor[i] = !box->isChecked();
+            box->setChecked(plotMotor[i]);
+        }
     }
 }
 
