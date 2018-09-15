@@ -57,6 +57,8 @@ void RoboyMotorStatus::initPlugin(qt_gui_cpp::PluginContext &context) {
     motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyMotorStatus::MotorStatus, this);
     QObject::connect(this, SIGNAL(newData()), this, SLOT(plotData()));
     QObject::connect(ui.toggle_all, SIGNAL(clicked()), this, SLOT(toggleAll()));
+    QObject::connect(ui.fpga, SIGNAL(valueChanged(int)), this, SLOT(fpgaChanged(int)));
+
 
     spinner.reset(new ros::AsyncSpinner(2));
     spinner->start();
@@ -210,6 +212,23 @@ void RoboyMotorStatus::toggleAll(){
         if(box!=nullptr) {
             plotMotor[i] = !box->isChecked();
             box->setChecked(plotMotor[i]);
+        }
+    }
+}
+
+void RoboyMotorStatus::fpgaChanged(int fpga){
+    for(int i=0;i<NUMBER_OF_MOTORS_PER_FPGA;i++) {
+        char str[20];
+        sprintf(str,"motor_%d",i);
+        QCheckBox *box = widget_->findChild<QCheckBox*>(str);
+        if(box!=nullptr) {
+            if(find(active_motors[fpga].begin(),active_motors[fpga].end(),i)!=active_motors[fpga].end()) {
+                plotMotor[i] = true;
+                box->setChecked(true);
+            }else{
+                plotMotor[i] = false;
+                box->setChecked(false);
+            }
         }
     }
 }
