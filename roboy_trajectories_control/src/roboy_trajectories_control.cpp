@@ -101,6 +101,7 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
         for(auto it = active_motors[i].begin(); it != active_motors[i].end(); it++ )
         {
             QGraphicsView* view = widget_->findChild<QGraphicsView *>(QString::fromStdString(bodyParts[i]+"_m"+to_string(*it)));
+            ROS_INFO_STREAM(bodyParts[i]+"_m"+to_string(*it));
 //            ROS_INFO_STREAM(view->whatsThis().toStdString());
 
             view->setScene(scene);
