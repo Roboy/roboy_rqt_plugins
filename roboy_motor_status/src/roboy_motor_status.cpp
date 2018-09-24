@@ -120,10 +120,13 @@ void RoboyMotorStatus::MotorStatus(const roboy_communication_middleware::MotorSt
         }
 
         if (counter % 100 == 0) {
-            if (msg->power_sense)
-                ui.power_sense->setStyleSheet("background-color:green;");
-            else
-                ui.power_sense->setStyleSheet("background-color:red;");
+            if (msg->power_sense) {
+                if(ui.power_sense!=nullptr)
+                    ui.power_sense->setStyleSheet("background-color:green;");
+            }else {
+                if(ui.power_sense!=nullptr)
+                    ui.power_sense->setStyleSheet("background-color:red;");
+            }
             rescale();
         }
     }

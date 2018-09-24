@@ -372,14 +372,14 @@
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>0</x>
      <y>40</y>
-     <width>311</width>
+     <width>321</width>
      <height>20</height>
     </rect>
    </property>
    <property name="text">
-    <string>0  1   2   3   4   5    6   7    8   9  10 11 12 13 14 15</string>
+    <string>0   1    2   3   4  5   6   7  8   9  10 11 12 13 14 15</string>
    </property>
   </widget>
   <widget class="QCheckBox" name="motor_15">
