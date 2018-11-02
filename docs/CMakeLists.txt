@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(sw_documentation_template)
+project(roboy_rqt_plugins_documentation)
 
 ## Add support for C++11, supported in ROS Kinetic and newer
 # add_definitions(-std=c++11)

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>sw_documentation_template</name>
+  <name>roboy_rqt_plugins_documentation</name>
   <version>0.0.0</version>
   <description>The sw_documentation_template package</description>
 
