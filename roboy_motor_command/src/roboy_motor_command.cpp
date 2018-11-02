@@ -477,6 +477,7 @@ void RoboyMotorCommand::update_config(){
         motor_config_control_mode = DISPLACEMENT;
     for(int i=0;i<NUMBER_OF_MOTORS_PER_FPGA;i++){
         msg.request.config.motors.push_back(i);
+        msg.request.config.setpoint.push_back(0);
         msg.request.config.control_mode.push_back(motor_config_control_mode);
         msg.request.config.outputPosMax.push_back(outputPosMax);
         msg.request.config.outputNegMax.push_back(outputNegMax);
