@@ -208,8 +208,8 @@ void RoboyMotorCalibration::MotorStatus(const roboy_communication_middleware::Mo
         lock_guard<mutex> lock(mux);
         ROS_DEBUG_THROTTLE(5, "receiving motor status");
         timeMotorData[POSITION].push_back(counter);
-        motorData[POSITION].push_back(msg->position[ui.motor->value()] / 1024.0f / 62.0f *
-                                      360.0f); // 1024 ticks per turn / gear box ratio * 360 degrees
+        motorData[POSITION].push_back(msg->position[ui.motor->value()] * 4.0f / 62.0f);
+        // 1024 ticks per turn / gear box ratio * 360 degrees
         if (motorData[POSITION].size() > samples_per_plot) {
             motorData[POSITION].pop_front();
         }
@@ -239,57 +239,49 @@ void RoboyMotorCalibration::MotorStatus(const roboy_communication_middleware::Mo
 }
 
 void RoboyMotorCalibration::MotorAngle(const roboy_communication_middleware::MotorAngle::ConstPtr &msg) {
-    lock_guard<mutex> lock(mux);
-    ROS_INFO_THROTTLE(5, "receiving motor angle");
-    timeMotorData[ANGLE].push_back(counter++);
+    if(msg->id==ui.fpga->value()) {
+        lock_guard<mutex> lock(mux);
+        ROS_DEBUG_THROTTLE(5, "receiving motor angle");
+        timeMotorData[ANGLE].push_back(counter++);
 
-    if (motorData[ANGLE].back() > 340 && msg->angles[0] < 20) { // increase rotation counter
-        rotationCounter[0]++;
+        motorData[ANGLEABSOLUT].push_back(msg->angles[ui.motor->value()] / 360.0 * 4096.0 + offset[ANGLEABSOLUT]);
+        if (motorData[ANGLEABSOLUT].size() > samples_per_plot) {
+            motorData[ANGLEABSOLUT].pop_front();
+        }
+
+        motorData[SPRING].push_back(motorData[POSITIONABSOLUT].back() - motorData[ANGLEABSOLUT].back());
+        if (motorData[SPRING].size() > samples_per_plot) {
+            motorData[SPRING].pop_front();
+        }
+
+        if (timeMotorData[ANGLE].size() > samples_per_plot)
+            timeMotorData[ANGLE].pop_front();
+
+        if (counter % 10 == 0)
+                Q_EMIT newData();
     }
-    if (motorData[ANGLE].back() < 20 && msg->angles[0] > 340) { // decrease rotation counter
-        rotationCounter[0]--;
-    }
-
-    motorData[ANGLE].push_back(msg->angles[0]);
-    if (motorData[ANGLE].size() > samples_per_plot) {
-        motorData[ANGLE].pop_front();
-    }
-
-    motorData[ANGLEABSOLUT].push_back(msg->angles[0] + rotationCounter[0] * 360.0f + offset[ANGLE]);
-    if (motorData[ANGLEABSOLUT].size() > samples_per_plot) {
-        motorData[ANGLEABSOLUT].pop_front();
-    }
-
-    motorData[SPRING].push_back(motorData[POSITIONABSOLUT].back() - motorData[ANGLEABSOLUT].back());
-    if (motorData[SPRING].size() > samples_per_plot) {
-        motorData[SPRING].pop_front();
-    }
-
-    if (timeMotorData[ANGLE].size() > samples_per_plot)
-        timeMotorData[ANGLE].pop_front();
-
-    if (counter % 10 == 0)
-            Q_EMIT newData();
 }
 
 void RoboyMotorCalibration::ADCvalue(const roboy_communication_middleware::ADCvalue::ConstPtr &msg) {
-    ROS_INFO_THROTTLE(5, "receiving load_cell status");
-    lock_guard<mutex> lock(mux);
-    time.push_back(counter++);
-    loadCellLoad.push_back(msg->load[0]); // TODO: ui.motor->value()
-    if (loadCellLoad.size() > samples_per_plot) {
-        loadCellLoad.pop_front();
-    }
+    if(msg->id==ui.fpga->value()) {
+        ROS_DEBUG_THROTTLE(5, "receiving load_cell status");
+        lock_guard<mutex> lock(mux);
+        time.push_back(counter++);
+        loadCellLoad.push_back(msg->load[0]); // TODO: ui.motor->value()
+        if (loadCellLoad.size() > samples_per_plot) {
+            loadCellLoad.pop_front();
+        }
 
-    loadCellValue.push_back(msg->adc_value[0]); // TODO: ui.motor->value()
-    if (loadCellValue.size() > samples_per_plot) {
-        loadCellValue.pop_front();
-    }
-    if (time.size() > samples_per_plot)
-        time.pop_front();
+        loadCellValue.push_back(msg->adc_value[0]); // TODO: ui.motor->value()
+        if (loadCellValue.size() > samples_per_plot) {
+            loadCellValue.pop_front();
+        }
+        if (time.size() > samples_per_plot)
+            time.pop_front();
 
-    if (counter % 10 == 0)
-            Q_EMIT newData();
+        if (counter % 10 == 0)
+                Q_EMIT newData();
+    }
 }
 
 void RoboyMotorCalibration::receiveUDPLoadCellValues() {
@@ -730,7 +722,7 @@ void RoboyMotorCalibration::fitCurve() {
 }
 
 void RoboyMotorCalibration::winchAngleZero() {
-    offset[ANGLE] = -motorData[ANGLE].back();
+    offset[ANGLEABSOLUT] = -motorData[ANGLEABSOLUT].back();
     rotationCounter[0] = 0;
 }
 

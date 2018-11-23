@@ -51,20 +51,26 @@ public Q_SLOTS:
     void controlModeChanged();
     void update_config();
     void loadMotorConfig();
+    void addFpgaWidgets(int fpga);
 private:
     Ui::RoboyMotorCommand ui;
     QWidget *widget_;
     ros::NodeHandlePtr nh;
     ros::Publisher motorCommand;
-    ros::ServiceClient motorControl[5], motorConfig[5], emergencyStop[5];
+    ros::ServiceClient motorControl[6], motorConfig[6], emergencyStop[6];
     boost::shared_ptr<ros::AsyncSpinner> spinner;
 private:
     bool stopButton;
     vector<double> setpoint;
     vector<int> control_mode;
-    int total_number_of_motors = 0, number_of_fpgas = 5;
+    int total_number_of_motors = 0, number_of_fpgas = 6;
     vector<QRadioButton*> pos, vel, dis, force;
     vector<QSlider*> setpoint_slider_widget;
+    QSlider *setpoint_slider_widget_all;
     vector<QLineEdit*> setpoint_widget;
+    QLineEdit *setpoint_widget_all;
     QLineEdit* scale;
+    QWidget* motor_command_scrollarea;
+    vector<QWidget*> widgets;
+    vector<string> body_parts = {"h","spl","spr","shl","shr","unknown"};
 };

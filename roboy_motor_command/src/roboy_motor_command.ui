@@ -833,6 +833,40 @@
     </property>
    </widget>
   </widget>
+  <widget class="QSpinBox" name="fpga">
+   <property name="geometry">
+    <rect>
+     <x>537</x>
+     <y>0</y>
+     <width>41</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="maximum">
+    <number>5</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>490</x>
+     <y>0</y>
+     <width>41</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>12</pointsize>
+     <weight>75</weight>
+     <italic>false</italic>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>FPGA</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>
