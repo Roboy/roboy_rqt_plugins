@@ -330,9 +330,9 @@ p, li { white-space: pre-wrap; }
   <widget class="QGroupBox" name="head_motors">
    <property name="geometry">
     <rect>
-     <x>490</x>
+     <x>590</x>
      <y>500</y>
-     <width>211</width>
+     <width>171</width>
      <height>81</height>
     </rect>
    </property>
@@ -342,7 +342,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>30</x>
       <y>30</y>
       <width>31</width>
       <height>17</height>
@@ -355,7 +355,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QGraphicsView" name="head_m9">
     <property name="geometry">
      <rect>
-      <x>0</x>
+      <x>10</x>
       <y>30</y>
       <width>16</width>
       <height>16</height>
@@ -368,7 +368,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QGraphicsView" name="head_m11">
     <property name="geometry">
      <rect>
-      <x>100</x>
+      <x>110</x>
       <y>30</y>
       <width>16</width>
       <height>16</height>
@@ -378,7 +378,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>120</x>
+      <x>130</x>
       <y>30</y>
       <width>31</width>
       <height>17</height>
@@ -388,10 +388,10 @@ p, li { white-space: pre-wrap; }
      <string>M11</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="head_m13">
+   <widget class="QGraphicsView" name="head_m12">
     <property name="geometry">
      <rect>
-      <x>0</x>
+      <x>10</x>
       <y>60</y>
       <width>16</width>
       <height>16</height>
@@ -401,7 +401,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QLabel" name="label_10">
     <property name="geometry">
      <rect>
-      <x>70</x>
+      <x>80</x>
       <y>30</y>
       <width>31</width>
       <height>17</height>
@@ -414,7 +414,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QGraphicsView" name="head_m10">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>60</x>
       <y>30</y>
       <width>16</width>
       <height>16</height>
@@ -424,7 +424,53 @@ p, li { white-space: pre-wrap; }
    <widget class="QLabel" name="label_11">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>30</x>
+      <y>60</y>
+      <width>31</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>M12</string>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="head_m13">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>60</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="head_m14">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>60</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_13">
+    <property name="geometry">
+     <rect>
+      <x>130</x>
+      <y>60</y>
+      <width>31</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>M14</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_12">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
       <y>60</y>
       <width>31</width>
       <height>17</height>
@@ -1502,7 +1548,7 @@ p, li { white-space: pre-wrap; }
   <widget class="Line" name="line_2">
    <property name="geometry">
     <rect>
-     <x>470</x>
+     <x>570</x>
      <y>510</y>
      <width>16</width>
      <height>51</height>
@@ -1676,50 +1722,73 @@ p, li { white-space: pre-wrap; }
     <number>50</number>
    </property>
   </widget>
-  <widget class="QGraphicsView" name="head_m14">
+  <widget class="QLabel" name="label_89">
    <property name="geometry">
     <rect>
      <x>540</x>
-     <y>560</y>
+     <y>580</y>
+     <width>31</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>M13</string>
+   </property>
+  </widget>
+  <widget class="QGraphicsView" name="spine_right_m14">
+   <property name="geometry">
+    <rect>
+     <x>570</x>
+     <y>580</y>
      <width>16</width>
      <height>16</height>
     </rect>
    </property>
   </widget>
-  <widget class="QLabel" name="label_12">
+  <widget class="QLabel" name="label_87">
    <property name="geometry">
     <rect>
-     <x>560</x>
-     <y>560</y>
+     <x>490</x>
+     <y>580</y>
+     <width>31</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>M12</string>
+   </property>
+  </widget>
+  <widget class="QGraphicsView" name="spine_right_m12">
+   <property name="geometry">
+    <rect>
+     <x>470</x>
+     <y>580</y>
+     <width>16</width>
+     <height>16</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QGraphicsView" name="spine_right_m13">
+   <property name="geometry">
+    <rect>
+     <x>520</x>
+     <y>580</y>
+     <width>16</width>
+     <height>16</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_88">
+   <property name="geometry">
+    <rect>
+     <x>590</x>
+     <y>580</y>
      <width>31</width>
      <height>17</height>
     </rect>
    </property>
    <property name="text">
     <string>M14</string>
-   </property>
-  </widget>
-  <widget class="QGraphicsView" name="head_m15">
-   <property name="geometry">
-    <rect>
-     <x>590</x>
-     <y>560</y>
-     <width>16</width>
-     <height>16</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_13">
-   <property name="geometry">
-    <rect>
-     <x>610</x>
-     <y>560</y>
-     <width>31</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>M15</string>
    </property>
   </widget>
  </widget>
