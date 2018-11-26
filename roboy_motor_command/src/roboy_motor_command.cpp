@@ -385,6 +385,10 @@ void RoboyMotorCommand::addFpgaWidgets(int fpga){
     widgets.clear();
     setpoint_widget.clear();
     setpoint_slider_widget.clear();
+    pos.clear();
+    vel.clear();
+    dis.clear();
+    force.clear();
 
     total_number_of_motors = NUMBER_OF_MOTORS_PER_FPGA;
     for (uint motor = 0; motor < NUMBER_OF_MOTORS_PER_FPGA; motor++) {
