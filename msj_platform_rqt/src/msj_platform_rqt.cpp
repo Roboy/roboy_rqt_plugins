@@ -37,7 +37,7 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     ui.velocity_plot->replot();
 
     ui.angle_plot->xAxis->setLabel("time[s]");
-    ui.angle_plot->yAxis->setLabel("degree");
+    ui.angle_plot->yAxis->setLabel("ticks");
     ui.angle_plot->replot();
 
     nh = ros::NodeHandlePtr(new ros::NodeHandle);
@@ -80,9 +80,9 @@ void MSJPlatformRQT::MotorStatus(const roboy_communication_middleware::MotorStat
         time.push_back(delta.toSec());
         for (uint motor = 0; motor < msg->position.size(); motor++) {
             if (plotMotor[motor]) {
-                motorData[msg->id][motor][0].push_back(msg->position[motor]);
-                motorData[msg->id][motor][1].push_back(msg->velocity[motor]);
-                motorData[msg->id][motor][2].push_back(msg->angle[motor]/4096.0*360.0);
+                motorData[msg->id][motor][0].push_back(msjMeterPerEncoderTick(msg->position[motor]));
+                motorData[msg->id][motor][1].push_back(msjMeterPerEncoderTick(msg->velocity[motor]));
+                motorData[msg->id][motor][2].push_back(msg->angle[motor]);
                 if (motorData[msg->id][motor][0].size() > samples_per_plot) {
                     motorData[msg->id][motor][0].pop_front();
                     motorData[msg->id][motor][1].pop_front();

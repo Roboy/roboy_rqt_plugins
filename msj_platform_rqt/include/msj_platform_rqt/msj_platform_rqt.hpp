@@ -15,6 +15,7 @@
 #endif
 
 #define NUMBER_OF_MOTORS 8
+#define msjMeterPerEncoderTick(encoderTicks) (((encoderTicks)/4096.0*2.0*M_PI)*(2.0*M_PI*0.0045))
 
 class MSJPlatformRQT
         : public rqt_gui_cpp::Plugin {
