@@ -1,0 +1,14 @@
+<library path="lib/libmsj_platform_rqt">
+  <class name="MSJPlatformRQT" type="MSJPlatformRQT" base_class_type="rqt_gui_cpp::Plugin">
+    <description>
+      MSJ platform plugin
+    </description>
+    <qtgui>
+      <group>
+        <label>CARDSflow</label>
+      </group>
+      <label>msj platform</label>
+      <statustip>Great user interface to provide real value.</statustip>
+    </qtgui>
+  </class>
+</library>
