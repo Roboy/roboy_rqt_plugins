@@ -5,12 +5,17 @@
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
 #include <msj_platform_rqt/ui_msj_platform_rqt.h>
+#include <roboy_communication_middleware/MagneticSensor.h>
 #include <roboy_communication_middleware/MotorStatus.h>
+#include <roboy_communication_middleware/MotorCommand.h>
 #include <QWidget>
+#include <QSlider>
 #include <QtWidgets/QCheckBox>
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
 #include <common_utilities/CommonDefinitions.h>
+#include <std_srvs/SetBool.h>
+#include <std_srvs/Empty.h>
 
 #endif
 
@@ -39,23 +44,30 @@ public Q_SLOTS:
     void plotMotorChanged();
     void toggleAll();
     void fpgaChanged(int fpga);
+    void motorPosChanged(int pos);
+    void stopButtonClicked();
+    void zeroClicked();
 private:
     void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
+    void MagneticSensor(const roboy_communication_middleware::MagneticSensor::ConstPtr &msg);
 Q_SIGNALS:
     void newData();
 private:
     Ui::MSJPlatformRQT ui;
     QWidget *widget_;
 
-    QVector<double> time;
+    QVector<double> time, time_sensor;
     int counter = 0;
-    QVector<double> motorData[NUMBER_OF_FPGAS][NUMBER_OF_MOTORS][3];
-    bool motorConnected[NUMBER_OF_FPGAS][NUMBER_OF_MOTORS], plotMotor[NUMBER_OF_MOTORS];
+    QVector<double> motorData[NUMBER_OF_FPGAS+1][NUMBER_OF_MOTORS][3];
+    QVector<double> sensorData[3][3];
+    bool motorConnected[NUMBER_OF_FPGAS+1][NUMBER_OF_MOTORS], plotMotor[NUMBER_OF_MOTORS];
     int samples_per_plot = 300;
     QColor color_pallette[16] = {Qt::blue, Qt::red, Qt::green, Qt::cyan, Qt::magenta, Qt::darkGray, Qt::darkRed, Qt::darkGreen,
                                  Qt::darkBlue, Qt::darkCyan, Qt::darkMagenta, Qt::darkYellow, Qt::black, Qt::gray, Qt::green, Qt::cyan};
     ros::NodeHandlePtr nh;
-    ros::Subscriber motorStatus;
+    ros::Subscriber motorStatus, magneticSensor;
+    ros::Publisher motorCommand;
+    ros::ServiceClient emergencyStop, zero;
     ros::Time start_time;
     boost::shared_ptr<ros::AsyncSpinner> spinner;
 };

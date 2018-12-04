@@ -28,6 +28,7 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
         QObject::connect(box, SIGNAL(stateChanged(int)), this, SLOT(plotMotorChanged()));
         plotMotor[motor] = true;
     }
+
     ui.position_plot->xAxis->setLabel("time[s]");
     ui.position_plot->yAxis->setLabel("pos[m]");
     ui.position_plot->replot();
@@ -40,6 +41,21 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     ui.angle_plot->yAxis->setLabel("ticks");
     ui.angle_plot->replot();
 
+    for(int axis=0; axis<3; axis++){
+        ui.magnetic_plot_0->addGraph();
+        ui.magnetic_plot_0->graph(axis)->setPen(QPen(color_pallette[axis]))
+        ui.magnetic_plot_1->addGraph();
+        ui.magnetic_plot_1->graph(axis)->setPen(QPen(color_pallette[axis]));
+        ui.magnetic_plot_2->addGraph();
+        ui.magnetic_plot_2->graph(axis)->setPen(QPen(color_pallette[axis]));
+    }
+    ui.magnetic_plot_0->xAxis->setLabel("time[s]");
+    ui.magnetic_plot_0->yAxis->setLabel("fieldStrength");
+    ui.magnetic_plot_1->xAxis->setLabel("time[s]");
+    ui.magnetic_plot_1->yAxis->setLabel("fieldStrength");
+    ui.magnetic_plot_2->xAxis->setLabel("time[s]");
+    ui.magnetic_plot_2->yAxis->setLabel("fieldStrength");
+
     nh = ros::NodeHandlePtr(new ros::NodeHandle);
     if (!ros::isInitialized()) {
         int argc = 0;
@@ -48,10 +64,25 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     }
 
     motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &MSJPlatformRQT::MotorStatus, this);
+    magneticSensor = nh->subscribe("/roboy/middleware/MagneticSensor", 1, &MSJPlatformRQT::MagneticSensor, this);
+    motorCommand = nh->advertise<roboy_communication_middleware::MotorCommand>("/roboy/middleware/MotorCommand",1);
+    emergencyStop = nh->serviceClient<std_srvs::SetBool>("/msj_platform/emergency_stop");
+    zero = nh->serviceClient<std_srvs::Empty>("/msj_platform/zero");
     QObject::connect(this, SIGNAL(newData()), this, SLOT(plotData()));
     QObject::connect(ui.toggle_all, SIGNAL(clicked()), this, SLOT(toggleAll()));
     QObject::connect(ui.fpga, SIGNAL(valueChanged(int)), this, SLOT(fpgaChanged(int)));
+    QObject::connect(ui.motor_pos_0, SIGNAL(valueChanged(int)), this, SLOT(motorPosChanged(int)));
+    QObject::connect(ui.motor_pos_1, SIGNAL(valueChanged(int)), this, SLOT(motorPosChanged(int)));
+    QObject::connect(ui.motor_pos_2, SIGNAL(valueChanged(int)), this, SLOT(motorPosChanged(int)));
+    QObject::connect(ui.motor_pos_3, SIGNAL(valueChanged(int)), this, SLOT(motorPosChanged(int)));
+    QObject::connect(ui.motor_pos_4, SIGNAL(valueChanged(int)), this, SLOT(motorPosChanged(int)));
+    QObject::connect(ui.motor_pos_5, SIGNAL(valueChanged(int)), this, SLOT(motorPosChanged(int)));
+    QObject::connect(ui.motor_pos_6, SIGNAL(valueChanged(int)), this, SLOT(motorPosChanged(int)));
+    QObject::connect(ui.motor_pos_7, SIGNAL(valueChanged(int)), this, SLOT(motorPosChanged(int)));
 
+    ui.stop_button->setStyleSheet("background-color: green");
+    QObject::connect(ui.stop_button, SIGNAL(clicked()), this, SLOT(stopButtonClicked()));
+    QObject::connect(ui.zero, SIGNAL(clicked()), this, SLOT(zeroClicked()));
 
     spinner.reset(new ros::AsyncSpinner(2));
     spinner->start();
@@ -119,12 +150,43 @@ void MSJPlatformRQT::MotorStatus(const roboy_communication_middleware::MotorStat
     }
 }
 
+void MSJPlatformRQT::MagneticSensor(const roboy_communication_middleware::MagneticSensor::ConstPtr &msg){
+    int j = 0;
+    ros::Duration delta = (ros::Time::now() - start_time);
+    time_sensor.push_back(delta.toSec());
+    for(int i=0;i<msg->sensor_id;i++){
+        sensorData[msg->sensor_id][0].push_back(msg.x[j]);
+        sensorData[msg->sensor_id][1].push_back(msg.y[j]);
+        sensorData[msg->sensor_id][2].push_back(msg.z[j]);
+        if (time_sensor.size() > samples_per_plot) {
+            sensorData[msg->sensor_id][0].pop_front();
+            sensorData[msg->sensor_id][1].pop_front();
+            sensorData[msg->sensor_id][2].pop_front();
+        }
+        j++;
+    }
+}
+
 void MSJPlatformRQT::plotData() {
     for (uint motor = 0; motor < NUMBER_OF_MOTORS; motor++) {
         ui.position_plot->graph(motor)->setData(time, motorData[ui.fpga->value()][motor][0]);
         ui.velocity_plot->graph(motor)->setData(time, motorData[ui.fpga->value()][motor][1]);
         ui.angle_plot->graph(motor)->setData(time, motorData[ui.fpga->value()][motor][2]);
     }
+
+    for (uint axis = 0; axis < 3; axis++) {
+        ui.magnetic_plot_0->graph(axis)->setData(time, sensorData[0][axis]);
+        ui.magnetic_plot_1->graph(axis)->setData(time, sensorData[1][axis]);
+        ui.magnetic_plot_2->graph(axis)->setData(time, sensorData[2][axis]);
+    }
+
+    ui.magnetic_plot_0->xAxis->rescale();
+    ui.magnetic_plot_1->xAxis->rescale();
+    ui.magnetic_plot_2->xAxis->rescale();
+
+    ui.magnetic_plot_0->replot();
+    ui.magnetic_plot_1->replot();
+    ui.magnetic_plot_2->replot();
 
     ui.position_plot->xAxis->rescale();
     ui.velocity_plot->xAxis->rescale();
@@ -200,19 +262,43 @@ void MSJPlatformRQT::toggleAll(){
 }
 
 void MSJPlatformRQT::fpgaChanged(int fpga){
+
+}
+
+void MSJPlatformRQT::motorPosChanged(int pos){
+    roboy_communication_middleware::MotorCommand msg;
+    msg.id = ui.fpga->value();
     for(int i=0;i<NUMBER_OF_MOTORS;i++) {
         char str[20];
-        sprintf(str,"motor_%d",i);
-        QCheckBox *box = widget_->findChild<QCheckBox*>(str);
-        if(box!=nullptr) {
-            if(find(active_motors[fpga].begin(),active_motors[fpga].end(),i)!=active_motors[fpga].end()) {
-                plotMotor[i] = true;
-                box->setChecked(true);
-            }else{
-                plotMotor[i] = false;
-                box->setChecked(false);
-            }
-        }
+        sprintf(str,"motor_pos_%d",i);
+        QSlider *slider = widget_->findChild<QSlider*>(str);
+        msg.motors.push_back(i);
+        msg.setPoints.push_back(slider->value());
+    }
+    motorCommand.publish(msg);
+}
+
+void MSJPlatformRQT::stopButtonClicked(){
+    std_srvs::SetBool msg;
+    if(ui.stop_button->isChecked()) {
+        ui.stop_button->setStyleSheet("background-color: red");
+        msg.request.data = 1;
+        emergencyStop.call(msg);
+    }else {
+        ui.stop_button->setStyleSheet("background-color: green");
+        msg.request.data = 0;
+        emergencyStop.call(msg);
+    }
+}
+
+void MSJPlatformRQT::zeroClicked(){
+    std_srvs::Empty msg;
+    zero.call(msg);
+    for(int i=0;i<NUMBER_OF_MOTORS;i++) {
+        char str[20];
+        sprintf(str,"motor_pos_%d",i);
+        QSlider *slider = widget_->findChild<QSlider*>(str);
+        slider->setValue(0);
     }
 }
 
