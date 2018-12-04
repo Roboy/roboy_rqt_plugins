@@ -5,11 +5,11 @@
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
 #include <roboy_motor_calibration/ui_roboy_motor_calibration.h>
-#include <roboy_communication_middleware/ADCvalue.h>
-#include <roboy_communication_middleware/MotorAngle.h>
-#include <roboy_communication_middleware/MotorCalibrationService.h>
-#include <roboy_communication_middleware/MotorCommand.h>
-#include <roboy_communication_middleware/MotorStatus.h>
+#include <roboy_middleware_msgs/ADCvalue.h>
+#include <roboy_middleware_msgs/MotorAngle.h>
+#include <roboy_middleware_msgs/MotorCalibrationService.h>
+#include <roboy_middleware_msgs/MotorCommand.h>
+#include <roboy_middleware_msgs/MotorStatus.h>
 #include <QWidget>
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
@@ -58,9 +58,9 @@ public Q_SLOTS:
     void winchAngleZero();
     void motorAngleZero();
 private:
-    void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
-    void MotorAngle(const roboy_communication_middleware::MotorAngle::ConstPtr &msg);
-    void ADCvalue(const roboy_communication_middleware::ADCvalue::ConstPtr &msg);
+    void MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
+    void MotorAngle(const roboy_middleware_msgs::MotorAngle::ConstPtr &msg);
+    void ADCvalue(const roboy_middleware_msgs::ADCvalue::ConstPtr &msg);
     void receiveUDPLoadCellValues();
     /**
 	 * Performs polynomial regression (http://www.bragitoff.com/2015/09/c-program-for-polynomial-fit-least-squares/)

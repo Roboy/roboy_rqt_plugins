@@ -5,8 +5,8 @@
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
 #include <roboy_motor_record/ui_roboy_motor_record.h>
-#include <roboy_communication_middleware/MotorStatus.h>
-#include <roboy_communication_middleware/MotorCommand.h>
+#include <roboy_middleware_msgs/MotorStatus.h>
+#include <roboy_middleware_msgs/MotorCommand.h>
 #include <QWidget>
 #include <QtQuick/QQuickView>
 #include <pluginlib/class_list_macros.h>
@@ -52,7 +52,7 @@ public Q_SLOTS:
     void control_mode();
     void plotData();
 private:
-    void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
+    void MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
     Q_SIGNALS:
     void newData();
 private:

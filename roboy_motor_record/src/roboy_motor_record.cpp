@@ -29,7 +29,7 @@ void RoboyMotorRecord::initPlugin(qt_gui_cpp::PluginContext &context) {
     }
 
     motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 10, &RoboyMotorRecord::MotorStatus, this);
-    motorCommand = nh->advertise<roboy_communication_middleware::MotorCommand>("/roboy/middleware/MotorCommand", 1);
+    motorCommand = nh->advertise<roboy_middleware_msgs::MotorCommand>("/roboy/middleware/MotorCommand", 1);
     QObject::connect(this, SIGNAL(newData()), this, SLOT(plotData()));
     QObject::connect(ui.pos, SIGNAL(clicked()), this, SLOT(control_mode()));
     QObject::connect(ui.vel, SIGNAL(clicked()), this, SLOT(control_mode()));
@@ -69,7 +69,7 @@ void RoboyMotorRecord::record(){
             lock_guard<mutex> lock(mux);
             file << "timestamp, \t" << ui.motorIDs->text().toStdString() << "control mode (0:Position, 1:Velocity, 2:Displacement): " << cm << endl;
             sample = 0;
-            roboy_communication_middleware::MotorCommand msg;
+            roboy_middleware_msgs::MotorCommand msg;
             msg.id = ui.fpga->value();
             for(int fpga=0;fpga<NUMBER_OF_FPGAS;fpga++){
                 for(int motor=0;motor<NUMBER_OF_MOTORS_PER_FPGA;motor++){
@@ -138,7 +138,7 @@ void RoboyMotorRecord::control_mode(){
     }
 }
 
-void RoboyMotorRecord::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
+void RoboyMotorRecord::MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg) {
     if(recording && msg->id==ui.fpga->value()) {
         ROS_DEBUG_THROTTLE(5, "receiving motor status");
         high_resolution_clock::time_point t1 = high_resolution_clock::now();

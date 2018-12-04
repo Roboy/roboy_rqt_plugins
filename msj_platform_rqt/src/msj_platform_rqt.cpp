@@ -73,7 +73,7 @@ void MSJPlatformRQT::restoreSettings(const qt_gui_cpp::Settings &plugin_settings
     // v = instance_settings.value(k)
 }
 
-void MSJPlatformRQT::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
+void MSJPlatformRQT::MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg) {
     ROS_DEBUG_THROTTLE(5, "receiving motor status");
     if(msg->id == ui.fpga->value()) {
         ros::Duration delta = (ros::Time::now() - start_time);

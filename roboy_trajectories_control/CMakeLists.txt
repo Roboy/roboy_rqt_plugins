@@ -4,7 +4,7 @@ project( roboy_trajectories_control)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -g")
 
 find_package(catkin REQUIRED COMPONENTS common_utilities roscpp roslint rqt_gui rqt_gui_cpp std_msgs
-        roboy_communication_middleware roboy_communication_control actionlib actionlib_msgs)
+        roboy_middleware_msgs roboy_control_msgs actionlib actionlib_msgs)
 # FIND_PACKAGE(yaml-cpp REQUIRED)
 
  include_directories( include )
@@ -23,7 +23,7 @@ catkin_python_setup()
 roslint_cpp()
 
 catkin_package( INCLUDE_DIRS include LIBRARIES ${PROJECT_NAME}
-        CATKIN_DEPENDS roscpp rqt_gui_cpp std_msgs roboy_communication_middleware  roboy_communication_control
+        CATKIN_DEPENDS roscpp rqt_gui_cpp std_msgs roboy_middleware_msgs  roboy_control_msgs
         common_utilities
         DEPENDS YAML_CPP)
 
@@ -44,17 +44,17 @@ include_directories(
 add_library( roboy_trajectories_control src/roboy_trajectories_control.cpp ${roboy_trajectories_control_MOCS} ${roboy_trajectories_control_UIS_H}
         src/actions_client.cpp src/actions_server.cpp)
 
-add_dependencies(roboy_trajectories_control roboy_communication_middleware_gencpp roboy_communication_control_gencpp)
+add_dependencies(roboy_trajectories_control roboy_middleware_msgs_gencpp roboy_control_msgs_gencpp)
 
 target_link_libraries(roboy_trajectories_control ${catkin_LIBRARIES} )
 
  add_executable( actions_client src/actions_client.cpp)
- add_dependencies(actions_client roboy_communication_control_gencpp)
+ add_dependencies(actions_client roboy_control_msgs_gencpp)
  target_link_libraries(actions_client ${catkin_LIBRARIES} )
 
 
 #add_executable( actions_server src/actions_server.cpp)
-#add_dependencies(actions_server roboy_communication_control_gencpp)
+#add_dependencies(actions_server roboy_control_msgs_gencpp)
 #target_link_libraries(actions_server ${catkin_LIBRARIES} )
 # target_link_libraries(roboy_trajectories_control ${YAML_CPP_LIBRARIES} -ldl)
 

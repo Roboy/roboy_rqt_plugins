@@ -5,7 +5,7 @@
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
 #include <msj_platform_rqt/ui_msj_platform_rqt.h>
-#include <roboy_communication_middleware/MotorStatus.h>
+#include <roboy_middleware_msgs/MotorStatus.h>
 #include <QWidget>
 #include <QtWidgets/QCheckBox>
 #include <pluginlib/class_list_macros.h>
@@ -40,7 +40,7 @@ public Q_SLOTS:
     void toggleAll();
     void fpgaChanged(int fpga);
 private:
-    void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
+    void MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
 Q_SIGNALS:
     void newData();
 private:

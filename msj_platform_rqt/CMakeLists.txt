@@ -3,8 +3,8 @@ project( msj_platform_rqt )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -g")
 
-find_package(catkin REQUIRED COMPONENTS roscpp roslint rqt_gui rqt_gui_cpp std_msgs roboy_communication_middleware )
-catkin_package(CATKIN_DEPENDS roboy_communication_middleware)
+find_package(catkin REQUIRED COMPONENTS roscpp roslint rqt_gui rqt_gui_cpp std_msgs roboy_middleware_msgs )
+catkin_package(CATKIN_DEPENDS roboy_middleware_msgs)
 
 include_directories( include qcustomplot)
 
@@ -21,7 +21,7 @@ catkin_python_setup()
 
 roslint_cpp()
 
-catkin_package( INCLUDE_DIRS include LIBRARIES ${PROJECT_NAME} CATKIN_DEPENDS roscpp rqt_gui_cpp std_msgs roboy_communication_middleware)
+catkin_package( INCLUDE_DIRS include LIBRARIES ${PROJECT_NAME} CATKIN_DEPENDS roscpp rqt_gui_cpp std_msgs roboy_middleware_msgs)
 
 if("${qt_gui_cpp_USE_QT_MAJOR_VERSION} " STREQUAL "5 ")
   qt5_wrap_cpp(msj_platform_rqt_MOCS include/msj_platform_rqt/msj_platform_rqt.hpp qcustomplot/qcustomplot.h)
@@ -39,7 +39,7 @@ include_directories(
 add_library( msj_platform_rqt src/msj_platform_rqt.cpp include/msj_platform_rqt/msj_platform_rqt.hpp
         ${msj_platform_rqt_MOCS} ${msj_platform_rqt_UIS_H} qcustomplot/qcustomplot.cpp)
 
-add_dependencies(msj_platform_rqt roboy_communication_middleware_gencpp)
+add_dependencies(msj_platform_rqt roboy_middleware_msgs_gencpp)
 
 target_link_libraries(msj_platform_rqt ${catkin_LIBRARIES} )
 

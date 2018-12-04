@@ -51,19 +51,19 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
     QObject::connect(setpoint_widget_all, SIGNAL(editingFinished()), this, SLOT(setPointAllChanged()));
     scale = widget_->findChild<QLineEdit *>("motor_scale");
 
-    motorCommand = nh->advertise<roboy_communication_middleware::MotorCommand>("/roboy/middleware/MotorCommand", 1);
-    motorControl[0] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/head/middleware/ControlMode");
-    motorControl[1] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/spine_left/middleware/ControlMode");
-    motorControl[2] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/spine_right/middleware/ControlMode");
-    motorControl[3] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/shoulder_left/middleware/ControlMode");
-    motorControl[4] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/shoulder_right/middleware/ControlMode");
-    motorControl[5] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/unknown/middleware/ControlMode");
-    motorConfig[0] = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/head/middleware/MotorConfig");
-    motorConfig[1] = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/spine_left/middleware/MotorConfig");
-    motorConfig[2] = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/spine_right/middleware/MotorConfig");
-    motorConfig[3] = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/shoulder_left/middleware/MotorConfig");
-    motorConfig[4] = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/shoulder_right/middleware/MotorConfig");
-    motorConfig[5] = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/unknown/middleware/MotorConfig");
+    motorCommand = nh->advertise<roboy_middleware_msgs::MotorCommand>("/roboy/middleware/MotorCommand", 1);
+    motorControl[0] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/head/middleware/ControlMode");
+    motorControl[1] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/spine_left/middleware/ControlMode");
+    motorControl[2] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/spine_right/middleware/ControlMode");
+    motorControl[3] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/shoulder_left/middleware/ControlMode");
+    motorControl[4] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/shoulder_right/middleware/ControlMode");
+    motorControl[5] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/unknown/middleware/ControlMode");
+    motorConfig[0] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/head/middleware/MotorConfig");
+    motorConfig[1] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/spine_left/middleware/MotorConfig");
+    motorConfig[2] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/spine_right/middleware/MotorConfig");
+    motorConfig[3] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/shoulder_left/middleware/MotorConfig");
+    motorConfig[4] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/shoulder_right/middleware/MotorConfig");
+    motorConfig[5] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/unknown/middleware/MotorConfig");
     emergencyStop[0] = nh->serviceClient<std_srvs::SetBool>("/roboy/head/middleware/EmergencyStop");
     emergencyStop[1] = nh->serviceClient<std_srvs::SetBool>("/roboy/spine_left/middleware/EmergencyStop");
     emergencyStop[2] = nh->serviceClient<std_srvs::SetBool>("/roboy/spine_right/middleware/EmergencyStop");
@@ -131,7 +131,7 @@ void RoboyMotorCommand::stopButtonAllClicked(){
 }
 
 void RoboyMotorCommand::setPointChanged(){
-    roboy_communication_middleware::MotorCommand msg;
+    roboy_middleware_msgs::MotorCommand msg;
     bool ok;
     double motor_scale = scale->text().toDouble(&ok);
     if(!ok)
@@ -156,7 +156,7 @@ void RoboyMotorCommand::setPointChanged(){
 }
 
 void RoboyMotorCommand::setPointChangedSlider(){
-    roboy_communication_middleware::MotorCommand msg;
+    roboy_middleware_msgs::MotorCommand msg;
     bool ok;
     double motor_scale = scale->text().toDouble(&ok);
     if(!ok){
@@ -183,7 +183,7 @@ void RoboyMotorCommand::setPointChangedSlider(){
 }
 
 void RoboyMotorCommand::setPointAllChanged(){
-    roboy_communication_middleware::MotorCommand msg;
+    roboy_middleware_msgs::MotorCommand msg;
     bool ok;
     double motor_scale = scale->text().toDouble(&ok);
     if(!ok){
@@ -210,7 +210,7 @@ void RoboyMotorCommand::setPointAllChanged(){
 }
 
 void RoboyMotorCommand::setPointAllChangedSlider(){
-    roboy_communication_middleware::MotorCommand msg;
+    roboy_middleware_msgs::MotorCommand msg;
     bool ok;
     double motor_scale = scale->text().toDouble(&ok);
     if(!ok){
@@ -238,7 +238,7 @@ void RoboyMotorCommand::setPointAllChangedSlider(){
 }
 
 void RoboyMotorCommand::controlModeChanged(){
-    roboy_communication_middleware::ControlMode msg;
+    roboy_middleware_msgs::ControlMode msg;
     if(ui.pos->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
             control_mode[motor] = POSITION;
@@ -345,7 +345,7 @@ void RoboyMotorCommand::update_config(){
         ROS_ERROR("outputDivider not valid");
         return;
     }
-    roboy_communication_middleware::MotorConfigService msg;
+    roboy_middleware_msgs::MotorConfigService msg;
     int motor_config_control_mode= 0;
     if(ui.pos_motor_config->isChecked())
         motor_config_control_mode = POSITION;

@@ -31,22 +31,22 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Int32.h>
-#include <roboy_communication_control/StartRecordTrajectory.h>
-#include <roboy_communication_control/PerformMovementAction.h>
-#include <roboy_communication_control/PerformMovementsAction.h>
-#include <roboy_communication_control/PerformMovementsActionResult.h>
-#include <roboy_communication_control/ListItems.h>
-#include <roboy_communication_control/Behavior.h>
-#include <roboy_communication_middleware/MotorCommand.h>
-#include <roboy_communication_middleware/MotorStatus.h>
-#include <roboy_communication_middleware/SetInt16.h>
+#include <roboy_control_msgs/StartRecordTrajectory.h>
+#include <roboy_control_msgs/PerformMovementAction.h>
+#include <roboy_control_msgs/PerformMovementsAction.h>
+#include <roboy_control_msgs/PerformMovementsActionResult.h>
+#include <roboy_control_msgs/ListItems.h>
+#include <roboy_control_msgs/Behavior.h>
+#include <roboy_middleware_msgs/MotorCommand.h>
+#include <roboy_middleware_msgs/MotorStatus.h>
+#include <roboy_middleware_msgs/SetInt16.h>
 #include <actionlib/client/simple_action_client.h>
 
 #endif
 
 using namespace std;
-typedef actionlib::SimpleActionClient<roboy_communication_control::PerformMovementsAction> MovementsAC;
-typedef actionlib::SimpleActionClient<roboy_communication_control::PerformMovementAction> MovementAC;
+typedef actionlib::SimpleActionClient<roboy_control_msgs::PerformMovementsAction> MovementsAC;
+typedef actionlib::SimpleActionClient<roboy_control_msgs::PerformMovementAction> MovementAC;
 
 class RoboyTrajectoriesControl:
         public rqt_gui_cpp::Plugin, MotorConfig {
@@ -108,16 +108,16 @@ class RoboyTrajectoriesControl:
 
 //            ros::ServiceClient listExistingBehaviorsServiceClient, expandBehaviorServiceClient;
 
-//            actionlib::SimpleActionClient<roboy_communication_control::PerformMovementsAction> lsh_movements_ac, rsh_movements_ac,
+//            actionlib::SimpleActionClient<roboy_control_msgs::PerformMovementsAction> lsh_movements_ac, rsh_movements_ac,
 //                    legs_movements_ac, lsp_movements_ac, rsp_movements_ac, head_movements_ac;
-//            actionlib::SimpleActionClient<roboy_communication_control::PerformMovementAction> lsh_movement_ac, rsh_movement_ac,
+//            actionlib::SimpleActionClient<roboy_control_msgs::PerformMovementAction> lsh_movement_ac, rsh_movement_ac,
 //                    legs_movement_ac, lsp_movement_ac, rsp_movement_ac, head_movement_ac;
 
-            map<string,actionlib::SimpleActionClient<roboy_communication_control::PerformMovementAction>*> performMovement_ac;
-            map<string,actionlib::SimpleActionClient<roboy_communication_control::PerformMovementsAction>*> performMovements_ac;
+            map<string,actionlib::SimpleActionClient<roboy_control_msgs::PerformMovementAction>*> performMovement_ac;
+            map<string,actionlib::SimpleActionClient<roboy_control_msgs::PerformMovementsAction>*> performMovements_ac;
             void checkMotorStatus();
-            void motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
-            void performMovementsResultCallback(const roboy_communication_control::PerformMovementsActionResult::ConstPtr &msg);
+            void motorStatusCallback(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
+            void performMovementsResultCallback(const roboy_control_msgs::PerformMovementsActionResult::ConstPtr &msg);
             void initializeRosCommunication();
 
         private:

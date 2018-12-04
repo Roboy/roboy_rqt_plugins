@@ -1,13 +1,13 @@
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
-#include <roboy_communication_control/PerformMovementAction.h>
+#include <roboy_control_msgs/PerformMovementAction.h>
 
 class FibonacciAction
 {
 protected:
 
     ros::NodeHandle nh_;
-    actionlib::SimpleActionServer<roboy_communication_control::PerformMovementAction> as_; // NodeHandle instance must be created before this line. Otherwise strange error occurs.
+    actionlib::SimpleActionServer<roboy_control_msgs::PerformMovementAction> as_; // NodeHandle instance must be created before this line. Otherwise strange error occurs.
     std::string action_name_;
     // create messages that are used to published feedback/result
 //    actionlib_tutorials::FibonacciFeedback feedback_;
