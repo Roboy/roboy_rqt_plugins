@@ -41,6 +41,7 @@ public:
 public Q_SLOTS:
     void plotData();
     void rescale();
+    void rescaleMagneticSensors();
     void plotMotorChanged();
     void toggleAll();
     void fpgaChanged(int fpga);
