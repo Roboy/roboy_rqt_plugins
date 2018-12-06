@@ -3,8 +3,14 @@ project( msj_platform_rqt )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -g")
 
-find_package(catkin REQUIRED COMPONENTS roscpp roslint rqt_gui rqt_gui_cpp std_msgs roboy_communication_middleware )
-catkin_package(CATKIN_DEPENDS roboy_communication_middleware)
+find_package(catkin REQUIRED COMPONENTS roscpp roslint rqt_gui rqt_gui_cpp std_msgs tf
+        roboy_communication_middleware common_utilities)
+catkin_package(CATKIN_DEPENDS roboy_communication_middleware common_utilities)
+
+# Eigen
+find_package(PkgConfig REQUIRED )
+pkg_check_modules(EIGEN3 REQUIRED eigen3)
+include_directories(${EIGEN3_INCLUDE_DIRS})
 
 include_directories( include qcustomplot)
 

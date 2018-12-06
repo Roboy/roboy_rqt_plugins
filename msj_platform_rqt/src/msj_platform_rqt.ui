@@ -774,6 +774,35 @@
     <string>bottom</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="show_magnetic_field">
+   <property name="geometry">
+    <rect>
+     <x>480</x>
+     <y>790</y>
+     <width>171</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>show magnetic field</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="clear_magnetic_field">
+   <property name="geometry">
+    <rect>
+     <x>480</x>
+     <y>820</y>
+     <width>171</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>clear magnetic field</string>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>

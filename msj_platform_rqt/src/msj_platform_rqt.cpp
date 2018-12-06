@@ -83,6 +83,8 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     ui.stop_button->setStyleSheet("background-color: green");
     QObject::connect(ui.stop_button, SIGNAL(clicked()), this, SLOT(stopButtonClicked()));
     QObject::connect(ui.zero, SIGNAL(clicked()), this, SLOT(zeroClicked()));
+    QObject::connect(ui.show_magnetic_field, SIGNAL(clicked()), this, SLOT(showMagneticField()));
+    QObject::connect(ui.clear_magnetic_field, SIGNAL(clicked()), this, SLOT(clearMagneticField()));
 
     spinner.reset(new ros::AsyncSpinner(0));
     spinner->start();
@@ -155,14 +157,30 @@ void MSJPlatformRQT::MagneticSensor(const roboy_communication_middleware::Magnet
     int j = 0;
     ros::Duration delta = (ros::Time::now() - start_time);
     time_sensor.push_back(delta.toSec());
+    Matrix4d pose;
+    getTransform("world","top",pose);
+    poseData.push_back(pose);
     for (int i = 0; i < msg->sensor_id.size(); i++) {
         sensorData[msg->sensor_id[i]][0].push_back(msg->x[j]);
         sensorData[msg->sensor_id[i]][1].push_back(msg->y[j]);
         sensorData[msg->sensor_id[i]][2].push_back(msg->z[j]);
+        if(show_magnetic_field){
+            static int counter = 9999;
+            Vector3d mag(msg->x[j],msg->y[j],msg->z[j]);
+            mag = pose.topLeftCorner(3,3)*mag*0.01;
+            Vector3d origin(0,0,0);
+            if(j == 0)
+                publishSphere(mag,"world","magnetic_field_sensor_0",counter++,COLOR(1,0,0,1),0.01,0);
+            else if(j == 1)
+                publishSphere(mag,"world","magnetic_field_sensor_1",counter++,COLOR(0,1,0,1),0.01,0);
+            else if(j == 2)
+                publishSphere(mag,"world","magnetic_field_sensor_2",counter++,COLOR(0,0,1,1),0.01,0);
+        }
         j++;
     }
     if (time_sensor.size() > samples_per_plot) {
         time_sensor.pop_front();
+        poseData.pop_front();
         for (int i = 0; i < msg->sensor_id.size(); i++) {
             sensorData[msg->sensor_id[i]][0].pop_front();
             sensorData[msg->sensor_id[i]][1].pop_front();
@@ -346,6 +364,14 @@ void MSJPlatformRQT::zeroClicked() {
         QSlider *slider = widget_->findChild<QSlider *>(str);
         slider->setValue(0);
     }
+}
+
+void MSJPlatformRQT::showMagneticField(){
+    show_magnetic_field = ui.show_magnetic_field->isChecked();
+}
+
+void MSJPlatformRQT::clearMagneticField(){
+    clearAll();
 }
 
 PLUGINLIB_DECLARE_CLASS(roboy_motor_status, MSJPlatformRQT, MSJPlatformRQT, rqt_gui_cpp::Plugin)

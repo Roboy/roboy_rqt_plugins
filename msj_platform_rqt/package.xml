@@ -12,6 +12,8 @@
   <depend>rqt_gui_cpp</depend>
   <depend>std_msgs</depend>
   <depend>roboy_communication_middleware</depend>
+  <depend>common_utilities</depend>
+  <depend>tf</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

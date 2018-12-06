@@ -16,14 +16,21 @@
 #include <common_utilities/CommonDefinitions.h>
 #include <std_srvs/SetBool.h>
 #include <std_srvs/Empty.h>
+#include <common_utilities/rviz_visualization.hpp>
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <vector>
 
 #endif
 
 #define NUMBER_OF_MOTORS 8
 #define msjMeterPerEncoderTick(encoderTicks) (((encoderTicks)/4096.0*2.0*M_PI)*(2.0*M_PI*0.0045))
 
+using namespace Eigen;
+using namespace std;
+
 class MSJPlatformRQT
-        : public rqt_gui_cpp::Plugin {
+        : public rqt_gui_cpp::Plugin, rviz_visualization {
     Q_OBJECT
 public:
     MSJPlatformRQT();
@@ -48,6 +55,8 @@ public Q_SLOTS:
     void motorPosChanged(int pos);
     void stopButtonClicked();
     void zeroClicked();
+    void showMagneticField();
+    void clearMagneticField();
 private:
     void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
     void MagneticSensor(const roboy_communication_middleware::MagneticSensor::ConstPtr &msg);
@@ -61,7 +70,8 @@ private:
     int counter = 0;
     QVector<double> motorData[NUMBER_OF_FPGAS+1][NUMBER_OF_MOTORS][3];
     QVector<double> sensorData[3][3];
-    bool motorConnected[NUMBER_OF_FPGAS+1][NUMBER_OF_MOTORS], plotMotor[NUMBER_OF_MOTORS];
+    QVector<Matrix4d> poseData;
+    bool motorConnected[NUMBER_OF_FPGAS+1][NUMBER_OF_MOTORS], plotMotor[NUMBER_OF_MOTORS], show_magnetic_field = false;
     int samples_per_plot = 300;
     QColor color_pallette[16] = {Qt::blue, Qt::red, Qt::green, Qt::cyan, Qt::magenta, Qt::darkGray, Qt::darkRed, Qt::darkGreen,
                                  Qt::darkBlue, Qt::darkCyan, Qt::darkMagenta, Qt::darkYellow, Qt::black, Qt::gray, Qt::green, Qt::cyan};
