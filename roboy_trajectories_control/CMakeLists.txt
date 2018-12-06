@@ -24,8 +24,7 @@ roslint_cpp()
 
 catkin_package( INCLUDE_DIRS include LIBRARIES ${PROJECT_NAME}
         CATKIN_DEPENDS roscpp rqt_gui_cpp std_msgs roboy_middleware_msgs  roboy_control_msgs
-        common_utilities
-        DEPENDS YAML_CPP)
+        common_utilities)
 
 if("${qt_gui_cpp_USE_QT_MAJOR_VERSION} " STREQUAL "5 ")
   qt5_wrap_cpp(roboy_trajectories_control_MOCS include/roboy_trajectories_control/roboy_trajectories_control.hpp )
