@@ -51,19 +51,19 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
     QObject::connect(setpoint_widget_all, SIGNAL(editingFinished()), this, SLOT(setPointAllChanged()));
     scale = widget_->findChild<QLineEdit *>("motor_scale");
 
-    motorCommand = nh->advertise<roboy_communication_middleware::MotorCommand>("/roboy/middleware/MotorCommand", 1);
-    motorControl[0] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/head/middleware/ControlMode");
-    motorControl[1] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/spine_left/middleware/ControlMode");
-    motorControl[2] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/spine_right/middleware/ControlMode");
-    motorControl[3] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/shoulder_left/middleware/ControlMode");
-    motorControl[4] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/shoulder_right/middleware/ControlMode");
-    motorControl[5] = nh->serviceClient<roboy_communication_middleware::ControlMode>("/roboy/unknown/middleware/ControlMode");
-    motorConfig[0] = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/head/middleware/MotorConfig");
-    motorConfig[1] = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/spine_left/middleware/MotorConfig");
-    motorConfig[2] = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/spine_right/middleware/MotorConfig");
-    motorConfig[3] = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/shoulder_left/middleware/MotorConfig");
-    motorConfig[4] = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/shoulder_right/middleware/MotorConfig");
-    motorConfig[5] = nh->serviceClient<roboy_communication_middleware::MotorConfigService>("/roboy/unknown/middleware/MotorConfig");
+    motorCommand = nh->advertise<roboy_middleware_msgs::MotorCommand>("/roboy/middleware/MotorCommand", 1);
+    motorControl[0] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/head/middleware/ControlMode");
+    motorControl[1] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/spine_left/middleware/ControlMode");
+    motorControl[2] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/spine_right/middleware/ControlMode");
+    motorControl[3] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/shoulder_left/middleware/ControlMode");
+    motorControl[4] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/shoulder_right/middleware/ControlMode");
+    motorControl[5] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/unknown/middleware/ControlMode");
+    motorConfig[0] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/head/middleware/MotorConfig");
+    motorConfig[1] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/spine_left/middleware/MotorConfig");
+    motorConfig[2] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/spine_right/middleware/MotorConfig");
+    motorConfig[3] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/shoulder_left/middleware/MotorConfig");
+    motorConfig[4] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/shoulder_right/middleware/MotorConfig");
+    motorConfig[5] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/unknown/middleware/MotorConfig");
     emergencyStop[0] = nh->serviceClient<std_srvs::SetBool>("/roboy/head/middleware/EmergencyStop");
     emergencyStop[1] = nh->serviceClient<std_srvs::SetBool>("/roboy/spine_left/middleware/EmergencyStop");
     emergencyStop[2] = nh->serviceClient<std_srvs::SetBool>("/roboy/spine_right/middleware/EmergencyStop");
@@ -131,7 +131,7 @@ void RoboyMotorCommand::stopButtonAllClicked(){
 }
 
 void RoboyMotorCommand::setPointChanged(){
-    roboy_communication_middleware::MotorCommand msg;
+    roboy_middleware_msgs::MotorCommand msg;
     bool ok;
     double motor_scale = scale->text().toDouble(&ok);
     if(!ok)
@@ -145,9 +145,9 @@ void RoboyMotorCommand::setPointChanged(){
             msg.motors.push_back(motor % NUMBER_OF_MOTORS_PER_FPGA);
             if (control_mode[motor] == FORCE) {
                 double displacement = force2displacement(setPoint, msg.id, motor % NUMBER_OF_MOTORS_PER_FPGA);
-                msg.setPoints.push_back(displacement);
+                msg.set_points.push_back(displacement);
             } else {
-                msg.setPoints.push_back(setPoint);
+                msg.set_points.push_back(setPoint);
             }
         }
         setpoint_widget[motor]->setText(QString::number(setPoint));
@@ -156,7 +156,7 @@ void RoboyMotorCommand::setPointChanged(){
 }
 
 void RoboyMotorCommand::setPointChangedSlider(){
-    roboy_communication_middleware::MotorCommand msg;
+    roboy_middleware_msgs::MotorCommand msg;
     bool ok;
     double motor_scale = scale->text().toDouble(&ok);
     if(!ok){
@@ -172,9 +172,9 @@ void RoboyMotorCommand::setPointChangedSlider(){
             msg.motors.push_back(motor % NUMBER_OF_MOTORS_PER_FPGA);
             if (control_mode[motor] == FORCE) {
                 double displacement = force2displacement(setPoint, msg.id, motor % NUMBER_OF_MOTORS_PER_FPGA);
-                msg.setPoints.push_back(displacement);
+                msg.set_points.push_back(displacement);
             } else {
-                msg.setPoints.push_back(setPoint);
+                msg.set_points.push_back(setPoint);
             }
         }
         setpoint_widget[motor]->setText(QString::number(setPoint));
@@ -183,7 +183,7 @@ void RoboyMotorCommand::setPointChangedSlider(){
 }
 
 void RoboyMotorCommand::setPointAllChanged(){
-    roboy_communication_middleware::MotorCommand msg;
+    roboy_middleware_msgs::MotorCommand msg;
     bool ok;
     double motor_scale = scale->text().toDouble(&ok);
     if(!ok){
@@ -199,9 +199,9 @@ void RoboyMotorCommand::setPointAllChanged(){
             msg.motors.push_back(motor % NUMBER_OF_MOTORS_PER_FPGA);
             if (control_mode[motor] == FORCE) {
                 double displacement = force2displacement(setPoint, msg.id, motor % NUMBER_OF_MOTORS_PER_FPGA);
-                msg.setPoints.push_back(displacement);
+                msg.set_points.push_back(displacement);
             } else {
-                msg.setPoints.push_back(setPoint);
+                msg.set_points.push_back(setPoint);
             }
         }
         setpoint_widget[motor]->setText(QString::number(setPoint));
@@ -210,7 +210,7 @@ void RoboyMotorCommand::setPointAllChanged(){
 }
 
 void RoboyMotorCommand::setPointAllChangedSlider(){
-    roboy_communication_middleware::MotorCommand msg;
+    roboy_middleware_msgs::MotorCommand msg;
     bool ok;
     double motor_scale = scale->text().toDouble(&ok);
     if(!ok){
@@ -227,9 +227,9 @@ void RoboyMotorCommand::setPointAllChangedSlider(){
             msg.motors.push_back(motor % NUMBER_OF_MOTORS_PER_FPGA);
             if (control_mode[motor] == FORCE) {
                 double displacement = force2displacement(setPoint, msg.id, motor % NUMBER_OF_MOTORS_PER_FPGA);
-                msg.setPoints.push_back(displacement);
+                msg.set_points.push_back(displacement);
             } else {
-                msg.setPoints.push_back(setPoint);
+                msg.set_points.push_back(setPoint);
             }
         }
         setpoint_widget[motor]->setText(QString::number(setPoint));
@@ -238,7 +238,7 @@ void RoboyMotorCommand::setPointAllChangedSlider(){
 }
 
 void RoboyMotorCommand::controlModeChanged(){
-    roboy_communication_middleware::ControlMode msg;
+    roboy_middleware_msgs::ControlMode msg;
     if(ui.pos->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
             control_mode[motor] = POSITION;
@@ -278,7 +278,7 @@ void RoboyMotorCommand::controlModeChanged(){
         ROS_ERROR("invalid scale");
         return;
     }
-    msg.request.setPoint = 0;
+    msg.request.set_point = 0;
     if(!motorControl[ui.fpga->value()].call(msg))
         ROS_ERROR("failed to change control mode of head, is emergency stop active?! are the fpgas connected?!");
 }
@@ -345,7 +345,7 @@ void RoboyMotorCommand::update_config(){
         ROS_ERROR("outputDivider not valid");
         return;
     }
-    roboy_communication_middleware::MotorConfigService msg;
+    roboy_middleware_msgs::MotorConfigService msg;
     int motor_config_control_mode= 0;
     if(ui.pos_motor_config->isChecked())
         motor_config_control_mode = POSITION;
@@ -357,18 +357,18 @@ void RoboyMotorCommand::update_config(){
         msg.request.config.motors.push_back(i);
         msg.request.config.setpoint.push_back(0);
         msg.request.config.control_mode.push_back(motor_config_control_mode);
-        msg.request.config.outputPosMax.push_back(outputPosMax);
-        msg.request.config.outputNegMax.push_back(outputNegMax);
-        msg.request.config.spPosMax.push_back(spPosMax);
-        msg.request.config.spNegMax.push_back(spNegMax);
-        msg.request.config.IntegralPosMax.push_back(integralPosMax);
-        msg.request.config.IntegralNegMax.push_back(integralNegMax);
-        msg.request.config.deadBand.push_back(deadband);
-        msg.request.config.Kp.push_back(Kp);
-        msg.request.config.Ki.push_back(Ki);
-        msg.request.config.Kd.push_back(Kd);
-        msg.request.config.forwardGain.push_back(forwardGain);
-        msg.request.config.outputDivider.push_back(outputDivider);
+        msg.request.config.output_pos_max.push_back(outputPosMax);
+        msg.request.config.output_neg_max.push_back(outputNegMax);
+        msg.request.config.sp_pos_max.push_back(spPosMax);
+        msg.request.config.sp_neg_max.push_back(spNegMax);
+        msg.request.config.integral_pos_max.push_back(integralPosMax);
+        msg.request.config.integral_neg_max.push_back(integralNegMax);
+        msg.request.config.dead_band.push_back(deadband);
+        msg.request.config.kp.push_back(Kp);
+        msg.request.config.ki.push_back(Ki);
+        msg.request.config.kd.push_back(Kd);
+        msg.request.config.forward_gain.push_back(forwardGain);
+        msg.request.config.output_divider.push_back(outputDivider);
     }
     motorConfig[ui.fpga->value()].call(msg);
 }

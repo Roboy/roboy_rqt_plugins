@@ -139,9 +139,9 @@ void RoboyMotorCalibration::initPlugin(qt_gui_cpp::PluginContext &context) {
     motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyMotorCalibration::MotorStatus, this);
     motorAngle = nh->subscribe("/roboy/middleware/MotorAngle", 1, &RoboyMotorCalibration::MotorAngle, this);
     loadCells = nh->subscribe("/roboy/middleware/LoadCells", 1, &RoboyMotorCalibration::ADCvalue, this);
-    motorCalibration = nh->serviceClient<roboy_communication_middleware::MotorCalibrationService>(
+    motorCalibration = nh->serviceClient<roboy_middleware_msgs::MotorCalibrationService>(
             "/roboy/middleware/MotorCalibration");
-    motorCommand = nh->advertise<roboy_communication_middleware::MotorCommand>("/roboy/middleware/MotorCommand", 1);
+    motorCommand = nh->advertise<roboy_middleware_msgs::MotorCommand>("/roboy/middleware/MotorCommand", 1);
 
     offset[POSITION] = 0;
     offset[ANGLEABSOLUT] = 0;
@@ -203,7 +203,7 @@ void RoboyMotorCalibration::MotorCalibration() {
     }
 }
 
-void RoboyMotorCalibration::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
+void RoboyMotorCalibration::MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg) {
     if (msg->id == ui.fpga->value()) {
         lock_guard<mutex> lock(mux);
         ROS_DEBUG_THROTTLE(5, "receiving motor status");
@@ -238,7 +238,7 @@ void RoboyMotorCalibration::MotorStatus(const roboy_communication_middleware::Mo
     }
 }
 
-void RoboyMotorCalibration::MotorAngle(const roboy_communication_middleware::MotorAngle::ConstPtr &msg) {
+void RoboyMotorCalibration::MotorAngle(const roboy_middleware_msgs::MotorAngle::ConstPtr &msg) {
     if(msg->id==ui.fpga->value()) {
         lock_guard<mutex> lock(mux);
         ROS_DEBUG_THROTTLE(5, "receiving motor angle");
@@ -262,7 +262,7 @@ void RoboyMotorCalibration::MotorAngle(const roboy_communication_middleware::Mot
     }
 }
 
-void RoboyMotorCalibration::ADCvalue(const roboy_communication_middleware::ADCvalue::ConstPtr &msg) {
+void RoboyMotorCalibration::ADCvalue(const roboy_middleware_msgs::ADCvalue::ConstPtr &msg) {
     if(msg->id==ui.fpga->value()) {
         ROS_DEBUG_THROTTLE(5, "receiving load_cell status");
         lock_guard<mutex> lock(mux);
@@ -423,7 +423,7 @@ void RoboyMotorCalibration::estimateMyoMuscleSpringParameters() {
     outfile << "springAngle[degree], load[N]" << endl;
     float setpoint_max = ui.setpoint_max->text().toFloat(), setpoint_min = ui.setpoint_min->text().toFloat();
     int timeout = ui.timeout->text().toInt(), degree = ui.degree->text().toInt(), numberOfDataPoints = ui.data_points->text().toInt();
-    roboy_communication_middleware::MotorCommand msg;
+    roboy_middleware_msgs::MotorCommand msg;
     msg.id = ui.fpga->value();
     msg.motors.push_back(ui.motor->value());
 
@@ -432,8 +432,8 @@ void RoboyMotorCalibration::estimateMyoMuscleSpringParameters() {
     bool up = true;
     do {
 //        float f = (rand() / (float) RAND_MAX) * (setpoint_max - setpoint_min) + setpoint_min;
-        msg.setPoints.clear();
-        msg.setPoints.push_back(f);
+        msg.set_points.clear();
+        msg.set_points.push_back(f);
         motorCommand.publish(msg);
         t0 = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
         do {// wait a bit until force is applied
@@ -521,15 +521,15 @@ void RoboyMotorCalibration::estimateMyoBrickSpringParameters() {
     outfile << "springAngle[degree], load[N]" << endl;
     float setpoint_max = ui.setpoint_max->text().toFloat(), setpoint_min = ui.setpoint_min->text().toFloat();
     int timeout = ui.timeout->text().toInt(), degree = ui.degree->text().toInt(), numberOfDataPoints = ui.data_points->text().toInt();
-    roboy_communication_middleware::MotorCommand msg;
+    roboy_middleware_msgs::MotorCommand msg;
     msg.motors.push_back(ui.motor->value());
 
     vector<double> x, y;
 
     do {
         float f = (rand() / (float) RAND_MAX) * (setpoint_max - setpoint_min) + setpoint_min;
-        msg.setPoints.clear();
-        msg.setPoints.push_back(f);
+        msg.set_points.clear();
+        msg.set_points.push_back(f);
         motorCommand.publish(msg);
         t0 = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
         do {// wait a bit until force is applied

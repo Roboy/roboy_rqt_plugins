@@ -144,19 +144,19 @@ void RoboyTrajectoriesControl::initializeRosCommunication() {
 
     for (auto body_part: bodyParts) {
         emergencyStopServiceClient[body_part] = nh->serviceClient<std_srvs::SetBool>("/roboy/" + body_part + "/middleware/EmergencyStop");
-        setDisplacementForAllServiceClient.push_back(nh->serviceClient<roboy_communication_middleware::SetInt16>("/roboy/" + body_part + "/middleware/SetDisplacementForAll"));
-        listExistingTrajectoriesServiceClient[body_part] = nh->serviceClient<roboy_communication_control::ListItems>("/roboy/" + body_part + "/control/ListExistingTrajectories");
+        setDisplacementForAllServiceClient.push_back(nh->serviceClient<roboy_middleware_msgs::SetInt16>("/roboy/" + body_part + "/middleware/SetDisplacementForAll"));
+        listExistingTrajectoriesServiceClient[body_part] = nh->serviceClient<roboy_control_msgs::ListItems>("/roboy/" + body_part + "/control/ListExistingTrajectories");
 
         performMovementsResultSubscriber[body_part] = nh->subscribe("/"+body_part+"_movements_server/result", 1, &RoboyTrajectoriesControl::performMovementsResultCallback, this);
     }
 
-//    listExistingBehaviorsServiceClient = nh->serviceClient<roboy_communication_control::ListItems>("/roboy/control/ListExistingTrajectories");
-//    expandBehaviorServiceClient = nh->serviceClient<roboy_communication_control::ListItems>("/roboy/control/ExpandBehavior");
+//    listExistingBehaviorsServiceClient = nh->serviceClient<roboy_control_msgs::ListItems>("/roboy/control/ListExistingTrajectories");
+//    expandBehaviorServiceClient = nh->serviceClient<roboy_control_msgs::ListItems>("/roboy/control/ExpandBehavior");
     motorStatusSubscriber = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyTrajectoriesControl::motorStatusCallback, this);
 
-    startRecordTrajectoryPublisher = nh->advertise<roboy_communication_control::StartRecordTrajectory>("/roboy/control/StartRecordTrajectory", 1);
+    startRecordTrajectoryPublisher = nh->advertise<roboy_control_msgs::StartRecordTrajectory>("/roboy/control/StartRecordTrajectory", 1);
     stopRecordTrajectoryPublisher = nh->advertise<std_msgs::Empty>("/roboy/control/StopRecordTrajectory", 1);
-//    saveBehaviorPublisher = nh->advertise<roboy_communication_control::Behavior>("/roboy/control/SaveBehavior", 1);
+//    saveBehaviorPublisher = nh->advertise<roboy_control_msgs::Behavior>("/roboy/control/SaveBehavior", 1);
     enablePlaybackPublisher = nh->advertise<std_msgs::Bool>("/roboy/control/EnablePlayback", 1);
     preDisplacementPublisher = nh->advertise<std_msgs::Int32>("/roboy/middleware/PreDisplacement", 1);
 
@@ -164,12 +164,12 @@ void RoboyTrajectoriesControl::initializeRosCommunication() {
 
 }
 
-void RoboyTrajectoriesControl::performMovementsResultCallback(const roboy_communication_control::PerformMovementsActionResult::ConstPtr &msg) {
+void RoboyTrajectoriesControl::performMovementsResultCallback(const roboy_control_msgs::PerformMovementsActionResult::ConstPtr &msg) {
     // TODO many parts with various duration time
     ui.progressBar->hide();
 }
 
-void RoboyTrajectoriesControl::motorStatusCallback(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
+void RoboyTrajectoriesControl::motorStatusCallback(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg) {
 
 //    for (int i=0; i<active_motors[msg->id].size(); i++)
     for(auto it = active_motors[msg->id].begin(); it != active_motors[msg->id].end(); it++ )
@@ -193,7 +193,7 @@ void RoboyTrajectoriesControl::pullExistingTrajectories() {
     vector<QString> trajectories;
 
     for (auto part: bodyParts) {
-        roboy_communication_control::ListItems srv;
+        roboy_control_msgs::ListItems srv;
         srv.request.name = trajectories_path;
         listExistingTrajectoriesServiceClient[part].call(srv);
 
@@ -329,7 +329,7 @@ void RoboyTrajectoriesControl::playTrajectoriesButtonClicked() {
     enablePlaybackPublisher.publish(msg);
 
     vector<string> actions = getCurrentActions();
-    map<string,roboy_communication_control::PerformMovementsGoal> goals;
+    map<string,roboy_control_msgs::PerformMovementsGoal> goals;
     for (auto action: actions) {
         if (action=="sync") {
 
@@ -376,7 +376,7 @@ void RoboyTrajectoriesControl::stopBehaviorButtonClicked() {
 }
 
 void RoboyTrajectoriesControl::relaxAllMusclesButtonClicked() {
-    roboy_communication_middleware::SetInt16 srv;
+    roboy_middleware_msgs::SetInt16 srv;
     srv.request.setpoint = 0;
     for (auto part: activeBodyParts) {
         if (part->isChecked()) {
@@ -388,7 +388,7 @@ void RoboyTrajectoriesControl::relaxAllMusclesButtonClicked() {
 }
 
 void RoboyTrajectoriesControl::allToDisplacementButtonClicked() {
-    roboy_communication_middleware::SetInt16 srv;
+    roboy_middleware_msgs::SetInt16 srv;
     srv.request.setpoint = preDisplacement;
     for (auto part: activeBodyParts) {
         if (part->isChecked()) {
@@ -403,7 +403,7 @@ void RoboyTrajectoriesControl::allToDisplacementButtonClicked() {
 }
 
 void RoboyTrajectoriesControl::startRecordTrajectoryButtonClicked() {
-    roboy_communication_control::StartRecordTrajectory msg;
+    roboy_control_msgs::StartRecordTrajectory msg;
 
 
 
@@ -422,7 +422,7 @@ void RoboyTrajectoriesControl::startRecordTrajectoryButtonClicked() {
         for (auto part: activeBodyParts) {
             if (part->isChecked()) {
                 copy(active_motors[i].begin(), active_motors[i].end(),
-                          std::back_inserter(msg.idList));
+                          std::back_inserter(msg.id_list));
                 msg.body_parts.push_back(part->whatsThis().toStdString());
             }
             i++;
@@ -463,7 +463,7 @@ void RoboyTrajectoriesControl::saveBehavior(string name, vector<string> actions)
 
 void RoboyTrajectoriesControl::loadBehaviorButtonClicked() {
 
-//    roboy_communication_control::ListItems srv;
+//    roboy_control_msgs::ListItems srv;
 //    srv.request.name = behaviors_path;
 //    listExistingBehaviorsServiceClient.call(srv);
 
@@ -576,7 +576,7 @@ vector<string> RoboyTrajectoriesControl::expandBehavior(string name) {
 
     return actions;
 
-//    roboy_communication_control::ListItems srv;
+//    roboy_control_msgs::ListItems srv;
 //    srv.request.name = name;
 //    expandBehaviorServiceClient.call(srv);
 //

@@ -5,9 +5,9 @@
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
 #include <roboy_control/ui_roboy_control.h>
-#include <roboy_communication_middleware/ControlMode.h>
-#include <roboy_communication_middleware/MotorCommand.h>
-#include <roboy_communication_middleware/MotorConfigService.h>
+#include <roboy_middleware_msgs/ControlMode.h>
+#include <roboy_middleware_msgs/MotorCommand.h>
+#include <roboy_middleware_msgs/MotorConfigService.h>
 #include <QWidget>
 #include <QtQuick/QQuickView>
 #include <pluginlib/class_list_macros.h>

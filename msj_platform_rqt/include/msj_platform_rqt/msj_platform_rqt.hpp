@@ -5,9 +5,9 @@
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
 #include <msj_platform_rqt/ui_msj_platform_rqt.h>
-#include <roboy_communication_middleware/MagneticSensor.h>
-#include <roboy_communication_middleware/MotorStatus.h>
-#include <roboy_communication_middleware/MotorCommand.h>
+#include <roboy_middleware_msgs/MagneticSensor.h>
+#include <roboy_middleware_msgs/MotorStatus.h>
+#include <roboy_middleware_msgs/MotorCommand.h>
 #include <QWidget>
 #include <QSlider>
 #include <QtWidgets/QCheckBox>
@@ -58,8 +58,8 @@ public Q_SLOTS:
     void showMagneticField();
     void clearMagneticField();
 private:
-    void MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg);
-    void MagneticSensor(const roboy_communication_middleware::MagneticSensor::ConstPtr &msg);
+    void MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
+    void MagneticSensor(const roboy_middleware_msgs::MagneticSensor::ConstPtr &msg);
 Q_SIGNALS:
     void newData();
 private:

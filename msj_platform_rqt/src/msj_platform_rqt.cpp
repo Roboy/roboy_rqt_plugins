@@ -65,7 +65,7 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &MSJPlatformRQT::MotorStatus, this);
     magneticSensor = nh->subscribe("/roboy/middleware/MagneticSensor", 1, &MSJPlatformRQT::MagneticSensor, this);
-    motorCommand = nh->advertise<roboy_communication_middleware::MotorCommand>("/roboy/middleware/MotorCommand", 1);
+    motorCommand = nh->advertise<roboy_middleware_msgs::MotorCommand>("/roboy/middleware/MotorCommand", 1);
     emergencyStop = nh->serviceClient<std_srvs::SetBool>("/msj_platform/emergency_stop");
     zero = nh->serviceClient<std_srvs::Empty>("/msj_platform/zero");
     QObject::connect(this, SIGNAL(newData()), this, SLOT(plotData()));
@@ -106,7 +106,7 @@ void MSJPlatformRQT::restoreSettings(const qt_gui_cpp::Settings &plugin_settings
     // v = instance_settings.value(k)
 }
 
-void MSJPlatformRQT::MotorStatus(const roboy_communication_middleware::MotorStatus::ConstPtr &msg) {
+void MSJPlatformRQT::MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg) {
     ROS_DEBUG_THROTTLE(5, "receiving motor status");
     if (msg->id == ui.fpga->value()) {
         ros::Duration delta = (ros::Time::now() - start_time);
@@ -153,7 +153,7 @@ void MSJPlatformRQT::MotorStatus(const roboy_communication_middleware::MotorStat
     }
 }
 
-void MSJPlatformRQT::MagneticSensor(const roboy_communication_middleware::MagneticSensor::ConstPtr &msg) {
+void MSJPlatformRQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor::ConstPtr &msg) {
     int j = 0;
     ros::Duration delta = (ros::Time::now() - start_time);
     time_sensor.push_back(delta.toSec());
@@ -330,14 +330,14 @@ void MSJPlatformRQT::fpgaChanged(int fpga) {
 }
 
 void MSJPlatformRQT::motorPosChanged(int pos) {
-    roboy_communication_middleware::MotorCommand msg;
+    roboy_middleware_msgs::MotorCommand msg;
     msg.id = ui.fpga->value();
     for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
         char str[20];
         sprintf(str, "motor_pos_%d", i);
         QSlider *slider = widget_->findChild<QSlider *>(str);
         msg.motors.push_back(i);
-        msg.setPoints.push_back(slider->value());
+        msg.set_points.push_back(slider->value());
     }
     motorCommand.publish(msg);
 }
