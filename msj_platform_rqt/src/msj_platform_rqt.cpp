@@ -1,4 +1,5 @@
 #include <msj_platform_rqt/msj_platform_rqt.hpp>
+#include <std_msgs/Float32.h>
 
 MSJPlatformRQT::MSJPlatformRQT()
         : rqt_gui_cpp::Plugin(), widget_(0) {
@@ -56,6 +57,39 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     ui.magnetic_plot_2->xAxis->setLabel("time[s]");
     ui.magnetic_plot_2->yAxis->setLabel("sensor 2");
 
+    ui.joint_space->addGraph();
+    ui.joint_space->graph(0)->setPen(QPen(Qt::red));
+    ui.joint_space->graph(0)->setLineStyle(QCPGraph::lsNone);
+    ui.joint_space->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5));
+    ui.joint_space->addGraph();
+    ui.joint_space->graph(1)->setPen(QPen(Qt::blue));
+    ui.joint_space->graph(1)->setLineStyle(QCPGraph::lsNone);
+    ui.joint_space->graph(1)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 1));
+    ui.joint_space->xAxis->setLabel("sphere_axis0");
+    ui.joint_space->yAxis->setLabel("sphere_axis1");
+
+    string path = ros::package::getPath("robots");
+    path+="/msj_platform/joint_limits.txt";
+    FILE*       file = fopen(path.c_str(),"r");
+    if (NULL != file) {
+        fscanf(file, "%*[^\n]\n", NULL);
+        float qx,qy;
+        int i =0;
+        while(fscanf(file,"%f %f\n",&qx,&qy)==2){
+            limits[0].push_back(qx);
+            limits[1].push_back(qy);
+            cout << qx << "\t" << qy << endl;
+            i++;
+        }
+        printf("read %d joint limit values\n", i);
+        ui.joint_space->graph(0)->setData(limits[0],limits[1]);
+        ui.joint_space->xAxis->rescale();
+        ui.joint_space->yAxis->rescale();
+        ui.joint_space->replot();
+    }else{
+        cout << "could not open " << path << endl;
+    }
+
     nh = ros::NodeHandlePtr(new ros::NodeHandle);
     if (!ros::isInitialized()) {
         int argc = 0;
@@ -63,12 +97,17 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
         ros::init(argc, argv, "msj_platform_rqt_plugin");
     }
 
+    joint_state = nh->subscribe("/joint_state", 1, &MSJPlatformRQT::JointState, this);
     motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &MSJPlatformRQT::MotorStatus, this);
     magneticSensor = nh->subscribe("/roboy/middleware/MagneticSensor", 1, &MSJPlatformRQT::MagneticSensor, this);
     motorCommand = nh->advertise<roboy_middleware_msgs::MotorCommand>("/roboy/middleware/MotorCommand", 1);
+    sphere_axis0 = nh->advertise<std_msgs::Float32>("/sphere_axis0/sphere_axis0/target", 1);
+    sphere_axis1 = nh->advertise<std_msgs::Float32>("/sphere_axis1/sphere_axis1/target", 1);
+    sphere_axis2 = nh->advertise<std_msgs::Float32>("/sphere_axis2/sphere_axis2/target", 1);
     emergencyStop = nh->serviceClient<std_srvs::SetBool>("/msj_platform/emergency_stop");
     zero = nh->serviceClient<std_srvs::Empty>("/msj_platform/zero");
     QObject::connect(this, SIGNAL(newData()), this, SLOT(plotData()));
+    QObject::connect(this, SIGNAL(newJointState()), this, SLOT(plotJointState()));
     QObject::connect(ui.toggle_all, SIGNAL(clicked()), this, SLOT(toggleAll()));
     QObject::connect(ui.fpga, SIGNAL(valueChanged(int)), this, SLOT(fpgaChanged(int)));
     QObject::connect(ui.motor_pos_0, SIGNAL(valueChanged(int)), this, SLOT(motorPosChanged(int)));
@@ -85,6 +124,9 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     QObject::connect(ui.zero, SIGNAL(clicked()), this, SLOT(zeroClicked()));
     QObject::connect(ui.show_magnetic_field, SIGNAL(clicked()), this, SLOT(showMagneticField()));
     QObject::connect(ui.clear_magnetic_field, SIGNAL(clicked()), this, SLOT(clearMagneticField()));
+
+    grid_thread.reset(new std::thread(&MSJPlatformRQT::gridMap, this));
+    grid_thread->detach();
 
     spinner.reset(new ros::AsyncSpinner(0));
     spinner->start();
@@ -189,6 +231,184 @@ void MSJPlatformRQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor:
     }
 }
 
+void MSJPlatformRQT::JointState(const roboy_simulation_msgs::JointState::ConstPtr &msg){
+    static int counter = 0;
+    counter++;
+    if(counter%5==0) {
+        for (int i = 3; i < msg->q.size(); i++) {
+            if (i > 6)
+                return;
+            q[i-3].push_back(msg->q[i]);
+        }
+        Q_EMIT newJointState();
+    }
+}
+
+long MSJPlatformRQT::closest(QVector<double> const& vec, double value){
+    auto const it = std::lower_bound(vec.begin(), vec.end(), value);
+    if (it == vec.end()) { return -1; }
+    return distance(vec.begin(),it);
+}
+
+struct Point
+{
+    int x;
+    int y;
+};
+
+// Given three colinear points p, q, r, the function checks if
+// point q lies on line segment 'pr'
+bool onSegment(Point p, Point q, Point r)
+{
+    if (q.x <= max(p.x, r.x) && q.x >= min(p.x, r.x) &&
+        q.y <= max(p.y, r.y) && q.y >= min(p.y, r.y))
+        return true;
+    return false;
+}
+
+// To find orientation of ordered triplet (p, q, r).
+// The function returns following values
+// 0 --> p, q and r are colinear
+// 1 --> Clockwise
+// 2 --> Counterclockwise
+int orientation(Point p, Point q, Point r)
+{
+    int val = (q.y - p.y) * (r.x - q.x) -
+              (q.x - p.x) * (r.y - q.y);
+
+    if (val == 0) return 0;  // colinear
+    return (val > 0)? 1: 2; // clock or counterclock wise
+}
+
+// The function that returns true if line segment 'p1q1'
+// and 'p2q2' intersect.
+bool doIntersect(Point p1, Point q1, Point p2, Point q2)
+{
+    // Find the four orientations needed for general and
+    // special cases
+    int o1 = orientation(p1, q1, p2);
+    int o2 = orientation(p1, q1, q2);
+    int o3 = orientation(p2, q2, p1);
+    int o4 = orientation(p2, q2, q1);
+
+    // General case
+    if (o1 != o2 && o3 != o4)
+        return true;
+
+    // Special Cases
+    // p1, q1 and p2 are colinear and p2 lies on segment p1q1
+    if (o1 == 0 && onSegment(p1, p2, q1)) return true;
+
+    // p1, q1 and p2 are colinear and q2 lies on segment p1q1
+    if (o2 == 0 && onSegment(p1, q2, q1)) return true;
+
+    // p2, q2 and p1 are colinear and p1 lies on segment p2q2
+    if (o3 == 0 && onSegment(p2, p1, q2)) return true;
+
+    // p2, q2 and q1 are colinear and q1 lies on segment p2q2
+    if (o4 == 0 && onSegment(p2, q1, q2)) return true;
+
+    return false; // Doesn't fall in any of the above cases
+}
+
+// Returns true if the point p lies inside the polygon[] with n vertices
+bool isInside(vector<Point> polygon, Point p)
+{
+    int n = polygon.size();
+    // Create a point for line segment from p to infinite
+    Point extreme = {INF, p.y};
+
+    // Count intersections of the above line with sides of polygon
+    int count = 0, i = 0;
+    do
+    {
+        int next = (i+1)%n;
+
+        // Check if the line segment from 'p' to 'extreme' intersects
+        // with the line segment from 'polygon[i]' to 'polygon[next]'
+        if (doIntersect(polygon[i], polygon[next], p, extreme))
+        {
+            // If the point 'p' is colinear with line segment 'i-next',
+            // then check if it lies on segment. If it lies, return true,
+            // otherwise false
+            if (orientation(polygon[i], p, polygon[next]) == 0)
+                return onSegment(polygon[i], p, polygon[next]);
+
+            count++;
+        }
+        i = next;
+    } while (i != 0);
+
+    // Return true if count is odd, false otherwise
+    return count&1;  // Same as (count%2 == 1)
+}
+
+void MSJPlatformRQT::gridMap(){
+    ros::Rate rate(20);
+    vector<Point> polygon;
+    double min[3] = {0,0,-0.3}, max[3] = {0,0,0.3};
+    for(int i=0;i<limits[0].size();i++){
+        if(limits[0][i]<min[0])
+            min[0] = limits[0][i];
+        if(limits[1][i]<min[1])
+            min[1] = limits[1][i];
+        if(limits[1][i]>max[0])
+            max[0] = limits[0][i];
+        if(limits[0][i]>max[1])
+            max[1] = limits[1][i];
+        Point p;
+        p.x = limits[0][i]*10000 + 50000;
+        p.y = limits[1][i]*10000 + 50000;
+        polygon.push_back(p);
+    }
+    double target[3] = {q[0].back(),q[1].back(),q[2].back()};
+    bool dir[3] = {false,false,false};
+    double y_scan_step = 0.05;
+    while(ros::ok()){
+        if(ui.run_grid->isChecked()){
+            target[0] += (dir[0] ? -1.0 : 1.0) * 0.001;
+            if (target[0] > max[0] || target[0] < min[0]) {
+                dir[0] = !dir[0];
+                target[1] += (dir[1] ? -1.0 : 1.0) * y_scan_step;
+                if (target[1] > max[1] || target[1] < min[1]) {
+                    dir[1] = !dir[1];
+                    y_scan_step -= 0.01;
+                    if(y_scan_step<=0) {
+                        ui.run_grid->setChecked(false);
+                        y_scan_step = 0.05;
+                        continue;
+                    }
+                }
+            }
+
+            Point p;
+            p.x = target[0]*10000 + 50000;
+            p.y = target[1]*10000 + 50000;
+            if(!isInside(polygon,p)){
+//                ROS_INFO_THROTTLE(1,"not inside");
+                continue;
+            }else{
+//                ROS_INFO_THROTTLE(1,"inside");
+                std_msgs::Float32 msg;
+                msg.data = target[0];
+                sphere_axis0.publish(msg);
+                msg.data = target[1];
+                sphere_axis1.publish(msg);
+                if(target[2]>max[2]||target[2]<min[2])
+                    dir[2] = !dir[2];
+                target[2] += (dir[2] ? -1.0 : 1.0) * 0.01;
+                msg.data = target[2];
+                sphere_axis2.publish(msg);
+            }
+        }else{
+            q[0].clear();
+            q[1].clear();
+            q[2].clear();
+        }
+        rate.sleep();
+    }
+}
+
 void MSJPlatformRQT::plotData() {
     for (uint motor = 0; motor < NUMBER_OF_MOTORS; motor++) {
         ui.position_plot->graph(motor)->setData(time, motorData[ui.fpga->value()][motor][0]);
@@ -217,6 +437,13 @@ void MSJPlatformRQT::plotData() {
     ui.position_plot->replot();
     ui.velocity_plot->replot();
     ui.angle_plot->replot();
+}
+
+void MSJPlatformRQT::plotJointState(){
+    ui.joint_space->graph(1)->setData(q[0],q[1]);
+    ui.joint_space->xAxis->rescale();
+    ui.joint_space->yAxis->rescale();
+    ui.joint_space->replot();
 }
 
 void MSJPlatformRQT::rescale() {

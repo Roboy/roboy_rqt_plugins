@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>681</width>
+    <width>1020</width>
     <height>939</height>
    </rect>
   </property>
@@ -801,6 +801,32 @@
    </property>
    <property name="text">
     <string>clear magnetic field</string>
+   </property>
+  </widget>
+  <widget class="QCustomPlot" name="joint_space" native="true">
+   <property name="geometry">
+    <rect>
+     <x>680</x>
+     <y>80</y>
+     <width>341</width>
+     <height>461</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="run_grid">
+   <property name="geometry">
+    <rect>
+     <x>680</x>
+     <y>540</y>
+     <width>171</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>run grid</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
    </property>
   </widget>
  </widget>

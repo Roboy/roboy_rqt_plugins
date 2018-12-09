@@ -5,11 +5,15 @@
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
 #include <msj_platform_rqt/ui_msj_platform_rqt.h>
+#include <roboy_simulation_msgs/JointState.h>
 #include <roboy_middleware_msgs/MagneticSensor.h>
 #include <roboy_middleware_msgs/MotorStatus.h>
 #include <roboy_middleware_msgs/MotorCommand.h>
 #include <QWidget>
 #include <QSlider>
+#include <QLabel>
+#include <QPicture>
+#include <QPainter>
 #include <QtWidgets/QCheckBox>
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
@@ -20,11 +24,16 @@
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <vector>
+#include <stdio.h>
+#include <ros/package.h>
+#include <qcustomplot.h>
+#include <thread>
 
 #endif
 
 #define NUMBER_OF_MOTORS 8
 #define msjMeterPerEncoderTick(encoderTicks) (((encoderTicks)/4096.0*2.0*M_PI)*(2.0*M_PI*0.0045))
+#define INF 100000
 
 using namespace Eigen;
 using namespace std;
@@ -47,6 +56,7 @@ public:
 
 public Q_SLOTS:
     void plotData();
+    void plotJointState();
     void rescale();
     void rescaleMagneticSensors();
     void plotMotorChanged();
@@ -60,25 +70,30 @@ public Q_SLOTS:
 private:
     void MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
     void MagneticSensor(const roboy_middleware_msgs::MagneticSensor::ConstPtr &msg);
+    void JointState(const roboy_simulation_msgs::JointState::ConstPtr &msg);
+    long closest(QVector<double> const& vec, double value);
+    void gridMap();
 Q_SIGNALS:
     void newData();
+    void newJointState();
 private:
     Ui::MSJPlatformRQT ui;
     QWidget *widget_;
 
     QVector<double> time, time_sensor;
+    QVector<double> limits[3];
     int counter = 0;
-    QVector<double> motorData[NUMBER_OF_FPGAS+1][NUMBER_OF_MOTORS][3];
-    QVector<double> sensorData[3][3];
+    QVector<double> motorData[NUMBER_OF_FPGAS+1][NUMBER_OF_MOTORS][3], sensorData[3][3], q[3];
     QVector<Matrix4d> poseData;
     bool motorConnected[NUMBER_OF_FPGAS+1][NUMBER_OF_MOTORS], plotMotor[NUMBER_OF_MOTORS], show_magnetic_field = false;
     int samples_per_plot = 300;
     QColor color_pallette[16] = {Qt::blue, Qt::red, Qt::green, Qt::cyan, Qt::magenta, Qt::darkGray, Qt::darkRed, Qt::darkGreen,
                                  Qt::darkBlue, Qt::darkCyan, Qt::darkMagenta, Qt::darkYellow, Qt::black, Qt::gray, Qt::green, Qt::cyan};
     ros::NodeHandlePtr nh;
-    ros::Subscriber motorStatus, magneticSensor;
-    ros::Publisher motorCommand;
+    ros::Subscriber motorStatus, magneticSensor, joint_state;
+    ros::Publisher motorCommand, sphere_axis0, sphere_axis1, sphere_axis2;
     ros::ServiceClient emergencyStop, zero;
     ros::Time start_time;
     boost::shared_ptr<ros::AsyncSpinner> spinner;
+    boost::shared_ptr<std::thread> grid_thread;
 };
