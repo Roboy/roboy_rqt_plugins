@@ -28,6 +28,7 @@
 #include <ros/package.h>
 #include <qcustomplot.h>
 #include <thread>
+#include <common_utilities/UDPSocket.hpp>
 
 #endif
 
@@ -73,6 +74,7 @@ private:
     void JointState(const roboy_simulation_msgs::JointState::ConstPtr &msg);
     long closest(QVector<double> const& vec, double value);
     void gridMap();
+    void receivePose();
 Q_SIGNALS:
     void newData();
     void newJointState();
@@ -95,5 +97,6 @@ private:
     ros::ServiceClient emergencyStop, zero;
     ros::Time start_time;
     boost::shared_ptr<ros::AsyncSpinner> spinner;
-    boost::shared_ptr<std::thread> grid_thread;
+    boost::shared_ptr<std::thread> grid_thread, udp_thread;
+    UDPSocketPtr udp;
 };

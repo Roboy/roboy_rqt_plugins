@@ -132,6 +132,12 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     spinner->start();
 
     start_time = ros::Time::now();
+
+    uint32_t ip;
+    inet_pton(AF_INET, "192.168.255.255", &ip);
+    udp.reset(new UDPSocket(8000));
+    udp_thread.reset(new std::thread(&MSJPlatformRQT::receivePose, this));
+    udp_thread->detach();
 }
 
 void MSJPlatformRQT::shutdownPlugin() {
@@ -200,7 +206,8 @@ void MSJPlatformRQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor:
     ros::Duration delta = (ros::Time::now() - start_time);
     time_sensor.push_back(delta.toSec());
     Matrix4d pose;
-    getTransform("world","top",pose);
+    if(!getTransform("world","top_estimate",pose))
+        ROS_WARN("is the IMU on?!");
     poseData.push_back(pose);
     for (int i = 0; i < msg->sensor_id.size(); i++) {
         sensorData[msg->sensor_id[i]][0].push_back(msg->x[j]);
@@ -407,6 +414,27 @@ void MSJPlatformRQT::gridMap(){
         }
         rate.sleep();
     }
+}
+
+void MSJPlatformRQT::receivePose(){
+    ROS_INFO("start receiving udp");
+    while (ros::ok()) {
+        if (udp->receiveUDP() == 16) {
+            float q[4];
+            for(int i=0;i<4;i++){
+                uint32_t data = (uint32_t) ((uint8_t) udp->buf[3+i*4] << 24 | (uint8_t) udp->buf[2+i*4] << 16 |
+                                   (uint8_t) udp->buf[1+i*4] << 8 | (uint8_t) udp->buf[0+i*4]);
+                q[i] = unpack754_32(data);
+            }
+            geometry_msgs::Pose p;
+            p.orientation.x = q[0];
+            p.orientation.y = q[1];
+            p.orientation.z = q[2];
+            p.orientation.w = q[3];
+            publishTransform("world","top_estimate",p);
+        }
+    }
+    ROS_INFO("stop receiving udp");
 }
 
 void MSJPlatformRQT::plotData() {
