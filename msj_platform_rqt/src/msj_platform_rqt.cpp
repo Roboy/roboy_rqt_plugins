@@ -234,7 +234,7 @@ void MSJPlatformRQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor:
 void MSJPlatformRQT::JointState(const roboy_simulation_msgs::JointState::ConstPtr &msg){
     static int counter = 0;
     counter++;
-    if(counter%5==0) {
+    if(counter%20==0) {
         for (int i = 3; i < msg->q.size(); i++) {
             if (i > 6)
                 return;
@@ -344,7 +344,7 @@ bool isInside(vector<Point> polygon, Point p)
 }
 
 void MSJPlatformRQT::gridMap(){
-    ros::Rate rate(20);
+    ros::Rate rate(40);
     vector<Point> polygon;
     double min[3] = {0,0,-0.3}, max[3] = {0,0,0.3};
     for(int i=0;i<limits[0].size();i++){
@@ -396,7 +396,7 @@ void MSJPlatformRQT::gridMap(){
                 sphere_axis1.publish(msg);
                 if(target[2]>max[2]||target[2]<min[2])
                     dir[2] = !dir[2];
-                target[2] += (dir[2] ? -1.0 : 1.0) * 0.01;
+                target[2] += (dir[2] ? -1.0 : 1.0) * 0.001;
                 msg.data = target[2];
                 sphere_axis2.publish(msg);
             }
