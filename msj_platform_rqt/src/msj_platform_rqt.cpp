@@ -257,116 +257,29 @@ long MSJPlatformRQT::closest(QVector<double> const& vec, double value){
     return distance(vec.begin(),it);
 }
 
-struct Point
+int pnpoly(QVector<double> limits_x, QVector<double> limits_y, double testx, double testy)
 {
-    int x;
-    int y;
-};
-
-// Given three colinear points p, q, r, the function checks if
-// point q lies on line segment 'pr'
-bool onSegment(Point p, Point q, Point r)
-{
-    if (q.x <= max(p.x, r.x) && q.x >= min(p.x, r.x) &&
-        q.y <= max(p.y, r.y) && q.y >= min(p.y, r.y))
-        return true;
-    return false;
-}
-
-// To find orientation of ordered triplet (p, q, r).
-// The function returns following values
-// 0 --> p, q and r are colinear
-// 1 --> Clockwise
-// 2 --> Counterclockwise
-int orientation(Point p, Point q, Point r)
-{
-    int val = (q.y - p.y) * (r.x - q.x) -
-              (q.x - p.x) * (r.y - q.y);
-
-    if (val == 0) return 0;  // colinear
-    return (val > 0)? 1: 2; // clock or counterclock wise
-}
-
-// The function that returns true if line segment 'p1q1'
-// and 'p2q2' intersect.
-bool doIntersect(Point p1, Point q1, Point p2, Point q2)
-{
-    // Find the four orientations needed for general and
-    // special cases
-    int o1 = orientation(p1, q1, p2);
-    int o2 = orientation(p1, q1, q2);
-    int o3 = orientation(p2, q2, p1);
-    int o4 = orientation(p2, q2, q1);
-
-    // General case
-    if (o1 != o2 && o3 != o4)
-        return true;
-
-    // Special Cases
-    // p1, q1 and p2 are colinear and p2 lies on segment p1q1
-    if (o1 == 0 && onSegment(p1, p2, q1)) return true;
-
-    // p1, q1 and p2 are colinear and q2 lies on segment p1q1
-    if (o2 == 0 && onSegment(p1, q2, q1)) return true;
-
-    // p2, q2 and p1 are colinear and p1 lies on segment p2q2
-    if (o3 == 0 && onSegment(p2, p1, q2)) return true;
-
-    // p2, q2 and q1 are colinear and q1 lies on segment p2q2
-    if (o4 == 0 && onSegment(p2, q1, q2)) return true;
-
-    return false; // Doesn't fall in any of the above cases
-}
-
-// Returns true if the point p lies inside the polygon[] with n vertices
-bool isInside(vector<Point> polygon, Point p)
-{
-    int n = polygon.size();
-    // Create a point for line segment from p to infinite
-    Point extreme = {INF, p.y};
-
-    // Count intersections of the above line with sides of polygon
-    int count = 0, i = 0;
-    do
-    {
-        int next = (i+1)%n;
-
-        // Check if the line segment from 'p' to 'extreme' intersects
-        // with the line segment from 'polygon[i]' to 'polygon[next]'
-        if (doIntersect(polygon[i], polygon[next], p, extreme))
-        {
-            // If the point 'p' is colinear with line segment 'i-next',
-            // then check if it lies on segment. If it lies, return true,
-            // otherwise false
-            if (orientation(polygon[i], p, polygon[next]) == 0)
-                return onSegment(polygon[i], p, polygon[next]);
-
-            count++;
-        }
-        i = next;
-    } while (i != 0);
-
-    // Return true if count is odd, false otherwise
-    return count&1;  // Same as (count%2 == 1)
+    int i, j, c = 0;
+    for (i = 0, j = limits_x.size()-1; i < limits_x.size(); j = i++) {
+        if ( ((limits_y[i]>testy) != (limits_y[j]>testy)) &&
+             (testx < (limits_x[j]-limits_x[i]) * (testy-limits_y[i]) / (limits_y[j]-limits_y[i]) + limits_x[i]) )
+            c = !c;
+    }
+    return c;
 }
 
 void MSJPlatformRQT::gridMap(){
     ros::Rate rate(40);
-    vector<Point> polygon;
     double min[3] = {0,0,-0.3}, max[3] = {0,0,0.3};
     for(int i=0;i<limits[0].size();i++){
         if(limits[0][i]<min[0])
             min[0] = limits[0][i];
         if(limits[1][i]<min[1])
             min[1] = limits[1][i];
-        if(limits[1][i]>max[0])
+        if(limits[0][i]>max[0])
             max[0] = limits[0][i];
-        if(limits[0][i]>max[1])
+        if(limits[1][i]>max[1])
             max[1] = limits[1][i];
-        Point p;
-        p.x = limits[0][i]*10000 + 50000;
-        p.y = limits[1][i]*10000 + 50000;
-        polygon.push_back(p);
     }
     double target[3] = {q[0].back(),q[1].back(),q[2].back()};
     bool dir[3] = {false,false,false};
@@ -374,26 +287,21 @@ void MSJPlatformRQT::gridMap(){
     while(ros::ok()){
         if(ui.run_grid->isChecked()){
             target[0] += (dir[0] ? -1.0 : 1.0) * 0.001;
-            if (target[0] > max[0] || target[0] < min[0]) {
+            if (target[0] >= max[0] || target[0] <= min[0]) {
                 dir[0] = !dir[0];
                 target[1] += (dir[1] ? -1.0 : 1.0) * y_scan_step;
-                if (target[1] > max[1] || target[1] < min[1]) {
+                if (target[1] >= max[1] || target[1] <= min[1]) {
                     dir[1] = !dir[1];
                     y_scan_step -= 0.01;
-                    if(y_scan_step<=0) {
+                    if (y_scan_step <= 0) {
                         ui.run_grid->setChecked(false);
                         y_scan_step = 0.05;
                         continue;
                     }
                 }
             }
-
-            Point p;
-            p.x = target[0]*10000 + 50000;
-            p.y = target[1]*10000 + 50000;
-            if(!isInside(polygon,p)){
+            if(pnpoly(limits[0],limits[1],target[0],target[1])==0){
 //                ROS_INFO_THROTTLE(1,"not inside");
-                continue;
             }else{
 //                ROS_INFO_THROTTLE(1,"inside");
                 std_msgs::Float32 msg;
@@ -406,13 +314,14 @@ void MSJPlatformRQT::gridMap(){
                 target[2] += (dir[2] ? -1.0 : 1.0) * 0.001;
                 msg.data = target[2];
                 sphere_axis2.publish(msg);
+                rate.sleep();
             }
+
         }else{
             q[0].clear();
             q[1].clear();
             q[2].clear();
         }
-        rate.sleep();
     }
 }
 

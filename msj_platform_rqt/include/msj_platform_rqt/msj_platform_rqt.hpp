@@ -34,7 +34,7 @@
 
 #define NUMBER_OF_MOTORS 8
 #define msjMeterPerEncoderTick(encoderTicks) (((encoderTicks)/4096.0*2.0*M_PI)*(2.0*M_PI*0.0045))
-#define INF 100000
+#define INF 500000
 
 using namespace Eigen;
 using namespace std;
