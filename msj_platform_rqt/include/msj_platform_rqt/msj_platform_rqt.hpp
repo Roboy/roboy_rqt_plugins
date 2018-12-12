@@ -29,6 +29,7 @@
 #include <qcustomplot.h>
 #include <thread>
 #include <common_utilities/UDPSocket.hpp>
+#include <mutex>
 
 #endif
 
@@ -68,6 +69,8 @@ public Q_SLOTS:
     void zeroClicked();
     void showMagneticField();
     void clearMagneticField();
+    void zeroPose();
+    void calibrateSystem();
 private:
     void MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
     void MagneticSensor(const roboy_middleware_msgs::MagneticSensor::ConstPtr &msg);
@@ -75,6 +78,7 @@ private:
     long closest(QVector<double> const& vec, double value);
     void gridMap();
     void receivePose();
+    int pnpoly(QVector<double> limits_x, QVector<double> limits_y, double testx, double testy);
 Q_SIGNALS:
     void newData();
     void newJointState();
@@ -87,6 +91,8 @@ private:
     int counter = 0;
     QVector<double> motorData[NUMBER_OF_FPGAS+1][NUMBER_OF_MOTORS][3], sensorData[3][3], q[3];
     QVector<Matrix4d> poseData;
+    Quaterniond zero_rot;
+    int imu_state[4];
     bool motorConnected[NUMBER_OF_FPGAS+1][NUMBER_OF_MOTORS], plotMotor[NUMBER_OF_MOTORS], show_magnetic_field = false;
     int samples_per_plot = 300;
     QColor color_pallette[16] = {Qt::blue, Qt::red, Qt::green, Qt::cyan, Qt::magenta, Qt::darkGray, Qt::darkRed, Qt::darkGreen,
@@ -99,4 +105,5 @@ private:
     boost::shared_ptr<ros::AsyncSpinner> spinner;
     boost::shared_ptr<std::thread> grid_thread, udp_thread;
     UDPSocketPtr udp;
+    mutex mux;
 };

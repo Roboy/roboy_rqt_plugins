@@ -124,6 +124,7 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     QObject::connect(ui.zero, SIGNAL(clicked()), this, SLOT(zeroClicked()));
     QObject::connect(ui.show_magnetic_field, SIGNAL(clicked()), this, SLOT(showMagneticField()));
     QObject::connect(ui.clear_magnetic_field, SIGNAL(clicked()), this, SLOT(clearMagneticField()));
+    QObject::connect(ui.system, SIGNAL(clicked()), this, SLOT(calibrateSystem()));
 
     grid_thread.reset(new std::thread(&MSJPlatformRQT::gridMap, this));
     grid_thread->detach();
@@ -132,6 +133,8 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     spinner->start();
 
     start_time = ros::Time::now();
+
+    zero_rot.setIdentity();
 
     uint32_t ip;
     inet_pton(AF_INET, "192.168.255.255", &ip);
@@ -188,13 +191,6 @@ void MSJPlatformRQT::MotorStatus(const roboy_middleware_msgs::MotorStatus::Const
         }
 
         if (counter % 100 == 0) {
-            if (msg->power_sense) {
-                if (ui.power_sense != nullptr)
-                    ui.power_sense->setStyleSheet("background-color:green;");
-            } else {
-                if (ui.power_sense != nullptr)
-                    ui.power_sense->setStyleSheet("background-color:red;");
-            }
             rescale();
             rescaleMagneticSensors();
         }
@@ -207,7 +203,7 @@ void MSJPlatformRQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor:
     time_sensor.push_back(delta.toSec());
     Matrix4d pose;
     if(!getTransform("world","top_estimate",pose))
-        ROS_WARN("is the IMU on?!");
+        ROS_WARN_THROTTLE(10,"is the IMU on?!");
     poseData.push_back(pose);
     for (int i = 0; i < msg->sensor_id.size(); i++) {
         sensorData[msg->sensor_id[i]][0].push_back(msg->x[j]);
@@ -242,6 +238,7 @@ void MSJPlatformRQT::JointState(const roboy_simulation_msgs::JointState::ConstPt
     static int counter = 0;
     counter++;
     if(counter%20==0) {
+        lock_guard<mutex> lock(mux);
         for (int i = 3; i < msg->q.size(); i++) {
             if (i > 6)
                 return;
@@ -257,8 +254,7 @@ long MSJPlatformRQT::closest(QVector<double> const& vec, double value){
     return distance(vec.begin(),it);
 }
 
-int pnpoly(QVector<double> limits_x, QVector<double> limits_y, double testx, double testy)
-{
+int MSJPlatformRQT::pnpoly(QVector<double> limits_x, QVector<double> limits_y, double testx, double testy){
     int i, j, c = 0;
     for (i = 0, j = limits_x.size()-1; i < limits_x.size(); j = i++) {
         if ( ((limits_y[i]>testy) != (limits_y[j]>testy)) &&
@@ -269,7 +265,7 @@ int pnpoly(QVector<double> limits_x, QVector<double> limits_y, double testx, dou
 }
 
 void MSJPlatformRQT::gridMap(){
-    ros::Rate rate(40);
+    ros::Rate rate(50);
     double min[3] = {0,0,-0.3}, max[3] = {0,0,0.3};
     for(int i=0;i<limits[0].size();i++){
         if(limits[0][i]<min[0])
@@ -281,22 +277,31 @@ void MSJPlatformRQT::gridMap(){
         if(limits[1][i]>max[1])
             max[1] = limits[1][i];
     }
-    double target[3] = {q[0].back(),q[1].back(),q[2].back()};
+    double target[3] = {min[0],min[1],0};
     bool dir[3] = {false,false,false};
-    double y_scan_step = 0.05;
+    bool x_first = true;
     while(ros::ok()){
         if(ui.run_grid->isChecked()){
-            target[0] += (dir[0] ? -1.0 : 1.0) * 0.001;
-            if (target[0] >= max[0] || target[0] <= min[0]) {
-                dir[0] = !dir[0];
-                target[1] += (dir[1] ? -1.0 : 1.0) * y_scan_step;
-                if (target[1] >= max[1] || target[1] <= min[1]) {
+            if(x_first) {
+                target[0] += (dir[0] ? -1.0 : 1.0) * 0.001;
+                if (target[0] > max[0] || target[0] < min[0]) {
+                    dir[0] = !dir[0];
+                    target[1] += (dir[1] ? -1.0 : 1.0) * 0.001;
+                    if (target[1] > max[1] || target[1] < min[1]) {
+                        dir[1] = false;
+                        target[1] = min[1];
+                        x_first = false;
+                    }
+                }
+            }else{
+                target[1] += (dir[1] ? -1.0 : 1.0) * 0.001;
+                if (target[1] > max[1] || target[1] < min[1]) {
                     dir[1] = !dir[1];
-                    y_scan_step -= 0.01;
-                    if (y_scan_step <= 0) {
-                        ui.run_grid->setChecked(false);
-                        y_scan_step = 0.05;
-                        continue;
+                    target[0] += (dir[0] ? -1.0 : 1.0) * 0.001;
+                    if (target[0] > max[0] || target[0] < min[0]) {
+                        dir[0] = false;
+                        target[0] = min[0];
+                        x_first = true;
                     }
                 }
             }
@@ -316,11 +321,6 @@ void MSJPlatformRQT::gridMap(){
                 sphere_axis2.publish(msg);
                 rate.sleep();
             }
-
-        }else{
-            q[0].clear();
-            q[1].clear();
-            q[2].clear();
         }
     }
 }
@@ -328,19 +328,33 @@ void MSJPlatformRQT::gridMap(){
 void MSJPlatformRQT::receivePose(){
     ROS_INFO("start receiving udp");
     while (ros::ok()) {
-        if (udp->receiveUDP() == 16) {
+        int bytes_received = udp->receiveUDP();
+        if (bytes_received == 16) {
             float q[4];
             for(int i=0;i<4;i++){
                 uint32_t data = (uint32_t) ((uint8_t) udp->buf[3+i*4] << 24 | (uint8_t) udp->buf[2+i*4] << 16 |
                                    (uint8_t) udp->buf[1+i*4] << 8 | (uint8_t) udp->buf[0+i*4]);
                 q[i] = unpack754_32(data);
             }
-            geometry_msgs::Pose p;
-            p.orientation.x = q[0];
-            p.orientation.y = q[1];
-            p.orientation.z = q[2];
-            p.orientation.w = q[3];
+            Quaterniond quat(q[3],q[0],q[1],q[2]);
+            if(ui.zero_pose->isChecked()){
+                zero_rot = quat;
+                ui.zero_pose->setChecked(false);
+            }
+            quat = quat*zero_rot.inverse();
+            geometry_msgs::Pose p, p_top;
+            p.orientation.x = quat.x();
+            p.orientation.y = quat.y();
+            p.orientation.z = quat.z();
+            p.orientation.w = quat.w();
+            getTransform("world","top",p_top);
+            p.position = p_top.position;
             publishTransform("world","top_estimate",p);
+        }else if(bytes_received == 4){
+            imu_state[0] = udp->buf[0];
+            imu_state[1] = udp->buf[1];
+            imu_state[2] = udp->buf[2];
+            imu_state[3] = udp->buf[3];
         }
     }
     ROS_INFO("stop receiving udp");
@@ -374,6 +388,63 @@ void MSJPlatformRQT::plotData() {
     ui.position_plot->replot();
     ui.velocity_plot->replot();
     ui.angle_plot->replot();
+
+    switch(imu_state[0]){
+        case 0:
+            ui.system->setStyleSheet("background-color: red");
+            break;
+        case 1:
+            ui.system->setStyleSheet("background-color: orange");
+            break;
+        case 2:
+            ui.system->setStyleSheet("background-color: yellow");
+            break;
+        case 3:
+            ui.system->setStyleSheet("background-color: green");
+            break;
+    }
+    switch(imu_state[1]){
+        case 0:
+            ui.gyro->setStyleSheet("background-color: red");
+            break;
+        case 1:
+            ui.gyro->setStyleSheet("background-color: orange");
+            break;
+        case 2:
+            ui.gyro->setStyleSheet("background-color: yellow");
+            break;
+        case 3:
+            ui.gyro->setStyleSheet("background-color: green");
+            break;
+    }
+    switch(imu_state[2]){
+        case 0:
+            ui.acc->setStyleSheet("background-color: red");
+            break;
+        case 1:
+            ui.acc->setStyleSheet("background-color: orange");
+            break;
+        case 2:
+            ui.acc->setStyleSheet("background-color: yellow");
+            break;
+        case 3:
+            ui.acc->setStyleSheet("background-color: green");
+            break;
+    }
+    switch(imu_state[3]){
+        case 0:
+            ui.mag->setStyleSheet("background-color: red");
+            break;
+        case 1:
+            ui.mag->setStyleSheet("background-color: orange");
+            break;
+        case 2:
+            ui.mag->setStyleSheet("background-color: yellow");
+            break;
+        case 3:
+            ui.mag->setStyleSheet("background-color: green");
+            break;
+    }
 }
 
 void MSJPlatformRQT::plotJointState(){
@@ -536,6 +607,37 @@ void MSJPlatformRQT::showMagneticField(){
 
 void MSJPlatformRQT::clearMagneticField(){
     clearAll();
+}
+
+void MSJPlatformRQT::calibrateSystem(){
+    ros::Time start_time = ros::Time::now();
+    double min[3] = {0,0,-1}, max[3] = {0,0,1};
+    for(int i=0;i<limits[0].size();i++){
+        if(limits[0][i]<min[0])
+            min[0] = limits[0][i];
+        if(limits[1][i]<min[1])
+            min[1] = limits[1][i];
+        if(limits[0][i]>max[0])
+            max[0] = limits[0][i];
+        if(limits[1][i]>max[1])
+            max[1] = limits[1][i];
+    }
+    ros::Rate rate(1/3.0);
+    while(imu_state[0]!=3 && (ros::Time::now()-start_time).toSec()<60){
+        double q0 = rand()/(double)RAND_MAX*(max[0]-min[0])+min[0];
+        double q1 = rand()/(double)RAND_MAX*(max[1]-min[1])+min[1];
+        double q2 = rand()/(double)RAND_MAX*(max[2]-min[2])+min[2];
+        if(pnpoly(limits[0],limits[1],q0,q1)){
+            std_msgs::Float32 msg;
+            msg.data = q0;
+            sphere_axis0.publish(msg);
+            msg.data = q1;
+            sphere_axis1.publish(msg);
+            msg.data = q2;
+            sphere_axis2.publish(msg);
+            rate.sleep();
+        }
+    }
 }
 
 PLUGINLIB_DECLARE_CLASS(roboy_motor_status, MSJPlatformRQT, MSJPlatformRQT, rqt_gui_cpp::Plugin)

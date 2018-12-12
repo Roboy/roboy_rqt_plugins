@@ -829,6 +829,74 @@
     <bool>true</bool>
    </property>
   </widget>
+  <widget class="QPushButton" name="zero_pose">
+   <property name="geometry">
+    <rect>
+     <x>850</x>
+     <y>540</y>
+     <width>171</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>zero pose</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="acc">
+   <property name="geometry">
+    <rect>
+     <x>680</x>
+     <y>580</y>
+     <width>71</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>acc</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="gyro">
+   <property name="geometry">
+    <rect>
+     <x>750</x>
+     <y>580</y>
+     <width>71</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>gyro</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="mag">
+   <property name="geometry">
+    <rect>
+     <x>820</x>
+     <y>580</y>
+     <width>71</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>mag</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="system">
+   <property name="geometry">
+    <rect>
+     <x>890</x>
+     <y>580</y>
+     <width>131</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>system</string>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
