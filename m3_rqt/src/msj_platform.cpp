@@ -1,12 +1,12 @@
-#include <msj_platform_rqt/msj_platform.hpp>
+#include <m3_rqt/m3_rqt.hpp>
 #include <std_msgs/Float32.h>
 
-MSJPlatformRQT::MSJPlatformRQT()
+M3RQT::M3RQT()
         : rqt_gui_cpp::Plugin(), widget_(0) {
-    setObjectName("MSJPlatformRQT");
+    setObjectName("M3RQT");
 }
 
-void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
+void M3RQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     // access standalone command line arguments
     QStringList argv = context.argv();
     // create QWidget
@@ -21,8 +21,8 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
         ui.position_plot->graph(motor)->setPen(QPen(color_pallette[motor]));
         ui.velocity_plot->addGraph();
         ui.velocity_plot->graph(motor)->setPen(QPen(color_pallette[motor]));
-        ui.angle_plot->addGraph();
-        ui.angle_plot->graph(motor)->setPen(QPen(color_pallette[motor]));
+        ui.force_plot->addGraph();
+        ui.force_plot->graph(motor)->setPen(QPen(color_pallette[motor]));
         char str[20];
         sprintf(str, "motor_%d", motor);
         QCheckBox *box = widget_->findChild<QCheckBox *>(str);
@@ -38,9 +38,9 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     ui.velocity_plot->yAxis->setLabel("vel[m/s]");
     ui.velocity_plot->replot();
 
-    ui.angle_plot->xAxis->setLabel("time[s]");
-    ui.angle_plot->yAxis->setLabel("ticks");
-    ui.angle_plot->replot();
+    ui.force_plot->xAxis->setLabel("time[s]");
+    ui.force_plot->yAxis->setLabel("ticks");
+    ui.force_plot->replot();
 
     for (int axis = 0; axis < 3; axis++) {
         ui.magnetic_plot_0->addGraph();
@@ -94,12 +94,12 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     if (!ros::isInitialized()) {
         int argc = 0;
         char **argv = NULL;
-        ros::init(argc, argv, "msj_platform_rqt_plugin");
+        ros::init(argc, argv, "m3_rqt_plugin");
     }
 
-    joint_state = nh->subscribe("/joint_state", 1, &MSJPlatformRQT::JointState, this);
-    motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &MSJPlatformRQT::MotorStatus, this);
-    magneticSensor = nh->subscribe("/roboy/middleware/MagneticSensor", 1, &MSJPlatformRQT::MagneticSensor, this);
+    joint_state = nh->subscribe("/joint_state", 1, &M3RQT::JointState, this);
+    motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &M3RQT::MotorStatus, this);
+    magneticSensor = nh->subscribe("/roboy/middleware/MagneticSensor", 1, &M3RQT::MagneticSensor, this);
     motorCommand = nh->advertise<roboy_middleware_msgs::MotorCommand>("/roboy/middleware/MotorCommand", 1);
     sphere_axis0 = nh->advertise<std_msgs::Float32>("/sphere_axis0/sphere_axis0/target", 1);
     sphere_axis1 = nh->advertise<std_msgs::Float32>("/sphere_axis1/sphere_axis1/target", 1);
@@ -126,7 +126,7 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     QObject::connect(ui.clear_magnetic_field, SIGNAL(clicked()), this, SLOT(clearMagneticField()));
     QObject::connect(ui.system, SIGNAL(clicked()), this, SLOT(calibrateSystem()));
 
-    grid_thread.reset(new std::thread(&MSJPlatformRQT::gridMap, this));
+    grid_thread.reset(new std::thread(&M3RQT::gridMap, this));
     grid_thread->detach();
 
     spinner.reset(new ros::AsyncSpinner(0));
@@ -136,28 +136,28 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     zero_rot.setIdentity();
 
-    uint32_t ip;
-    inet_pton(AF_INET, "192.168.255.255", &ip);
-    udp.reset(new UDPSocket(8000));
-    udp_thread.reset(new std::thread(&MSJPlatformRQT::receivePose, this));
+    udp_command.reset(new UDPSocket("192.168.0.134",8000,8000));
+    udp.reset(new UDPSocket(8001));
+    udp_thread.reset(new std::thread(&M3RQT::receiveMotorData, this));
     udp_thread->detach();
+
 }
 
-void MSJPlatformRQT::shutdownPlugin() {
+void M3RQT::shutdownPlugin() {
     motorStatus.shutdown();
 }
 
-void MSJPlatformRQT::saveSettings(qt_gui_cpp::Settings &plugin_settings,
+void M3RQT::saveSettings(qt_gui_cpp::Settings &plugin_settings,
                                   qt_gui_cpp::Settings &instance_settings) const {
     // instance_settings.setValue(k, v)
 }
 
-void MSJPlatformRQT::restoreSettings(const qt_gui_cpp::Settings &plugin_settings,
+void M3RQT::restoreSettings(const qt_gui_cpp::Settings &plugin_settings,
                                      const qt_gui_cpp::Settings &instance_settings) {
     // v = instance_settings.value(k)
 }
 
-void MSJPlatformRQT::MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg) {
+void M3RQT::MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg) {
     ROS_DEBUG_THROTTLE(5, "receiving motor status");
     if (msg->id == ui.fpga->value()) {
         ros::Duration delta = (ros::Time::now() - start_time);
@@ -197,7 +197,7 @@ void MSJPlatformRQT::MotorStatus(const roboy_middleware_msgs::MotorStatus::Const
     }
 }
 
-void MSJPlatformRQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor::ConstPtr &msg) {
+void M3RQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor::ConstPtr &msg) {
     int j = 0;
     ros::Duration delta = (ros::Time::now() - start_time);
     time_sensor.push_back(delta.toSec());
@@ -234,7 +234,7 @@ void MSJPlatformRQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor:
     }
 }
 
-void MSJPlatformRQT::JointState(const roboy_simulation_msgs::JointState::ConstPtr &msg){
+void M3RQT::JointState(const roboy_simulation_msgs::JointState::ConstPtr &msg){
     static int counter = 0;
     counter++;
     if(counter%20==0) {
@@ -248,13 +248,13 @@ void MSJPlatformRQT::JointState(const roboy_simulation_msgs::JointState::ConstPt
     }
 }
 
-long MSJPlatformRQT::closest(QVector<double> const& vec, double value){
+long M3RQT::closest(QVector<double> const& vec, double value){
     auto const it = std::lower_bound(vec.begin(), vec.end(), value);
     if (it == vec.end()) { return -1; }
     return distance(vec.begin(),it);
 }
 
-int MSJPlatformRQT::pnpoly(QVector<double> limits_x, QVector<double> limits_y, double testx, double testy){
+int M3RQT::pnpoly(QVector<double> limits_x, QVector<double> limits_y, double testx, double testy){
     int i, j, c = 0;
     for (i = 0, j = limits_x.size()-1; i < limits_x.size(); j = i++) {
         if ( ((limits_y[i]>testy) != (limits_y[j]>testy)) &&
@@ -264,7 +264,7 @@ int MSJPlatformRQT::pnpoly(QVector<double> limits_x, QVector<double> limits_y, d
     return c;
 }
 
-void MSJPlatformRQT::gridMap(){
+void M3RQT::gridMap(){
     ros::Rate rate(50);
     double min[3] = {0,0,-0.3}, max[3] = {0,0,0.3};
     for(int i=0;i<limits[0].size();i++){
@@ -327,46 +327,44 @@ void MSJPlatformRQT::gridMap(){
     }
 }
 
-void MSJPlatformRQT::receivePose(){
+void M3RQT::receiveMotorData(){
     ROS_INFO("start receiving udp");
     while (ros::ok()) {
-        int bytes_received = udp->receiveUDP();
-        if (bytes_received == 16) {
-            float q[4];
-            for(int i=0;i<4;i++){
+//        int bytes_received = ;
+        if (udp->receiveUDP()!=0) {//bytes_received == 12
+            ros::Duration delta = (ros::Time::now() - start_time);
+            time.push_back(delta.toSec());
+            for(int i=0;i<3;i++){
                 uint32_t data = (uint32_t) ((uint8_t) udp->buf[3+i*4] << 24 | (uint8_t) udp->buf[2+i*4] << 16 |
                                    (uint8_t) udp->buf[1+i*4] << 8 | (uint8_t) udp->buf[0+i*4]);
-                q[i] = unpack754_32(data);
+                float val = unpack754_32(data);
+                motorData[ui.fpga->value()][0][i].push_back(val);
             }
-            Quaterniond quat(q[3],q[0],q[1],q[2]);
-            if(ui.zero_pose->isChecked()){
-                zero_rot = quat;
-                ui.zero_pose->setChecked(false);
+            if (motorData[ui.fpga->value()][0][0].size() > samples_per_plot) {
+                motorData[ui.fpga->value()][0][0].pop_front();
+                motorData[ui.fpga->value()][0][1].pop_front();
+                motorData[ui.fpga->value()][0][2].pop_front();
             }
-            quat = quat*zero_rot.inverse();
-            geometry_msgs::Pose p, p_top;
-            p.orientation.x = quat.x();
-            p.orientation.y = quat.y();
-            p.orientation.z = quat.z();
-            p.orientation.w = quat.w();
-            getTransform("world","top",p_top);
-            p.position = p_top.position;
-            publishTransform("world","top_estimate",p);
-        }else if(bytes_received == 4){
-            imu_state[0] = udp->buf[0];
-            imu_state[1] = udp->buf[1];
-            imu_state[2] = udp->buf[2];
-            imu_state[3] = udp->buf[3];
+            if (time.size() > samples_per_plot)
+                time.pop_front();
+
+            if ((counter++) % 20 == 0) {
+                Q_EMIT newData();
+            }
+
+            if (counter % 100 == 0) {
+                rescale();
+            }
         }
     }
     ROS_INFO("stop receiving udp");
 }
 
-void MSJPlatformRQT::plotData() {
+void M3RQT::plotData() {
     for (uint motor = 0; motor < NUMBER_OF_MOTORS; motor++) {
         ui.position_plot->graph(motor)->setData(time, motorData[ui.fpga->value()][motor][0]);
         ui.velocity_plot->graph(motor)->setData(time, motorData[ui.fpga->value()][motor][1]);
-        ui.angle_plot->graph(motor)->setData(time, motorData[ui.fpga->value()][motor][2]);
+        ui.force_plot->graph(motor)->setData(time, motorData[ui.fpga->value()][motor][2]);
     }
 
     for (uint axis = 0; axis < 3; axis++) {
@@ -385,11 +383,11 @@ void MSJPlatformRQT::plotData() {
 
     ui.position_plot->xAxis->rescale();
     ui.velocity_plot->xAxis->rescale();
-    ui.angle_plot->xAxis->rescale();
+    ui.force_plot->xAxis->rescale();
 
     ui.position_plot->replot();
     ui.velocity_plot->replot();
-    ui.angle_plot->replot();
+    ui.force_plot->replot();
 
     switch(imu_state[0]){
         case 0:
@@ -449,14 +447,14 @@ void MSJPlatformRQT::plotData() {
     }
 }
 
-void MSJPlatformRQT::plotJointState(){
+void M3RQT::plotJointState(){
     ui.joint_space->graph(1)->setData(q[0],q[1]);
     ui.joint_space->xAxis->rescale();
     ui.joint_space->yAxis->rescale();
     ui.joint_space->replot();
 }
 
-void MSJPlatformRQT::rescale() {
+void M3RQT::rescale() {
     double minima[NUMBER_OF_MOTORS][3], maxima[NUMBER_OF_MOTORS][3];
     uint minimal_motor[3] = {0, 0, 0}, maximal_motor[3] = {0, 0, 0};
     for (uint type = 0; type < 3; type++) {
@@ -485,7 +483,7 @@ void MSJPlatformRQT::rescale() {
         if (minimal_motor[1] == motor || maximal_motor[1] == motor)
             ui.velocity_plot->graph(motor)->rescaleAxes();
         if (minimal_motor[2] == motor || maximal_motor[2] == motor)
-            ui.angle_plot->graph(motor)->rescaleAxes();
+            ui.force_plot->graph(motor)->rescaleAxes();
     }
 
     for (uint motor = 0; motor < NUMBER_OF_MOTORS; motor++) {
@@ -494,11 +492,11 @@ void MSJPlatformRQT::rescale() {
         if (minimal_motor[1] != motor || maximal_motor[1] != motor)
             ui.velocity_plot->graph(motor)->rescaleAxes(true);
         if (minimal_motor[2] != motor || maximal_motor[2] != motor)
-            ui.angle_plot->graph(motor)->rescaleAxes(true);
+            ui.force_plot->graph(motor)->rescaleAxes(true);
     }
 }
 
-void MSJPlatformRQT::rescaleMagneticSensors() {
+void M3RQT::rescaleMagneticSensors() {
     double minima[3][3], maxima[3][3];
     uint minimal_axis[3] = {0, 0, 0}, maximal_axis[3] = {0, 0, 0};
     for (uint sensor = 0; sensor < 3; sensor++) {
@@ -540,7 +538,7 @@ void MSJPlatformRQT::rescaleMagneticSensors() {
     }
 }
 
-void MSJPlatformRQT::plotMotorChanged() {
+void M3RQT::plotMotorChanged() {
     for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
         char str[20];
         sprintf(str, "motor_%d", i);
@@ -550,7 +548,7 @@ void MSJPlatformRQT::plotMotorChanged() {
     }
 }
 
-void MSJPlatformRQT::toggleAll() {
+void M3RQT::toggleAll() {
     for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
         char str[20];
         sprintf(str, "motor_%d", i);
@@ -562,11 +560,11 @@ void MSJPlatformRQT::toggleAll() {
     }
 }
 
-void MSJPlatformRQT::fpgaChanged(int fpga) {
+void M3RQT::fpgaChanged(int fpga) {
 
 }
 
-void MSJPlatformRQT::motorPosChanged(int pos) {
+void M3RQT::motorPosChanged(int pos) {
     roboy_middleware_msgs::MotorCommand msg;
     msg.id = ui.fpga->value();
     for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
@@ -575,11 +573,17 @@ void MSJPlatformRQT::motorPosChanged(int pos) {
         QSlider *slider = widget_->findChild<QSlider *>(str);
         msg.motors.push_back(i);
         msg.set_points.push_back(slider->value());
+        float setpoint = slider->value();
+        uint32_t data = pack754_32(setpoint);
+        memcpy(udp_command->buf,&data,4);
     }
     motorCommand.publish(msg);
+
+    udp_command->numbytes = 4;
+    udp_command->sendUDPToClient();
 }
 
-void MSJPlatformRQT::stopButtonClicked() {
+void M3RQT::stopButtonClicked() {
     std_srvs::SetBool msg;
     if (ui.stop_button->isChecked()) {
         ui.stop_button->setStyleSheet("background-color: red");
@@ -592,7 +596,7 @@ void MSJPlatformRQT::stopButtonClicked() {
     }
 }
 
-void MSJPlatformRQT::zeroClicked() {
+void M3RQT::zeroClicked() {
     std_srvs::Empty msg;
     zero.call(msg);
     for (int i = 0; i < NUMBER_OF_MOTORS; i++) {
@@ -603,15 +607,15 @@ void MSJPlatformRQT::zeroClicked() {
     }
 }
 
-void MSJPlatformRQT::showMagneticField(){
+void M3RQT::showMagneticField(){
     show_magnetic_field = ui.show_magnetic_field->isChecked();
 }
 
-void MSJPlatformRQT::clearMagneticField(){
+void M3RQT::clearMagneticField(){
     clearAll();
 }
 
-void MSJPlatformRQT::calibrateSystem(){
+void M3RQT::calibrateSystem(){
     ros::Time start_time = ros::Time::now();
     double min[3] = {0,0,-1}, max[3] = {0,0,1};
     for(int i=0;i<limits[0].size();i++){
@@ -642,4 +646,4 @@ void MSJPlatformRQT::calibrateSystem(){
     }
 }
 
-PLUGINLIB_DECLARE_CLASS(roboy_motor_status, MSJPlatformRQT, MSJPlatformRQT, rqt_gui_cpp::Plugin)
+PLUGINLIB_DECLARE_CLASS(roboy_motor_status, M3RQT, M3RQT, rqt_gui_cpp::Plugin)

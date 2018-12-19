@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MSJPlatformRQT</class>
- <widget class="QWidget" name="MSJPlatformRQT">
+ <class>M3RQT</class>
+ <widget class="QWidget" name="M3RQT">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -33,7 +33,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QCustomPlot" name="angle_plot" native="true">
+  <widget class="QCustomPlot" name="force_plot" native="true">
    <property name="geometry">
     <rect>
      <x>0</x>
@@ -90,7 +90,7 @@
     </font>
    </property>
    <property name="text">
-    <string>MSJ PLATFORM</string>
+    <string>m3</string>
    </property>
   </widget>
   <widget class="QFrame" name="power_sense">

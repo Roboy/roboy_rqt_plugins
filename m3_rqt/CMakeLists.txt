@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project( msj_platform_rqt )
+project( m3_rqt )
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -g")
 
@@ -30,11 +30,11 @@ roslint_cpp()
 catkin_package( INCLUDE_DIRS include LIBRARIES ${PROJECT_NAME} CATKIN_DEPENDS roscpp rqt_gui_cpp std_msgs roboy_middleware_msgs)
 
 if("${qt_gui_cpp_USE_QT_MAJOR_VERSION} " STREQUAL "5 ")
-  qt5_wrap_cpp(msj_platform_rqt_MOCS include/msj_platform_rqt/msj_platform.hpp qcustomplot/qcustomplot.h)
-  qt5_wrap_ui(msj_platform_rqt_UIS_H src/msj_platform_rqt.ui)
+  qt5_wrap_cpp(m3_rqt_MOCS include/m3_rqt/m3_rqt.hpp qcustomplot/qcustomplot.h)
+  qt5_wrap_ui(m3_rqt_UIS_H src/m3_rqt.ui)
 else()
-  qt4_wrap_cpp(msj_platform_rqt_MOCS include/msj_platform_rqt/msj_platform.hpp qcustomplot/qcustomplot.h)
-  qt4_wrap_ui(msj_platform_rqt_UIS_H src/msj_platform_rqt.ui)
+  qt4_wrap_cpp(m3_rqt_MOCS include/m3_rqt/m3_rqt.hpp qcustomplot/qcustomplot.h)
+  qt4_wrap_ui(m3_rqt_UIS_H src/m3_rqt.ui)
 endif()
 
 include_directories(
@@ -42,24 +42,24 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library( msj_platform_rqt src/msj_platform_rqt.cpp include/msj_platform_rqt/msj_platform.hpp
-        ${msj_platform_rqt_MOCS} ${msj_platform_rqt_UIS_H} qcustomplot/qcustomplot.cpp)
+add_library( m3_rqt src/msj_platform.cpp include/m3_rqt/m3_rqt.hpp
+        ${m3_rqt_MOCS} ${m3_rqt_UIS_H} qcustomplot/qcustomplot.cpp)
 
-add_dependencies(msj_platform_rqt roboy_middleware_msgs_gencpp)
+add_dependencies(m3_rqt roboy_middleware_msgs_gencpp)
 
-target_link_libraries(msj_platform_rqt ${catkin_LIBRARIES} )
+target_link_libraries(m3_rqt ${catkin_LIBRARIES} )
 
 if("${qt_gui_cpp_USE_QT_MAJOR_VERSION} " STREQUAL "5 ")
-  target_link_libraries(msj_platform_rqt Qt5::Widgets)
+  target_link_libraries(m3_rqt Qt5::Widgets)
 else()
-  target_link_libraries(msj_platform_rqt ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY})
+  target_link_libraries(m3_rqt ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY})
 endif()
 
 #############
 ## Install ##
 #############
 
-install(TARGETS msj_platform_rqt
+install(TARGETS m3_rqt
         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
         )
 

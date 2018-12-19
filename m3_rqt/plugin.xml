@@ -1,0 +1,14 @@
+<library path="lib/libm3_rqt">
+  <class name="M3RQT" type="M3RQT" base_class_type="rqt_gui_cpp::Plugin">
+    <description>
+      m3 plugin
+    </description>
+    <qtgui>
+      <group>
+        <label>Roboy</label>
+      </group>
+      <label>m3</label>
+      <statustip>Great user interface to provide real value.</statustip>
+    </qtgui>
+  </class>
+</library>
