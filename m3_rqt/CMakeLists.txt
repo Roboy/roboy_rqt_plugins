@@ -42,7 +42,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library( m3_rqt src/msj_platform.cpp include/m3_rqt/m3_rqt.hpp
+add_library( m3_rqt src/m3_rqt.cpp include/m3_rqt/m3_rqt.hpp
         ${m3_rqt_MOCS} ${m3_rqt_UIS_H} qcustomplot/qcustomplot.cpp)
 
 add_dependencies(m3_rqt roboy_middleware_msgs_gencpp)
