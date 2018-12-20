@@ -2,18 +2,20 @@
 <package format="2">
   <name>m3_rqt</name>
   <version>0.0.0</version>
-  <description>m3 plugin for rqt</description>
-  <maintainer email="simon.trendel@tum.de">Simon Trendel</maintainer>
+  <description>The m3_rqt package</description>
+  <maintainer email="st@gi.ai">Simon Trendel</maintainer>
   <license>BSD-3</license>
   <buildtool_depend>catkin</buildtool_depend>
-  <depend>roscpp</depend>
-  <depend>roslint</depend>
-  <depend>rqt_gui</depend>
-  <depend>rqt_gui_cpp</depend>
-  <depend>std_msgs</depend>
-  <depend>roboy_middleware_msgs</depend>
-  <depend>common_utilities</depend>
-  <depend>tf</depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>rqt_gui</build_depend>
+  <build_depend>rqt_gui_py</build_depend>
+  <build_export_depend>rospy</build_export_depend>
+  <build_export_depend>rqt_gui</build_export_depend>
+  <build_export_depend>rqt_gui_py</build_export_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>rqt_gui</exec_depend>
+  <exec_depend>rqt_gui_py</exec_depend>
+
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

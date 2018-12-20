@@ -1,14 +1,15 @@
-<library path="lib/libm3_rqt">
-  <class name="M3RQT" type="M3RQT" base_class_type="rqt_gui_cpp::Plugin">
-    <description>
-      m3 plugin
-    </description>
-    <qtgui>
-      <group>
-        <label>Roboy</label>
-      </group>
-      <label>m3</label>
-      <statustip>Great user interface to provide real value.</statustip>
-    </qtgui>
-  </class>
+<library path="src">
+    <class name="m3 plugin" type="m3_rqt.my_module.MyPlugin" base_class_type="rqt_gui_py::Plugin">
+        <description>
+            The m3 plugin to create a great user interface.
+        </description>
+        <qtgui>
+            <group>
+                <label>Roboy</label>
+            </group>
+            <label>m3</label>
+            <icon type="theme">system-help</icon>
+            <statustip>Great user interface to provide real value.</statustip>
+        </qtgui>
+    </class>
 </library>
