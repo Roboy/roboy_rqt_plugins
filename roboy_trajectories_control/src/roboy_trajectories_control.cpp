@@ -584,4 +584,4 @@ vector<string> RoboyTrajectoriesControl::expandBehavior(string name) {
 
 }
 
-PLUGINLIB_DECLARE_CLASS(roboy_trajectories_control, RoboyTrajectoriesControl, RoboyTrajectoriesControl, rqt_gui_cpp::Plugin)
+PLUGINLIB_EXPORT_CLASS(RoboyTrajectoriesControl, rqt_gui_cpp::Plugin)

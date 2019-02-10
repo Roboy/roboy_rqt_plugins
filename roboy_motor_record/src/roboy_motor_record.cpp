@@ -192,4 +192,4 @@ void RoboyMotorRecord::plotData() {
     ui.plot->replot();
 }
 
-PLUGINLIB_DECLARE_CLASS(roboy_motor_record, RoboyMotorRecord, RoboyMotorRecord, rqt_gui_cpp::Plugin)
+PLUGINLIB_EXPORT_CLASS(RoboyMotorRecord, rqt_gui_cpp::Plugin)

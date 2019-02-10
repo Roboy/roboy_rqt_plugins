@@ -236,4 +236,4 @@ void RoboyMotorStatus::fpgaChanged(int fpga){
     }
 }
 
-PLUGINLIB_DECLARE_CLASS(roboy_motor_status, RoboyMotorStatus, RoboyMotorStatus, rqt_gui_cpp::Plugin)
+PLUGINLIB_EXPORT_CLASS(RoboyMotorStatus, rqt_gui_cpp::Plugin)

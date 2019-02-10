@@ -642,4 +642,4 @@ void MSJPlatformRQT::calibrateSystem(){
     }
 }
 
-PLUGINLIB_DECLARE_CLASS(roboy_motor_status, MSJPlatformRQT, MSJPlatformRQT, rqt_gui_cpp::Plugin)
+PLUGINLIB_EXPORT_CLASS(MSJPlatformRQT, rqt_gui_cpp::Plugin)

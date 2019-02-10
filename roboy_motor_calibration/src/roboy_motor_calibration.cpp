@@ -730,4 +730,4 @@ void RoboyMotorCalibration::motorAngleZero() {
     offset[POSITION] = -motorData[POSITION].back();
 }
 
-PLUGINLIB_DECLARE_CLASS(roboy_motor_calibration, RoboyMotorCalibration, RoboyMotorCalibration, rqt_gui_cpp::Plugin)
+PLUGINLIB_EXPORT_CLASS(RoboyMotorCalibration, rqt_gui_cpp::Plugin)

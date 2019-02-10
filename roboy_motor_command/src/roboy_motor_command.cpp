@@ -484,4 +484,4 @@ void RoboyMotorCommand::addFpgaWidgets(int fpga){
     }
 }
 
-PLUGINLIB_DECLARE_CLASS(roboy_motor_command, RoboyMotorCommand, RoboyMotorCommand, rqt_gui_cpp::Plugin)
+PLUGINLIB_EXPORT_CLASS(RoboyMotorCommand, rqt_gui_cpp::Plugin)
