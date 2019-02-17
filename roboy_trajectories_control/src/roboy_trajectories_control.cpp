@@ -32,13 +32,6 @@ RoboyTrajectoriesControl::RoboyTrajectoriesControl()
                         ROS_WARN_STREAM("Could not connect to the action server " + ac.first + ". Movements might not be available");
                     }
                 }
-
-//                total_number_of_motors.reserve(bodyParts.size());
-//                total_number_of_motors[HEAD] = 4;
-//                total_number_of_motors[SHOULDER_LEFT] = 13;
-//                total_number_of_motors[SHOULDER_RIGHT] = 13;
-//                total_number_of_motors[SPINE_LEFT] = 9;
-//                total_number_of_motors[SPINE_RIGHT] = 9;
 }
 
 void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
@@ -93,20 +86,19 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     ui.progressBar->hide();
 
     for (int i=0; i<bodyParts.size(); i++) {
-
         activeBodyParts.push_back(widget_->findChild<QCheckBox*>(QString::fromStdString(bodyParts[i])));
         activeBodyParts[i]->setChecked(true);
+    }
 
-        motorStatus.push_back(vector<bool>(active_motors[i].back()+1));
-        for(auto it = active_motors[i].begin(); it != active_motors[i].end(); it++ )
-        {
-            QGraphicsView* view = widget_->findChild<QGraphicsView *>(QString::fromStdString(bodyParts[i]+"_m"+to_string(*it)));
-            ROS_INFO_STREAM(bodyParts[i]+"_m"+to_string(*it));
-//            ROS_INFO_STREAM(view->whatsThis().toStdString());
-
+    // TODO adapt for two fpgas
+    for(auto fpga:fpga_names) {
+        motorStatus.push_back(vector<bool>(active_motors[fpga_id_from_name[fpga]].back() + 1));
+        int i=0;
+        for (auto it = active_motors[fpga_id_from_name[fpga]].begin(); it != active_motors[fpga_id_from_name[fpga]].end(); it++) {
+            QGraphicsView *view = widget_->findChild<QGraphicsView *>(
+                    QString::fromStdString(fpga + "_m" + to_string(*it)));
+            ROS_INFO_STREAM(fpga + "_m" + to_string(*it));
             view->setScene(scene);
-//            view->setBackgroundBrush(redBrush);
-//            ROS_INFO_STREAM(view->objectName().toStdString());
             motorStatus[i].at(*it) = false;
         }
     }
@@ -141,27 +133,18 @@ void RoboyTrajectoriesControl::restoreSettings(const qt_gui_cpp::Settings &plugi
 }
 
 void RoboyTrajectoriesControl::initializeRosCommunication() {
+    for (auto fpga: fpga_names) {
+        emergencyStopServiceClient[fpga] = nh->serviceClient<std_srvs::SetBool>("/roboy/" + fpga + "/middleware/EmergencyStop");
+        setDisplacementForAllServiceClient.push_back(nh->serviceClient<roboy_middleware_msgs::SetInt16>("/roboy/" + fpga + "/middleware/SetDisplacementForAll"));
+        listExistingTrajectoriesServiceClient[fpga] = nh->serviceClient<roboy_control_msgs::ListItems>("/roboy/" + fpga + "/control/ListExistingTrajectories");
 
-    for (auto body_part: bodyParts) {
-        emergencyStopServiceClient[body_part] = nh->serviceClient<std_srvs::SetBool>("/roboy/" + body_part + "/middleware/EmergencyStop");
-        setDisplacementForAllServiceClient.push_back(nh->serviceClient<roboy_middleware_msgs::SetInt16>("/roboy/" + body_part + "/middleware/SetDisplacementForAll"));
-        listExistingTrajectoriesServiceClient[body_part] = nh->serviceClient<roboy_control_msgs::ListItems>("/roboy/" + body_part + "/control/ListExistingTrajectories");
-
-        performMovementsResultSubscriber[body_part] = nh->subscribe("/"+body_part+"_movements_server/result", 1, &RoboyTrajectoriesControl::performMovementsResultCallback, this);
+        performMovementsResultSubscriber[fpga] = nh->subscribe("/"+fpga+"_movements_server/result", 1, &RoboyTrajectoriesControl::performMovementsResultCallback, this);
     }
-
-//    listExistingBehaviorsServiceClient = nh->serviceClient<roboy_control_msgs::ListItems>("/roboy/control/ListExistingTrajectories");
-//    expandBehaviorServiceClient = nh->serviceClient<roboy_control_msgs::ListItems>("/roboy/control/ExpandBehavior");
     motorStatusSubscriber = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyTrajectoriesControl::motorStatusCallback, this);
-
     startRecordTrajectoryPublisher = nh->advertise<roboy_control_msgs::StartRecordTrajectory>("/roboy/control/StartRecordTrajectory", 1);
     stopRecordTrajectoryPublisher = nh->advertise<std_msgs::Empty>("/roboy/control/StopRecordTrajectory", 1);
-//    saveBehaviorPublisher = nh->advertise<roboy_control_msgs::Behavior>("/roboy/control/SaveBehavior", 1);
     enablePlaybackPublisher = nh->advertise<std_msgs::Bool>("/roboy/control/EnablePlayback", 1);
     preDisplacementPublisher = nh->advertise<std_msgs::Int32>("/roboy/middleware/PreDisplacement", 1);
-
-    // TODO warn if service doesnt exist
-
 }
 
 void RoboyTrajectoriesControl::performMovementsResultCallback(const roboy_control_msgs::PerformMovementsActionResult::ConstPtr &msg) {
@@ -171,17 +154,16 @@ void RoboyTrajectoriesControl::performMovementsResultCallback(const roboy_contro
 
 void RoboyTrajectoriesControl::motorStatusCallback(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg) {
 
-//    for (int i=0; i<active_motors[msg->id].size(); i++)
     for(auto it = active_motors[msg->id].begin(); it != active_motors[msg->id].end(); it++ )
     {
         if (msg->current.at(*it) > 0 && !motorStatus[msg->id][*it]) {
             widget_->findChild<QGraphicsView *>(
-                    QString::fromStdString(bodyParts[msg->id]+"_m"+to_string(*it)))->setBackgroundBrush(greenBrush);
+                    QString::fromStdString(fpga_name_from_id[msg->id]+"_m"+to_string(*it)))->setBackgroundBrush(greenBrush);
             motorStatus[msg->id][*it] = true;
         }
         else if (msg->current.at(*it) < 0 && motorStatus[msg->id][*it]){
             widget_->findChild<QGraphicsView *>(
-                    QString::fromStdString(bodyParts[msg->id]+"_m"+to_string(*it)))->setBackgroundBrush(redBrush);
+                    QString::fromStdString(fpga_name_from_id[msg->id]+"_m"+to_string(*it)))->setBackgroundBrush(redBrush);
             motorStatus[msg->id][*it] = false;
         }
     }
@@ -192,10 +174,10 @@ void RoboyTrajectoriesControl::pullExistingTrajectories() {
 
     vector<QString> trajectories;
 
-    for (auto part: bodyParts) {
+    for (auto fpga: fpga_names) {
         roboy_control_msgs::ListItems srv;
         srv.request.name = trajectories_path;
-        listExistingTrajectoriesServiceClient[part].call(srv);
+        listExistingTrajectoriesServiceClient[fpga].call(srv);
 
         for (string t: srv.response.items) {
             trajectories.push_back(QString::fromStdString(t));
@@ -332,7 +314,6 @@ void RoboyTrajectoriesControl::playTrajectoriesButtonClicked() {
     map<string,roboy_control_msgs::PerformMovementsGoal> goals;
     for (auto action: actions) {
         if (action=="sync") {
-
             //TODO sync here
             for (auto ac: performMovements_ac)
             {
@@ -344,12 +325,6 @@ void RoboyTrajectoriesControl::playTrajectoriesButtonClicked() {
                     goals[ac.first].actions = {};
                 }
             }
-
-//            for (auto ac: performMovements_ac)
-//            {
-//                ac.second->waitForResult();
-//            }
-
         }
         else {
             for (auto part: bodyParts) {
@@ -363,16 +338,13 @@ void RoboyTrajectoriesControl::playTrajectoriesButtonClicked() {
             }
         }
     }
-
     ui.stopBehavior->setEnabled(true);
-
 }
 
 void RoboyTrajectoriesControl::stopBehaviorButtonClicked() {
     std_msgs::Bool msg;
     msg.data = false;
     enablePlaybackPublisher.publish(msg);
-
 }
 
 void RoboyTrajectoriesControl::relaxAllMusclesButtonClicked() {
@@ -394,9 +366,6 @@ void RoboyTrajectoriesControl::allToDisplacementButtonClicked() {
         if (part->isChecked()) {
             auto partName = part->whatsThis().toStdString();
             int id = find(bodyParts.begin(), bodyParts.end(), partName) - bodyParts.begin();
-//            if (id==HEAD) {
-//                srv.request.setpoint = 20;
-//            }
             setDisplacementForAllServiceClient[id].call(srv);
         }
     }
@@ -404,9 +373,6 @@ void RoboyTrajectoriesControl::allToDisplacementButtonClicked() {
 
 void RoboyTrajectoriesControl::startRecordTrajectoryButtonClicked() {
     roboy_control_msgs::StartRecordTrajectory msg;
-
-
-
     if (ui.newTrajectoryName->toPlainText().isEmpty() || ui.newTrajectoryName->toPlainText().isNull()) {
         QMessageBox messageBox;
         messageBox.critical(0,"Error","No trajectory name specified");
@@ -575,12 +541,6 @@ vector<string> RoboyTrajectoriesControl::expandBehavior(string name) {
               std::back_inserter(actions));
 
     return actions;
-
-//    roboy_control_msgs::ListItems srv;
-//    srv.request.name = name;
-//    expandBehaviorServiceClient.call(srv);
-//
-//    return srv.response.items;
 
 }
 

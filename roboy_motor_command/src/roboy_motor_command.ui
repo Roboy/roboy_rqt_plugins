@@ -842,6 +842,9 @@
      <height>27</height>
     </rect>
    </property>
+   <property name="minimum">
+    <number>3</number>
+   </property>
    <property name="maximum">
     <number>5</number>
    </property>

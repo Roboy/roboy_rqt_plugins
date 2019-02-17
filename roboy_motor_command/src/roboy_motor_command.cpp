@@ -52,32 +52,18 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
     scale = widget_->findChild<QLineEdit *>("motor_scale");
 
     motorCommand = nh->advertise<roboy_middleware_msgs::MotorCommand>("/roboy/middleware/MotorCommand", 1);
-    motorControl[0] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/head/middleware/ControlMode");
-    motorControl[1] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/spine_left/middleware/ControlMode");
-    motorControl[2] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/spine_right/middleware/ControlMode");
-    motorControl[3] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/shoulder_left/middleware/ControlMode");
-    motorControl[4] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/shoulder_right/middleware/ControlMode");
-    motorControl[5] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/unknown/middleware/ControlMode");
-    motorConfig[0] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/head/middleware/MotorConfig");
-    motorConfig[1] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/spine_left/middleware/MotorConfig");
-    motorConfig[2] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/spine_right/middleware/MotorConfig");
-    motorConfig[3] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/shoulder_left/middleware/MotorConfig");
-    motorConfig[4] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/shoulder_right/middleware/MotorConfig");
-    motorConfig[5] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/unknown/middleware/MotorConfig");
-    emergencyStop[0] = nh->serviceClient<std_srvs::SetBool>("/roboy/head/middleware/EmergencyStop");
-    emergencyStop[1] = nh->serviceClient<std_srvs::SetBool>("/roboy/spine_left/middleware/EmergencyStop");
-    emergencyStop[2] = nh->serviceClient<std_srvs::SetBool>("/roboy/spine_right/middleware/EmergencyStop");
-    emergencyStop[3] = nh->serviceClient<std_srvs::SetBool>("/roboy/shoulder_left/middleware/EmergencyStop");
-    emergencyStop[4] = nh->serviceClient<std_srvs::SetBool>("/roboy/shoulder_right/middleware/EmergencyStop");
-    emergencyStop[5] = nh->serviceClient<std_srvs::SetBool>("/roboy/unknown/middleware/EmergencyStop");
+    motorControl[SHOULDER_LEFT] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/shoulder_left/middleware/ControlMode");
+    motorControl[SHOULDER_RIGHT] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/shoulder_right/middleware/ControlMode");
+    motorControl[UNKNOWN] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/unknown/middleware/ControlMode");
+    motorConfig[SHOULDER_LEFT] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/shoulder_left/middleware/MotorConfig");
+    motorConfig[SHOULDER_RIGHT] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/shoulder_right/middleware/MotorConfig");
+    motorConfig[UNKNOWN] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/unknown/middleware/MotorConfig");
+    emergencyStop[SHOULDER_LEFT] = nh->serviceClient<std_srvs::SetBool>("/roboy/shoulder_left/middleware/EmergencyStop");
+    emergencyStop[SHOULDER_RIGHT] = nh->serviceClient<std_srvs::SetBool>("/roboy/shoulder_right/middleware/EmergencyStop");
+    emergencyStop[UNKNOWN] = nh->serviceClient<std_srvs::SetBool>("/roboy/unknown/middleware/EmergencyStop");
 
     ui.stop_button_all->setStyleSheet("background-color: green");
     QObject::connect(ui.stop_button_all, SIGNAL(clicked()), this, SLOT(stopButtonAllClicked()));
-
-//    for(uint motor = 0; motor<NUMBER_OF_MOTORS_PER_FPGA; motor++){
-//        QObject::connect(setpoint_slider_widget.at(motor), SIGNAL(valueChanged(int)), this, SLOT(setPointChanged(int)));
-//    }
-//    QObject::connect(setpoint_slider_widget.at(NUMBER_OF_MOTORS_PER_FPGA), SIGNAL(valueChanged(int)), this, SLOT(setPointAllChanged(int)));
 
     QObject::connect(ui.pos, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
     QObject::connect(ui.vel, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
@@ -110,7 +96,7 @@ void RoboyMotorCommand::stopButtonAllClicked(){
     if(ui.stop_button_all->isChecked()) {
         ui.stop_button_all->setStyleSheet("background-color: red");
         msg.request.data = 1;
-        for(uint fpga=0;fpga<number_of_fpgas;fpga++)
+        for(uint fpga=SHOULDER_LEFT;fpga<=SHOULDER_RIGHT;fpga++)
             emergencyStop[fpga].call(msg);
         ui.motor_command->setEnabled(false);
         ui.pos->setEnabled(false);
@@ -120,7 +106,7 @@ void RoboyMotorCommand::stopButtonAllClicked(){
     }else {
         ui.stop_button_all->setStyleSheet("background-color: green");
         msg.request.data = 0;
-        for(uint fpga=0;fpga<number_of_fpgas;fpga++)
+        for(uint fpga=SHOULDER_LEFT;fpga<=SHOULDER_RIGHT;fpga++)
             emergencyStop[fpga].call(msg);
         ui.motor_command->setEnabled(true);
         ui.pos->setEnabled(true);
