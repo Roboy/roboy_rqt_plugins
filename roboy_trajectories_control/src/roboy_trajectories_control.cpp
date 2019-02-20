@@ -44,8 +44,7 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     // add widget to the user interface
     context.addWidget(widget_);
 
-    scene = new QGraphicsScene(widget_);
-    scene->setBackgroundBrush(redBrush);
+
 
     connect(ui.clearBehavior, SIGNAL(clicked()), this, SLOT(clearAllTrajectoriesButtonClicked()));
     connect(ui.playBehavior, SIGNAL(clicked()), this, SLOT(playTrajectoriesButtonClicked()));
@@ -87,19 +86,43 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     for (int i=0; i<bodyParts.size(); i++) {
         activeBodyParts.push_back(widget_->findChild<QCheckBox*>(QString::fromStdString(bodyParts[i])));
-        activeBodyParts[i]->setChecked(true);
+        activeBodyParts[i]->setChecked(false);
     }
+//
+//    fpgaBodyPart =  vector<string>(21);
+//
+//    for (int i=0; i<9; i++) {
+//        fpgaBodyPart[i] = "shoulder_left_m" + to_string(i);
+//    }
+//
+//    for (int i=15; i<21; i++) {
+//        fpgaBodyPart[i] = "leg_left_m" + to_string(i);
+//    }
+    //TODO number of fpgas
+    motorStatus = vector<vector<bool>>(5);
 
     // TODO adapt for two fpgas
     for(auto fpga:fpga_names) {
-        motorStatus.push_back(vector<bool>(active_motors[fpga_id_from_name[fpga]].back() + 1));
+
+
+//        fpgaCheckBox.push_back(widget_->findChild<QCheckBox*>(QString::fromStdString(fpga)));
+
+        scene = new QGraphicsScene(widget_);
+        scene->setBackgroundBrush(redBrush);
+//        motorStatus.push_back(vector<bool>(active_motors[fpga_id_from_name[fpga]].back() + 1));
+
+        motorStatus[fpga_id_from_name[fpga]] = vector<bool> (active_motors[fpga_id_from_name[fpga]].back() + 1);
+
         int i=0;
         for (auto it = active_motors[fpga_id_from_name[fpga]].begin(); it != active_motors[fpga_id_from_name[fpga]].end(); it++) {
             QGraphicsView *view = widget_->findChild<QGraphicsView *>(
                     QString::fromStdString(fpga + "_m" + to_string(*it)));
             ROS_INFO_STREAM(fpga + "_m" + to_string(*it));
+            if (view == NULL) {
+                ROS_ERROR_STREAM("view not found");
+            }
             view->setScene(scene);
-            motorStatus[i].at(*it) = false;
+            motorStatus[fpga_id_from_name[fpga]].at(*it) = false;
         }
     }
 

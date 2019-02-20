@@ -140,6 +140,9 @@ class RoboyTrajectoriesControl:
             QBrush redBrush;//(Qt::red);
             vector<vector<bool>> motorStatus; // motor status
             vector<QCheckBox*> activeBodyParts;
+            vector<QCheckBox*> fpgaCheckBox;
+            //TODO refactor fpgaBodypart
+            vector<string> fpgaBodyPart;
 
 
 
