@@ -45,7 +45,6 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
     context.addWidget(widget_);
 
 
-
     connect(ui.clearBehavior, SIGNAL(clicked()), this, SLOT(clearAllTrajectoriesButtonClicked()));
     connect(ui.playBehavior, SIGNAL(clicked()), this, SLOT(playTrajectoriesButtonClicked()));
     connect(ui.stopBehavior, SIGNAL(clicked()), this, SLOT(stopBehaviorButtonClicked()));
@@ -158,10 +157,12 @@ void RoboyTrajectoriesControl::restoreSettings(const qt_gui_cpp::Settings &plugi
 void RoboyTrajectoriesControl::initializeRosCommunication() {
     for (auto fpga: fpga_names) {
         emergencyStopServiceClient[fpga] = nh->serviceClient<std_srvs::SetBool>("/roboy/" + fpga + "/middleware/EmergencyStop");
-        setDisplacementForAllServiceClient.push_back(nh->serviceClient<roboy_middleware_msgs::SetInt16>("/roboy/" + fpga + "/middleware/SetDisplacementForAll"));
         listExistingTrajectoriesServiceClient[fpga] = nh->serviceClient<roboy_control_msgs::ListItems>("/roboy/" + fpga + "/control/ListExistingTrajectories");
 
         performMovementsResultSubscriber[fpga] = nh->subscribe("/"+fpga+"_movements_server/result", 1, &RoboyTrajectoriesControl::performMovementsResultCallback, this);
+    }
+    for (auto bodyPartName : bodyParts) {
+        setDisplacementForAllServiceClient.push_back(nh->serviceClient<roboy_middleware_msgs::SetInt16>("/roboy/" + bodyPartName + "/middleware/SetDisplacementForAll"));
     }
     motorStatusSubscriber = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyTrajectoriesControl::motorStatusCallback, this);
     startRecordTrajectoryPublisher = nh->advertise<roboy_control_msgs::StartRecordTrajectory>("/roboy/control/StartRecordTrajectory", 1);
@@ -376,7 +377,7 @@ void RoboyTrajectoriesControl::relaxAllMusclesButtonClicked() {
     for (auto part: activeBodyParts) {
         if (part->isChecked()) {
             auto partName = part->whatsThis().toStdString();
-            int id = find(bodyParts.begin(), bodyParts.end(), partName) - bodyParts.begin();
+            int id = bodyPartNameToIdMap[partName];
             setDisplacementForAllServiceClient[id].call(srv);
         }
     }
@@ -388,10 +389,11 @@ void RoboyTrajectoriesControl::allToDisplacementButtonClicked() {
     for (auto part: activeBodyParts) {
         if (part->isChecked()) {
             auto partName = part->whatsThis().toStdString();
-            int id = find(bodyParts.begin(), bodyParts.end(), partName) - bodyParts.begin();
+            int id = bodyPartNameToIdMap[partName];
             setDisplacementForAllServiceClient[id].call(srv);
         }
     }
+
 }
 
 void RoboyTrajectoriesControl::startRecordTrajectoryButtonClicked() {
@@ -406,15 +408,13 @@ void RoboyTrajectoriesControl::startRecordTrajectoryButtonClicked() {
         msg.name = ui.newTrajectoryName->toPlainText().toStdString();
         replace( msg.name.begin(), msg.name.end(), ' ', '_');
         msg.name.erase(std::remove(msg.name.begin(), msg.name.end(), ','), msg.name.end());
-        // TODO provide selection of motors to record
-        int i = 0;
         for (auto part: activeBodyParts) {
             if (part->isChecked()) {
-                copy(active_motors[i].begin(), active_motors[i].end(),
+                auto partName = part->whatsThis().toStdString();
+                copy(body_part_motors[partName].begin(), body_part_motors[partName].end(),
                           std::back_inserter(msg.id_list));
-                msg.body_parts.push_back(part->whatsThis().toStdString());
+                msg.body_parts.push_back(partName);
             }
-            i++;
         }
         startRecordTrajectoryPublisher.publish(msg);
         ui.startRecord->setEnabled(false);
