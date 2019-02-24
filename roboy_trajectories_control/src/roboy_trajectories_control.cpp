@@ -158,11 +158,8 @@ void RoboyTrajectoriesControl::initializeRosCommunication() {
     for (auto fpga: fpga_names) {
         emergencyStopServiceClient[fpga] = nh->serviceClient<std_srvs::SetBool>("/roboy/" + fpga + "/middleware/EmergencyStop");
         listExistingTrajectoriesServiceClient[fpga] = nh->serviceClient<roboy_control_msgs::ListItems>("/roboy/" + fpga + "/control/ListExistingTrajectories");
-
+        setDisplacementForAllServiceClient.push_back(nh->serviceClient<roboy_middleware_msgs::SetInt16>("/roboy/" + fpga + "/middleware/SetDisplacementForId"));
         performMovementsResultSubscriber[fpga] = nh->subscribe("/"+fpga+"_movements_server/result", 1, &RoboyTrajectoriesControl::performMovementsResultCallback, this);
-    }
-    for (auto bodyPartName : bodyParts) {
-        setDisplacementForAllServiceClient.push_back(nh->serviceClient<roboy_middleware_msgs::SetInt16>("/roboy/" + bodyPartName + "/middleware/SetDisplacementForAll"));
     }
     motorStatusSubscriber = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyTrajectoriesControl::motorStatusCallback, this);
     startRecordTrajectoryPublisher = nh->advertise<roboy_control_msgs::StartRecordTrajectory>("/roboy/control/StartRecordTrajectory", 1);
@@ -370,31 +367,34 @@ void RoboyTrajectoriesControl::stopBehaviorButtonClicked() {
     msg.data = false;
     enablePlaybackPublisher.publish(msg);
 }
-
 void RoboyTrajectoriesControl::relaxAllMusclesButtonClicked() {
-    roboy_middleware_msgs::SetInt16 srv;
-    srv.request.setpoint = 0;
-    for (auto part: activeBodyParts) {
-        if (part->isChecked()) {
-            auto partName = part->whatsThis().toStdString();
-            int id = bodyPartNameToIdMap[partName];
-            setDisplacementForAllServiceClient[id].call(srv);
-        }
-    }
+    setDisplacementOfAllSelectedMotors(0);
 }
 
 void RoboyTrajectoriesControl::allToDisplacementButtonClicked() {
-    roboy_middleware_msgs::SetInt16 srv;
-    srv.request.setpoint = preDisplacement;
-    for (auto part: activeBodyParts) {
-        if (part->isChecked()) {
-            auto partName = part->whatsThis().toStdString();
-            int id = bodyPartNameToIdMap[partName];
-            setDisplacementForAllServiceClient[id].call(srv);
+    setDisplacementOfAllSelectedMotors(preDisplacement);
+}
+
+void RoboyTrajectoriesControl::setDisplacementOfAllSelectedMotors(int displacement) {
+        map<int, vector<int16_t>> changedMotorsPerFPGA;
+        roboy_middleware_msgs::SetInt16 srv;
+        srv.request.setpoint = displacement;
+
+        for (auto part: activeBodyParts) {
+            if (part->isChecked()) {
+                auto partName = part->whatsThis().toStdString();
+                int bodyPartId = bodyPartNameToIdMap[partName];
+                int fpgaId = bodyPartToFGPAMap[bodyPartId];
+                copy(body_part_motors[partName].begin(), body_part_motors[partName].end(),
+                     std::back_inserter(changedMotorsPerFPGA[fpgaId]));
+            }
+        }
+        for (auto it : changedMotorsPerFPGA) {
+            int fpgaId = it.first;
+            srv.request.motors = it.second;
+            setDisplacementForAllServiceClient[fpgaId].call(srv);
         }
     }
-
-}
 
 void RoboyTrajectoriesControl::startRecordTrajectoryButtonClicked() {
     roboy_control_msgs::StartRecordTrajectory msg;

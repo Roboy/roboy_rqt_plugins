@@ -93,6 +93,8 @@ class RoboyTrajectoriesControl:
             void setPredisplacementButtonClicked();
             void setPredisplacement(int value);
         private:
+            void setDisplacementOfAllSelectedMotors(int displacement);
+        private:
             Ui::RoboyTrajectoriesControl ui;
             QWidget *widget_;
             ros::NodeHandlePtr nh;
