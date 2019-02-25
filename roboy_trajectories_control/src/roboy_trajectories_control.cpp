@@ -110,7 +110,7 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
         scene->setBackgroundBrush(redBrush);
 //        motorStatus.push_back(vector<bool>(active_motors[fpga_id_from_name[fpga]].back() + 1));
 
-        motorStatus[fpga_id_from_name[fpga]] = vector<bool> (active_motors[fpga_id_from_name[fpga]].back() + 1);
+        motorStatus[fpga_id_from_name[fpga]] = vector<bool> (active_motors[fpga_id_from_name[fpga]].back() + 10);
 
         int i=0;
         for (auto it = active_motors[fpga_id_from_name[fpga]].begin(); it != active_motors[fpga_id_from_name[fpga]].end(); it++) {
@@ -174,7 +174,8 @@ void RoboyTrajectoriesControl::performMovementsResultCallback(const roboy_contro
 }
 
 void RoboyTrajectoriesControl::motorStatusCallback(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg) {
-
+    if(msg->id==5)
+        return;
     for(auto it = active_motors[msg->id].begin(); it != active_motors[msg->id].end(); it++ )
     {
         if (msg->current.at(*it) > 0 && !motorStatus[msg->id][*it]) {
