@@ -106,7 +106,7 @@ class RoboyTrajectoriesControl:
             map<string,ros::ServiceClient> motorControlServiceClient, emergencyStopServiceClient,
                     performMovementServiceClient,
                     executeActionsServiceClient, listExistingTrajectoriesServiceClient;
-            vector<ros::ServiceClient> setDisplacementForAllServiceClient;
+            map<string,ros::ServiceClient> setDisplacementForAllServiceClient;
 
 //            ros::ServiceClient listExistingBehaviorsServiceClient, expandBehaviorServiceClient;
 

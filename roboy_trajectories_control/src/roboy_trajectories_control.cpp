@@ -158,7 +158,7 @@ void RoboyTrajectoriesControl::initializeRosCommunication() {
     for (auto fpga: fpga_names) {
         emergencyStopServiceClient[fpga] = nh->serviceClient<std_srvs::SetBool>("/roboy/" + fpga + "/middleware/EmergencyStop");
         listExistingTrajectoriesServiceClient[fpga] = nh->serviceClient<roboy_control_msgs::ListItems>("/roboy/" + fpga + "/control/ListExistingTrajectories");
-        setDisplacementForAllServiceClient.push_back(nh->serviceClient<roboy_middleware_msgs::SetInt16>("/roboy/" + fpga + "/middleware/SetDisplacementForId"));
+        setDisplacementForAllServiceClient[fpga] = nh->serviceClient<roboy_middleware_msgs::SetInt16>("/roboy/" + fpga + "/middleware/SetDisplacementForAll");
         performMovementsResultSubscriber[fpga] = nh->subscribe("/"+fpga+"_movements_server/result", 1, &RoboyTrajectoriesControl::performMovementsResultCallback, this);
     }
     motorStatusSubscriber = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyTrajectoriesControl::motorStatusCallback, this);
@@ -393,7 +393,7 @@ void RoboyTrajectoriesControl::setDisplacementOfAllSelectedMotors(int displaceme
         for (auto it : changedMotorsPerFPGA) {
             int fpgaId = it.first;
             srv.request.motors = it.second;
-            setDisplacementForAllServiceClient[fpgaId].call(srv);
+            setDisplacementForAllServiceClient[fpga_name_from_id[fpgaId]].call(srv);
         }
     }
 
