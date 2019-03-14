@@ -843,7 +843,7 @@
     </rect>
    </property>
    <property name="minimum">
-    <number>3</number>
+    <number>2</number>
    </property>
    <property name="maximum">
     <number>5</number>
