@@ -465,10 +465,10 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
     <property name="text">
-     <string>M0</string>
+     <string>M9</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="shoulder_left_m0">
+   <widget class="QGraphicsView" name="shoulder_left_m9">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -478,7 +478,7 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="shoulder_left_m1">
+   <widget class="QGraphicsView" name="shoulder_left_m10">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -498,7 +498,7 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
     <property name="text">
-     <string>M1</string>
+     <string>M10</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_20">
@@ -506,15 +506,15 @@ p, li { white-space: pre-wrap; }
      <rect>
       <x>30</x>
       <y>70</y>
-      <width>21</width>
+      <width>31</width>
       <height>17</height>
      </rect>
     </property>
     <property name="text">
-     <string>M2</string>
+     <string>M11</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="shoulder_left_m2">
+   <widget class="QGraphicsView" name="shoulder_left_m11">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -534,10 +534,10 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
     <property name="text">
-     <string>M3</string>
+     <string>M12</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="shoulder_left_m3">
+   <widget class="QGraphicsView" name="shoulder_left_m12">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -557,10 +557,10 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
     <property name="text">
-     <string>M4</string>
+     <string>M13</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="shoulder_left_m4">
+   <widget class="QGraphicsView" name="shoulder_left_m13">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -580,10 +580,10 @@ p, li { white-space: pre-wrap; }
      </rect>
     </property>
     <property name="text">
-     <string>M5</string>
+     <string>M14</string>
     </property>
    </widget>
-   <widget class="QGraphicsView" name="shoulder_left_m5">
+   <widget class="QGraphicsView" name="shoulder_left_m14">
     <property name="geometry">
      <rect>
       <x>10</x>
