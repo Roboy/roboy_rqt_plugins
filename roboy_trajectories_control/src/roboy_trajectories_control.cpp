@@ -383,7 +383,7 @@ void RoboyTrajectoriesControl::setDisplacementOfAllSelectedMotors(int displaceme
 
         for (auto part: activeBodyParts) {
             if (part->isChecked()) {
-                auto partName = part->whatsThis().toStdString();
+                auto partName = part->objectName().toStdString();
                 int bodyPartId = bodyPartNameToIdMap[partName];
                 int fpgaId = bodyPartToFGPAMap[bodyPartId];
                 copy(body_part_motors[partName].begin(), body_part_motors[partName].end(),
@@ -411,11 +411,17 @@ void RoboyTrajectoriesControl::startRecordTrajectoryButtonClicked() {
         msg.name.erase(std::remove(msg.name.begin(), msg.name.end(), ','), msg.name.end());
         for (auto part: activeBodyParts) {
             if (part->isChecked()) {
-                auto partName = part->whatsThis().toStdString();
+                auto partName = part->objectName().toStdString();
                 copy(body_part_motors[partName].begin(), body_part_motors[partName].end(),
                           std::back_inserter(msg.id_list));
                 msg.body_parts.push_back(partName);
             }
+        }
+        if(msg.body_parts.empty()){
+            QMessageBox messageBox;
+            messageBox.critical(0,"Error","Please select the body parts which you want to record");
+            messageBox.setFixedSize(500,200);
+            return;
         }
         startRecordTrajectoryPublisher.publish(msg);
         ui.startRecord->setEnabled(false);
