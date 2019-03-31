@@ -97,7 +97,7 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
         ros::init(argc, argv, "msj_platform_rqt_plugin");
     }
 
-    joint_state = nh->subscribe("/joint_state", 1, &MSJPlatformRQT::JointState, this);
+    joint_state = nh->subscribe("/joint_states_training", 1, &MSJPlatformRQT::JointState, this);
     motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &MSJPlatformRQT::MotorStatus, this);
     magneticSensor = nh->subscribe("/roboy/middleware/MagneticSensor", 1, &MSJPlatformRQT::MagneticSensor, this);
     motorCommand = nh->advertise<roboy_middleware_msgs::MotorCommand>("/roboy/middleware/MotorCommand", 1);
@@ -203,7 +203,7 @@ void MSJPlatformRQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor:
     time_sensor.push_back(delta.toSec());
     Matrix4d pose;
     if(!getTransform("world","top_estimate",pose))
-        ROS_WARN_THROTTLE(10,"is the IMU on?!");
+        ROS_DEBUG_THROTTLE(10,"is the IMU on?!");
     poseData.push_back(pose);
     for (int i = 0; i < msg->sensor_id.size(); i++) {
         sensorData[msg->sensor_id[i]][0].push_back(msg->x[j]);
@@ -234,15 +234,13 @@ void MSJPlatformRQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor:
     }
 }
 
-void MSJPlatformRQT::JointState(const roboy_simulation_msgs::JointState::ConstPtr &msg){
+void MSJPlatformRQT::JointState(const sensor_msgs::JointState::ConstPtr &msg){
     static int counter = 0;
     counter++;
     if(counter%20==0) {
         lock_guard<mutex> lock(mux);
-        for (int i = 3; i < msg->q.size(); i++) {
-            if (i > 6)
-                return;
-            q[i-3].push_back(msg->q[i]);
+        for (int i = 0; i < msg->name.size(); i++) {
+            q[i].push_back(msg->position[i]);
         }
         Q_EMIT newJointState();
     }
@@ -266,7 +264,7 @@ int MSJPlatformRQT::pnpoly(QVector<double> limits_x, QVector<double> limits_y, d
 
 void MSJPlatformRQT::gridMap(){
     ros::Rate rate(50);
-    double min[3] = {0,0,-0.3}, max[3] = {0,0,0.3};
+    double min[3] = {0,0,-0.5}, max[3] = {0,0,0.5};
     for(int i=0;i<limits[0].size();i++){
         if(limits[0][i]<min[0])
             min[0] = limits[0][i];

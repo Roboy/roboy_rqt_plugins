@@ -6,6 +6,7 @@
 #include <rqt_gui_cpp/plugin.h>
 #include <msj_platform_rqt/ui_msj_platform_rqt.h>
 #include <roboy_simulation_msgs/JointState.h>
+#include <sensor_msgs/JointState.h>
 #include <roboy_middleware_msgs/MagneticSensor.h>
 #include <roboy_middleware_msgs/MotorStatus.h>
 #include <roboy_middleware_msgs/MotorCommand.h>
@@ -74,7 +75,7 @@ public Q_SLOTS:
 private:
     void MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
     void MagneticSensor(const roboy_middleware_msgs::MagneticSensor::ConstPtr &msg);
-    void JointState(const roboy_simulation_msgs::JointState::ConstPtr &msg);
+    void JointState(const sensor_msgs::JointState::ConstPtr &msg);
     long closest(QVector<double> const& vec, double value);
     void gridMap();
     void receivePose();
