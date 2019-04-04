@@ -173,9 +173,9 @@ void MSJPlatformRQT::MotorStatus(const roboy_middleware_msgs::MotorStatus::Const
                     motorData[msg->id][motor][2].pop_front();
                 }
             } else {
-                motorData[msg->id][motor][0].push_back(std::numeric_limits<double>::quiet_NaN());
-                motorData[msg->id][motor][1].push_back(std::numeric_limits<double>::quiet_NaN());
-                motorData[msg->id][motor][2].push_back(std::numeric_limits<double>::quiet_NaN());
+                motorData[msg->id][motor][0].push_back(0);//std::numeric_limits<double>::quiet_NaN()
+                motorData[msg->id][motor][1].push_back(0);//std::numeric_limits<double>::quiet_NaN()
+                motorData[msg->id][motor][2].push_back(0);//std::numeric_limits<double>::quiet_NaN()
                 if (motorData[msg->id][motor][0].size() > samples_per_plot) {
                     motorData[msg->id][motor][0].pop_front();
                     motorData[msg->id][motor][1].pop_front();
@@ -199,38 +199,43 @@ void MSJPlatformRQT::MotorStatus(const roboy_middleware_msgs::MotorStatus::Const
 
 void MSJPlatformRQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor::ConstPtr &msg) {
     int j = 0;
+    static int counter = 0;
     ros::Duration delta = (ros::Time::now() - start_time);
     time_sensor.push_back(delta.toSec());
-    Matrix4d pose;
-    if(!getTransform("world","top_estimate",pose))
-        ROS_WARN_THROTTLE(10,"is the IMU on?!");
-    poseData.push_back(pose);
+//    Matrix4d pose;
+//    poseData.push_back(pose);
     for (int i = 0; i < msg->sensor_id.size(); i++) {
         sensorData[msg->sensor_id[i]][0].push_back(msg->x[j]);
         sensorData[msg->sensor_id[i]][1].push_back(msg->y[j]);
         sensorData[msg->sensor_id[i]][2].push_back(msg->z[j]);
-        if(show_magnetic_field){
-            static int counter = 9999;
-            Vector3d mag(msg->x[j],msg->y[j],msg->z[j]);
-            mag = pose.topLeftCorner(3,3)*mag*0.01;
-            Vector3d origin(0,0,0);
-            if(j == 0)
-                publishSphere(mag,"world","magnetic_field_sensor_0",counter++,COLOR(1,0,0,1),0.01,0);
-            else if(j == 1)
-                publishSphere(mag,"world","magnetic_field_sensor_1",counter++,COLOR(0,1,0,1),0.01,0);
-            else if(j == 2)
-                publishSphere(mag,"world","magnetic_field_sensor_2",counter++,COLOR(0,0,1,1),0.01,0);
-        }
+//        if(show_magnetic_field){
+//            static int counter = 9999;
+//            Vector3d mag(msg->x[j],msg->y[j],msg->z[j]);
+//            mag = pose.topLeftCorner(3,3)*mag*0.01;
+//            Vector3d origin(0,0,0);
+//            if(j == 0)
+//                publishSphere(mag,"world","magnetic_field_sensor_0",counter++,COLOR(1,0,0,1),0.01,0);
+//            else if(j == 1)
+//                publishSphere(mag,"world","magnetic_field_sensor_1",counter++,COLOR(0,1,0,1),0.01,0);
+//            else if(j == 2)
+//                publishSphere(mag,"world","magnetic_field_sensor_2",counter++,COLOR(0,0,1,1),0.01,0);
+//        }
         j++;
     }
     if (time_sensor.size() > samples_per_plot) {
         time_sensor.pop_front();
-        poseData.pop_front();
+//        poseData.pop_front();
         for (int i = 0; i < msg->sensor_id.size(); i++) {
             sensorData[msg->sensor_id[i]][0].pop_front();
             sensorData[msg->sensor_id[i]][1].pop_front();
             sensorData[msg->sensor_id[i]][2].pop_front();
         }
+    }
+//    if ((counter++) % 20 == 0) {
+        Q_EMIT newData();
+//    }
+    if ((counter++) % 100 == 0) {
+        rescaleMagneticSensors();
     }
 }
 
@@ -370,9 +375,9 @@ void MSJPlatformRQT::plotData() {
     }
 
     for (uint axis = 0; axis < 3; axis++) {
-        ui.magnetic_plot_0->graph(axis)->setData(time, sensorData[0][axis]);
-        ui.magnetic_plot_1->graph(axis)->setData(time, sensorData[1][axis]);
-        ui.magnetic_plot_2->graph(axis)->setData(time, sensorData[2][axis]);
+        ui.magnetic_plot_0->graph(axis)->setData(time_sensor, sensorData[0][axis]);
+        ui.magnetic_plot_1->graph(axis)->setData(time_sensor, sensorData[1][axis]);
+        ui.magnetic_plot_2->graph(axis)->setData(time_sensor, sensorData[2][axis]);
     }
 
     ui.magnetic_plot_0->xAxis->rescale();
@@ -506,7 +511,7 @@ void MSJPlatformRQT::rescaleMagneticSensors() {
             minima[axis][sensor] = 0;
             maxima[axis][sensor] = 0;
             for (auto val:motorData[ui.fpga->value()][axis][sensor]) {
-                if (val < minima[axis][sensor])
+                if (val < minima[axis][sensor] && val)
                     minima[axis][sensor] = val;
                 if (val > maxima[axis][sensor])
                     maxima[axis][sensor] = val;
