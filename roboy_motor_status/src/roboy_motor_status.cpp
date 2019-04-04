@@ -18,13 +18,13 @@ void RoboyMotorStatus::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     for (uint motor = 0; motor < NUMBER_OF_MOTORS_PER_FPGA; motor++) {
         ui.position_plot->addGraph();
-        ui.position_plot->graph(motor)->setPen(QPen(color_pallette[motor]));
+        ui.position_plot->graph(motor)->setPen(QPen(color_pallette[motor%16])); // %16 because we only have 16 colors :(
         ui.velocity_plot->addGraph();
-        ui.velocity_plot->graph(motor)->setPen(QPen(color_pallette[motor]));
+        ui.velocity_plot->graph(motor)->setPen(QPen(color_pallette[motor%16]));
         ui.displacement_plot->addGraph();
-        ui.displacement_plot->graph(motor)->setPen(QPen(color_pallette[motor]));
+        ui.displacement_plot->graph(motor)->setPen(QPen(color_pallette[motor%16]));
         ui.current_plot->addGraph();
-        ui.current_plot->graph(motor)->setPen(QPen(color_pallette[motor]));
+        ui.current_plot->graph(motor)->setPen(QPen(color_pallette[motor%16]));
         char str[20];
         sprintf(str,"motor_%d",motor);
         QCheckBox *box = widget_->findChild<QCheckBox*>(str);

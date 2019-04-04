@@ -93,6 +93,8 @@ class RoboyTrajectoriesControl:
             void setPredisplacementButtonClicked();
             void setPredisplacement(int value);
         private:
+            void setDisplacementOfAllSelectedMotors(int displacement);
+        private:
             Ui::RoboyTrajectoriesControl ui;
             QWidget *widget_;
             ros::NodeHandlePtr nh;
@@ -104,7 +106,7 @@ class RoboyTrajectoriesControl:
             map<string,ros::ServiceClient> motorControlServiceClient, emergencyStopServiceClient,
                     performMovementServiceClient,
                     executeActionsServiceClient, listExistingTrajectoriesServiceClient;
-            vector<ros::ServiceClient> setDisplacementForAllServiceClient;
+            map<string,ros::ServiceClient> setDisplacementForAllServiceClient;
 
 //            ros::ServiceClient listExistingBehaviorsServiceClient, expandBehaviorServiceClient;
 
@@ -140,6 +142,9 @@ class RoboyTrajectoriesControl:
             QBrush redBrush;//(Qt::red);
             vector<vector<bool>> motorStatus; // motor status
             vector<QCheckBox*> activeBodyParts;
+            vector<QCheckBox*> fpgaCheckBox;
+            //TODO refactor fpgaBodypart
+            vector<string> fpgaBodyPart;
 
 
 
