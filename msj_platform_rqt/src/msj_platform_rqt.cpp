@@ -136,11 +136,11 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     zero_rot.setIdentity();
 
-    uint32_t ip;
-    inet_pton(AF_INET, "192.168.255.255", &ip);
-    udp.reset(new UDPSocket(8000));
-    udp_thread.reset(new std::thread(&MSJPlatformRQT::receivePose, this));
-    udp_thread->detach();
+//    uint32_t ip;
+//    inet_pton(AF_INET, "192.168.255.255", &ip);
+//    udp.reset(new UDPSocket(8000));
+//    udp_thread.reset(new std::thread(&MSJPlatformRQT::receivePose, this));
+//    udp_thread->detach();
 }
 
 void MSJPlatformRQT::shutdownPlugin() {
@@ -192,7 +192,6 @@ void MSJPlatformRQT::MotorStatus(const roboy_middleware_msgs::MotorStatus::Const
 
         if (counter % 100 == 0) {
             rescale();
-            rescaleMagneticSensors();
         }
     }
 }
@@ -231,9 +230,9 @@ void MSJPlatformRQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor:
             sensorData[msg->sensor_id[i]][2].pop_front();
         }
     }
-//    if ((counter++) % 20 == 0) {
+    if ((counter++) % 20 == 0) {
         Q_EMIT newData();
-//    }
+    }
     if ((counter++) % 100 == 0) {
         rescaleMagneticSensors();
     }

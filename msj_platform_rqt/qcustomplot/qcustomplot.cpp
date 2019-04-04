@@ -16514,7 +16514,7 @@ QCPRange QCPGraph::getKeyRange(bool &foundRange, SignDomain inSignDomain, bool i
   if (inSignDomain == sdBoth) // range may be anywhere
   {
     QCPDataMap::const_iterator it = mData->constBegin();
-    while (it != mData->constEnd())
+    while (it != mData->constEnd() && it!=nullptr)
     {
       if (!qIsNaN(it.value().value))
       {
@@ -16537,7 +16537,7 @@ QCPRange QCPGraph::getKeyRange(bool &foundRange, SignDomain inSignDomain, bool i
   } else if (inSignDomain == sdNegative) // range may only be in the negative sign domain
   {
     QCPDataMap::const_iterator it = mData->constBegin();
-    while (it != mData->constEnd())
+    while (it != mData->constEnd() && it!=nullptr)
     {
       if (!qIsNaN(it.value().value))
       {
@@ -16573,7 +16573,7 @@ QCPRange QCPGraph::getKeyRange(bool &foundRange, SignDomain inSignDomain, bool i
   } else if (inSignDomain == sdPositive) // range may only be in the positive sign domain
   {
     QCPDataMap::const_iterator it = mData->constBegin();
-    while (it != mData->constEnd())
+    while (it != mData->constEnd() && it!=nullptr)
     {
       if (!qIsNaN(it.value().value))
       {
@@ -16629,7 +16629,7 @@ QCPRange QCPGraph::getValueRange(bool &foundRange, SignDomain inSignDomain, bool
   if (inSignDomain == sdBoth) // range may be anywhere
   {
     QCPDataMap::const_iterator it = mData->constBegin();
-    while (it != mData->constEnd())
+    while (it != mData->constEnd() && it!=nullptr)
     {
       current = it.value().value;
       if (!qIsNaN(current))
@@ -16652,7 +16652,7 @@ QCPRange QCPGraph::getValueRange(bool &foundRange, SignDomain inSignDomain, bool
   } else if (inSignDomain == sdNegative) // range may only be in the negative sign domain
   {
     QCPDataMap::const_iterator it = mData->constBegin();
-    while (it != mData->constEnd())
+    while (it != mData->constEnd() && it!=nullptr)
     {
       current = it.value().value;
       if (!qIsNaN(current))
