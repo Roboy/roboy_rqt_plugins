@@ -24,6 +24,7 @@ void RoboyMotorCalibration::initPlugin(qt_gui_cpp::PluginContext &context) {
     button["calibrate"] = widget_->findChild<QPushButton *>("calibrate");
     button["load_motor_config"] = widget_->findChild<QPushButton *>("load_motor_config");
     button["fit_curve"] = widget_->findChild<QPushButton *>("fit_curve");
+    button["zero_testrig_position"] = widget_->findChild<QPushButton *>("zero_testrig_position");
 
     button["fit_curve"]->setToolTip("estimates spring parameters read from csv file");
 
@@ -53,6 +54,7 @@ void RoboyMotorCalibration::initPlugin(qt_gui_cpp::PluginContext &context) {
     QObject::connect(button["calibrate"], SIGNAL(clicked()), this, SLOT(MotorCalibration()));
     QObject::connect(button["load_motor_config"], SIGNAL(clicked()), this, SLOT(loadConfig()));
     QObject::connect(button["fit_curve"], SIGNAL(clicked()), this, SLOT(fitCurve()));
+    QObject::connect(button["zero_testrig_position"], SIGNAL(clicked()), this, SLOT(zeroTestrigPosition()));
 
     QObject::connect(ui.winchAngle_zero, SIGNAL(clicked()), this, SLOT(winchAngleZero()));
     QObject::connect(ui.motorAngle_zero, SIGNAL(clicked()), this, SLOT(motorAngleZero()));
@@ -139,9 +141,11 @@ void RoboyMotorCalibration::initPlugin(qt_gui_cpp::PluginContext &context) {
     motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyMotorCalibration::MotorStatus, this);
     motorAngle = nh->subscribe("/roboy/middleware/MotorAngle", 1, &RoboyMotorCalibration::MotorAngle, this);
     loadCells = nh->subscribe("/roboy/middleware/LoadCells", 1, &RoboyMotorCalibration::ADCvalue, this);
+    testrig = nh->subscribe("/roboy/middleware/TestRigPosition", 1, &RoboyMotorCalibration::TestRigPosition, this);
     motorCalibration = nh->serviceClient<roboy_middleware_msgs::MotorCalibrationService>(
             "/roboy/middleware/MotorCalibration");
     motorCommand = nh->advertise<roboy_middleware_msgs::MotorCommand>("/roboy/middleware/MotorCommand", 1);
+    testrig_relative_pos = nh->advertise<std_msgs::Float32>("/roboy/middleware/TestRigRelativePosition", 1);
 
     offset[POSITION] = 0;
     offset[ANGLEABSOLUT] = 0;
@@ -282,6 +286,26 @@ void RoboyMotorCalibration::ADCvalue(const roboy_middleware_msgs::ADCvalue::Cons
         if (counter % 10 == 0)
                 Q_EMIT newData();
     }
+}
+
+void RoboyMotorCalibration::TestRigPosition(const std_msgs::Float32::ConstPtr &msg){
+    static float pos_prev = 0;
+    if(pos_prev > 280.0 && msg->data < 30.0){
+        rev_counter++;
+    }
+    if(pos_prev < 30.0 && msg->data > 280.0){
+        rev_counter--;
+    }
+    pos_prev = msg->data;
+    testrig_rawangle = msg->data;
+    testrig_position = (rev_counter*2.0*M_PI+(msg->data-testrig_position_offset)*M_PI/180.0)*0.009;
+    char str[100];
+    sprintf(str,"%.3f",testrig_position);
+    ui.testrig_pos->setText(str);
+
+    std_msgs::Float32 msg2;
+    msg2.data = testrig_position;
+    testrig_relative_pos.publish(msg2);
 }
 
 void RoboyMotorCalibration::receiveUDPLoadCellValues() {
@@ -719,6 +743,11 @@ void RoboyMotorCalibration::fitCurve() {
                                  coeffs_force2displacement[ui.fpga->value()][ui.motor->value()]);
         writeConfig(text["motor_config_path"]->text().toStdString());
     }
+}
+
+void RoboyMotorCalibration::zeroTestrigPosition(){
+    rev_counter = 0;
+    testrig_position_offset = testrig_rawangle;
 }
 
 void RoboyMotorCalibration::winchAngleZero() {

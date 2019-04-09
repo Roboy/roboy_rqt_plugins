@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>863</width>
+    <width>989</width>
     <height>778</height>
    </rect>
   </property>
@@ -582,6 +582,53 @@
     <bool>true</bool>
    </property>
   </widget>
+  <widget class="QLineEdit" name="testrig_pos">
+   <property name="geometry">
+    <rect>
+     <x>862</x>
+     <y>80</y>
+     <width>121</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_12">
+   <property name="geometry">
+    <rect>
+     <x>860</x>
+     <y>50</y>
+     <width>121</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>9</pointsize>
+     <weight>75</weight>
+     <italic>true</italic>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>test rig weight height</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="zero_testrig_position">
+   <property name="geometry">
+    <rect>
+     <x>860</x>
+     <y>110</y>
+     <width>121</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>zero position</string>
+   </property>
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+  </widget>
   <zorder>tabWidget</zorder>
   <zorder>label_2</zorder>
   <zorder>setpoint_max</zorder>
@@ -605,6 +652,9 @@
   <zorder>motor_config_path</zorder>
   <zorder>timeout</zorder>
   <zorder>stop_button_all</zorder>
+  <zorder>testrig_pos</zorder>
+  <zorder>label_12</zorder>
+  <zorder>zero_testrig_position</zorder>
  </widget>
  <customwidgets>
   <customwidget>
