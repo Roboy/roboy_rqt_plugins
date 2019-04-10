@@ -150,6 +150,8 @@ void RoboyMotorCalibration::initPlugin(qt_gui_cpp::PluginContext &context) {
     offset[POSITION] = 0;
     offset[ANGLEABSOLUT] = 0;
 
+    ui.progressBar->hide();
+
     uint32_t ip;
     inet_pton(AF_INET, "192.168.255.255", &ip);
     udp.reset(new UDPSocket(8000));
@@ -435,6 +437,8 @@ void RoboyMotorCalibration::estimateSpringParameters(vector<double> &force,
 }
 
 void RoboyMotorCalibration::estimateMyoMuscleSpringParameters() {
+    if(!ui.calibrate->isChecked())
+        return;
     milliseconds ms_start = duration_cast<milliseconds>(system_clock::now().time_since_epoch()), ms_stop, t0, t1;
     ofstream outfile;
     char str[100];
@@ -450,6 +454,9 @@ void RoboyMotorCalibration::estimateMyoMuscleSpringParameters() {
     roboy_middleware_msgs::MotorCommand msg;
     msg.id = ui.fpga->value();
     msg.motors.push_back(ui.motor->value());
+    ui.progressBar->show();
+    ui.progressBar->setMaximum(0);
+    ui.progressBar->setMinimum(0);
 
     vector<double> x, y;
     float f = setpoint_min;
@@ -476,7 +483,10 @@ void RoboyMotorCalibration::estimateMyoMuscleSpringParameters() {
         if(f<0 && !up)
             up= true;
         f += up?1:-1;
-    } while ((ms_stop - ms_start).count() < timeout && x.size() < numberOfDataPoints);
+
+    } while ((ms_stop - ms_start).count() < timeout && x.size() < numberOfDataPoints && ui.calibrate->isChecked());
+
+    ui.progressBar->hide();
 
     coeffs_displacement2force[ui.fpga->value()][ui.motor->value()].clear();
     polynomialRegression(degree, x, y, coeffs_displacement2force[ui.fpga->value()][ui.motor->value()]);
