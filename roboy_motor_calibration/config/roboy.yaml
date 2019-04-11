@@ -1,5 +1,5 @@
 fpga0:
-  motor_polynomial_parameters_displacement2force:
+  motor_polynomial_parameters_force2displacement:
     - [0, 0, 0]
     - [1, 0, 0]
     - [2, 0, 0]
@@ -21,7 +21,7 @@ fpga0:
     - [18]
     - [19]
     - [20]
-  motor_polynomial_parameters_force2displacement:
+  motor_polynomial_parameters_displacement2force:
     - [0, 0, 0]
     - [1, 0, 0]
     - [2, 0, 0]
@@ -44,7 +44,7 @@ fpga0:
     - [19]
     - [20]
 fpga1:
-  motor_polynomial_parameters_displacement2force:
+  motor_polynomial_parameters_force2displacement:
     - [0, 0, 0]
     - [1, 0, 0]
     - [2, 0, 0]
@@ -66,7 +66,7 @@ fpga1:
     - [18]
     - [19]
     - [20]
-  motor_polynomial_parameters_force2displacement:
+  motor_polynomial_parameters_displacement2force:
     - [0, 0, 0]
     - [1, 0, 0]
     - [2, 0, 0]
@@ -150,7 +150,7 @@ fpga3:
     - [12, 0, 0]
     - [13]
     - [14]
-    - [15, 15.74171, 0.2460887]
+    - [15, 15.6451, 0.2468019]
     - [16]
     - [17]
     - [18]
@@ -172,7 +172,7 @@ fpga3:
     - [12, 0, 0]
     - [13]
     - [14]
-    - [15, -58.98692, 3.944042]
+    - [15, -58.2062, 3.927222]
     - [16]
     - [17]
     - [18]

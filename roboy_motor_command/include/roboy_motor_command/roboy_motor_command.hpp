@@ -64,7 +64,7 @@ private:
     vector<double> setpoint;
     vector<int> control_mode;
     int total_number_of_motors = 0, number_of_fpgas = 6;
-    vector<QRadioButton*> pos, vel, dis, force;
+    vector<QRadioButton*> pos, vel, dis, force, cur, dir;
     vector<QSlider*> setpoint_slider_widget;
     QSlider *setpoint_slider_widget_all;
     vector<QLineEdit*> setpoint_widget;
