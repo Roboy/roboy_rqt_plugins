@@ -22,6 +22,7 @@
 #include <common_utilities/MotorConfig.hpp>
 #include <common_utilities/UDPSocket.hpp>
 #include <std_srvs/SetBool.h>
+#include <std_msgs/Float32.h>
 #include <boost/thread/thread.hpp>
 #include <qcustomplot.h>
 #include <QFileInfo>
@@ -55,12 +56,14 @@ public Q_SLOTS:
     void plotData();
     void loadConfig();
     void fitCurve();
+    void zeroTestrigPosition();
     void winchAngleZero();
     void motorAngleZero();
 private:
     void MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
     void MotorAngle(const roboy_middleware_msgs::MotorAngle::ConstPtr &msg);
     void ADCvalue(const roboy_middleware_msgs::ADCvalue::ConstPtr &msg);
+    void TestRigPosition(const std_msgs::Float32::ConstPtr &msg);
     void receiveUDPLoadCellValues();
     /**
 	 * Performs polynomial regression (http://www.bragitoff.com/2015/09/c-program-for-polynomial-fit-least-squares/)
@@ -92,8 +95,8 @@ private:
     Ui::RoboyMotorCalibration ui;
     QWidget *widget_;
     ros::NodeHandlePtr nh;
-    ros::Subscriber motorStatus, loadCells, motorAngle;
-    ros::Publisher motorCommand;
+    ros::Subscriber motorStatus, loadCells, motorAngle, testrig;
+    ros::Publisher motorCommand, testrig_relative_pos;
     ros::ServiceClient motorCalibration, emergencyStop;
 private:
     mutex mux;
@@ -109,6 +112,8 @@ private:
     map<string, QLineEdit*> text;
     QColor color_pallette[14] = {Qt::blue, Qt::red, Qt::green, Qt::cyan, Qt::magenta, Qt::darkGray, Qt::darkRed, Qt::darkGreen,
                                  Qt::darkBlue, Qt::darkCyan, Qt::darkMagenta, Qt::darkYellow, Qt::black, Qt::gray};
+    float testrig_rawangle = 0, testrig_position = 0, testrig_position_offset = 0;
+    int rev_counter = 0;
     UDPSocketPtr udp;
     enum{
         POSITION, // this is the raw motor angle

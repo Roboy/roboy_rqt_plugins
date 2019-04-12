@@ -69,6 +69,8 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
     QObject::connect(ui.vel, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
     QObject::connect(ui.dis, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
     QObject::connect(ui.force, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
+    QObject::connect(ui.current, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
+    QObject::connect(ui.direct, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
     QObject::connect(ui.fpga, SIGNAL(valueChanged(int)), this, SLOT(addFpgaWidgets(int)));
 
     QObject::connect(ui.update_config, SIGNAL(clicked()), this, SLOT(update_config()));
@@ -103,6 +105,8 @@ void RoboyMotorCommand::stopButtonAllClicked(){
         ui.vel->setEnabled(false);
         ui.dis->setEnabled(false);
         ui.force->setEnabled(false);
+        ui.current->setEnabled(false);
+        ui.direct->setEnabled(false);
     }else {
         ui.stop_button_all->setStyleSheet("background-color: green");
         msg.request.data = 0;
@@ -113,6 +117,8 @@ void RoboyMotorCommand::stopButtonAllClicked(){
         ui.vel->setEnabled(true);
         ui.dis->setEnabled(true);
         ui.force->setEnabled(true);
+        ui.current->setEnabled(true);
+        ui.direct->setEnabled(true);
     }
 }
 
@@ -257,6 +263,22 @@ void RoboyMotorCommand::controlModeChanged(){
         msg.request.control_mode = DISPLACEMENT;
         ROS_INFO("changed to FORCE control");
     }
+    if(ui.current->isChecked()) {
+        for(int motor = 0; motor<total_number_of_motors; motor++){
+            control_mode[motor] = CURRENT;
+            cur[motor]->setChecked(true);
+        }
+        msg.request.control_mode = CURRENT;
+        ROS_INFO("changed to CURRENT control");
+    }
+    if(ui.direct->isChecked()) {
+        for(int motor = 0; motor<total_number_of_motors; motor++){
+            control_mode[motor] = DIRECT_PWM;
+            dir[motor]->setChecked(true);
+        }
+        msg.request.control_mode = DIRECT_PWM;
+        ROS_INFO("changed to DIRECT_PWM control");
+    }
 
     bool ok;
     double motor_scale = scale->text().toDouble(&ok);
@@ -339,6 +361,10 @@ void RoboyMotorCommand::update_config(){
         motor_config_control_mode = VELOCITY;
     if(ui.dis_motor_config->isChecked())
         motor_config_control_mode = DISPLACEMENT;
+    if(ui.cur_motor_config->isChecked())
+        motor_config_control_mode = CURRENT;
+    if(ui.dir_motor_config->isChecked())
+        motor_config_control_mode = DIRECT_PWM;
     for(int i=0;i<NUMBER_OF_MOTORS_PER_FPGA;i++){
         msg.request.config.motors.push_back(i);
         msg.request.config.setpoint.push_back(0);
@@ -375,6 +401,8 @@ void RoboyMotorCommand::addFpgaWidgets(int fpga){
     vel.clear();
     dis.clear();
     force.clear();
+    cur.clear();
+    dir.clear();
 
     total_number_of_motors = NUMBER_OF_MOTORS_PER_FPGA;
     for (uint motor = 0; motor < NUMBER_OF_MOTORS_PER_FPGA; motor++) {
@@ -444,6 +472,34 @@ void RoboyMotorCommand::addFpgaWidgets(int fpga){
         widget->layout()->addWidget(f);
         force.push_back(f);
         QObject::connect(f, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
+
+        QRadioButton *c = new QRadioButton(widget);
+        c->setText("cur");
+        c->setFixedSize(60,30);
+        c->setCheckable(true);
+        c->setObjectName("cur");
+        c->setChecked(true);
+        if(!active)
+            c->setEnabled(false);
+        setpoint.push_back(0);
+        control_mode.push_back(CURRENT);
+        widget->layout()->addWidget(c);
+        cur.push_back(c);
+        QObject::connect(c, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
+
+        QRadioButton *di = new QRadioButton(widget);
+        di->setText("cur");
+        di->setFixedSize(60,30);
+        di->setCheckable(true);
+        di->setObjectName("dir");
+        di->setChecked(true);
+        if(!active)
+            di->setEnabled(false);
+        setpoint.push_back(0);
+        control_mode.push_back(DIRECT_PWM);
+        widget->layout()->addWidget(di);
+        dir.push_back(di);
+        QObject::connect(di, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
 
         QLineEdit *line = new QLineEdit(widget);
         line->setFixedSize(100,30);

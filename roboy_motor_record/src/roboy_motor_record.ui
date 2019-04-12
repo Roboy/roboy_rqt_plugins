@@ -34,12 +34,12 @@
     <string>MOTOR RECORD</string>
    </property>
   </widget>
-  <widget class="QRadioButton" name="pos">
+  <widget class="QCheckBox" name="pos_record">
    <property name="geometry">
     <rect>
      <x>130</x>
      <y>0</y>
-     <width>61</width>
+     <width>51</width>
      <height>31</height>
     </rect>
    </property>
@@ -57,12 +57,12 @@
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QRadioButton" name="vel">
+  <widget class="QCheckBox" name="vel_record">
    <property name="geometry">
     <rect>
-     <x>190</x>
+     <x>180</x>
      <y>0</y>
-     <width>61</width>
+     <width>51</width>
      <height>31</height>
     </rect>
    </property>
@@ -76,13 +76,16 @@
    <property name="text">
     <string>vel</string>
    </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
   </widget>
-  <widget class="QRadioButton" name="dis">
+  <widget class="QCheckBox" name="dis_record">
    <property name="geometry">
     <rect>
-     <x>250</x>
+     <x>230</x>
      <y>0</y>
-     <width>71</width>
+     <width>51</width>
      <height>31</height>
     </rect>
    </property>
@@ -97,30 +100,7 @@
     <string>dis</string>
    </property>
    <property name="checked">
-    <bool>false</bool>
-   </property>
-  </widget>
-  <widget class="QRadioButton" name="force">
-   <property name="geometry">
-    <rect>
-     <x>310</x>
-     <y>0</y>
-     <width>71</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>11</pointsize>
-     <weight>75</weight>
-     <bold>true</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>force</string>
-   </property>
-   <property name="checked">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
   </widget>
   <widget class="QPushButton" name="record">
@@ -174,7 +154,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>15</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="time_span">
@@ -415,6 +395,9 @@
      <height>31</height>
     </rect>
    </property>
+   <property name="minimum">
+    <number>3</number>
+   </property>
    <property name="maximum">
     <number>5</number>
    </property>
@@ -440,6 +423,149 @@
     <string>fpga</string>
    </property>
   </widget>
+  <widget class="QCheckBox" name="cur_record">
+   <property name="geometry">
+    <rect>
+     <x>280</x>
+     <y>0</y>
+     <width>71</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>11</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>current</string>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="pwm_record">
+   <property name="geometry">
+    <rect>
+     <x>360</x>
+     <y>0</y>
+     <width>51</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>11</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>pwm</string>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="pos">
+   <property name="geometry">
+    <rect>
+     <x>600</x>
+     <y>290</y>
+     <width>51</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>pos</string>
+   </property>
+   <attribute name="buttonGroup">
+    <string notr="true">buttonGroup</string>
+   </attribute>
+  </widget>
+  <widget class="QRadioButton" name="vel">
+   <property name="geometry">
+    <rect>
+     <x>660</x>
+     <y>290</y>
+     <width>51</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>vel</string>
+   </property>
+   <attribute name="buttonGroup">
+    <string notr="true">buttonGroup</string>
+   </attribute>
+  </widget>
+  <widget class="QRadioButton" name="dis">
+   <property name="geometry">
+    <rect>
+     <x>720</x>
+     <y>290</y>
+     <width>51</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>dis</string>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <attribute name="buttonGroup">
+    <string notr="true">buttonGroup</string>
+   </attribute>
+  </widget>
+  <widget class="QCheckBox" name="test_rig_pos_record">
+   <property name="geometry">
+    <rect>
+     <x>420</x>
+     <y>0</y>
+     <width>111</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>11</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>test_rig_pos</string>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="test_rig_weight_record">
+   <property name="geometry">
+    <rect>
+     <x>540</x>
+     <y>0</y>
+     <width>131</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>11</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>test_rig_weight</string>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
@@ -451,4 +577,7 @@
  </customwidgets>
  <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="buttonGroup"/>
+ </buttongroups>
 </ui>

@@ -191,6 +191,7 @@ void MSJPlatformRQT::MotorStatus(const roboy_middleware_msgs::MotorStatus::Const
         }
 
         if (counter % 100 == 0) {
+            rescaleMagneticSensors();
             rescale();
         }
     }
@@ -227,12 +228,6 @@ void MSJPlatformRQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor:
             sensorData[msg->sensor_id[i]][1].pop_front();
             sensorData[msg->sensor_id[i]][2].pop_front();
         }
-    }
-    if ((counter++) % 20 == 0) {
-        Q_EMIT newData();
-    }
-    if ((counter++) % 100 == 0) {
-        rescaleMagneticSensors();
     }
 }
 
