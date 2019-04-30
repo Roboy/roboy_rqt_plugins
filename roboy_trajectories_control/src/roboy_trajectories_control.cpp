@@ -119,6 +119,7 @@ void RoboyTrajectoriesControl::initPlugin(qt_gui_cpp::PluginContext &context) {
             ROS_INFO_STREAM(fpga + "_m" + to_string(*it));
             if (view == NULL) {
                 ROS_ERROR_STREAM("view not found");
+                continue;
             }
             view->setScene(scene);
             motorStatus[fpga_id_from_name[fpga]].at(*it) = false;
