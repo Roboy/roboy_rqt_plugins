@@ -31,6 +31,11 @@
 #include <thread>
 #include <common_utilities/UDPSocket.hpp>
 #include <mutex>
+#include <yaml-cpp/yaml.h>
+#include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #endif
 
@@ -72,12 +77,27 @@ public Q_SLOTS:
     void clearMagneticField();
     void zeroPose();
     void calibrateSystem();
+    void measureJointLimits();
 private:
+    /**
+     * Reads a yaml joint limits file
+     * @param filepath to config
+     * @return success
+     */
+    bool readJointLimits(const string &filepath);
+    /**
+     * Writes a yaml motor config file
+     * @param filepath
+     * @return success
+     */
+    bool writeJointLimits(const string &filepath);
+    void gridMap();
+    bool fileExists(const string &filepath);
     void MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
     void MagneticSensor(const roboy_middleware_msgs::MagneticSensor::ConstPtr &msg);
     void JointState(const sensor_msgs::JointState::ConstPtr &msg);
     long closest(QVector<double> const& vec, double value);
-    void gridMap();
+
     void receivePose();
     int pnpoly(QVector<double> limits_x, QVector<double> limits_y, double testx, double testy);
 Q_SIGNALS:

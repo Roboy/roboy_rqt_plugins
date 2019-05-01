@@ -68,28 +68,6 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     ui.joint_space->xAxis->setLabel("sphere_axis0");
     ui.joint_space->yAxis->setLabel("sphere_axis1");
 
-    string path = ros::package::getPath("robots");
-    path+="/msj_platform/joint_limits.txt";
-    FILE*       file = fopen(path.c_str(),"r");
-    if (NULL != file) {
-        fscanf(file, "%*[^\n]\n", NULL);
-        float qx,qy;
-        int i =0;
-        while(fscanf(file,"%f %f\n",&qx,&qy)==2){
-            limits[0].push_back(qx);
-            limits[1].push_back(qy);
-            cout << qx << "\t" << qy << endl;
-            i++;
-        }
-        printf("read %d joint limit values\n", i);
-        ui.joint_space->graph(0)->setData(limits[0],limits[1]);
-        ui.joint_space->xAxis->rescale();
-        ui.joint_space->yAxis->rescale();
-        ui.joint_space->replot();
-    }else{
-        cout << "could not open " << path << endl;
-    }
-
     nh = ros::NodeHandlePtr(new ros::NodeHandle);
     if (!ros::isInitialized()) {
         int argc = 0;
@@ -122,12 +100,10 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     ui.stop_button->setStyleSheet("background-color: green");
     QObject::connect(ui.stop_button, SIGNAL(clicked()), this, SLOT(stopButtonClicked()));
     QObject::connect(ui.zero, SIGNAL(clicked()), this, SLOT(zeroClicked()));
+    QObject::connect(ui.measure_joint_limits, SIGNAL(clicked()), this, SLOT(measureJointLimits()));
     QObject::connect(ui.show_magnetic_field, SIGNAL(clicked()), this, SLOT(showMagneticField()));
     QObject::connect(ui.clear_magnetic_field, SIGNAL(clicked()), this, SLOT(clearMagneticField()));
     QObject::connect(ui.system, SIGNAL(clicked()), this, SLOT(calibrateSystem()));
-
-    grid_thread.reset(new std::thread(&MSJPlatformRQT::gridMap, this));
-    grid_thread->detach();
 
     spinner.reset(new ros::AsyncSpinner(0));
     spinner->start();
@@ -135,6 +111,15 @@ void MSJPlatformRQT::initPlugin(qt_gui_cpp::PluginContext &context) {
     start_time = ros::Time::now();
 
     zero_rot.setIdentity();
+
+    string path = ros::package::getPath("robots");
+    string model_name;
+    nh->getParam("model_name", model_name);
+    path+="/" + model_name + "/joint_limits.yaml";
+    readJointLimits(path);
+
+    grid_thread.reset(new std::thread(&MSJPlatformRQT::gridMap, this));
+    grid_thread->detach();
 
 //    uint32_t ip;
 //    inet_pton(AF_INET, "192.168.255.255", &ip);
@@ -239,7 +224,16 @@ void MSJPlatformRQT::JointState(const sensor_msgs::JointState::ConstPtr &msg){
         for (int i = 0; i < msg->name.size(); i++) {
             q[i].push_back(msg->position[i]);
         }
+        if(q[0].size()>10000){
+            q[0].pop_front();
+            q[1].pop_front();
+            q[2].pop_front();
+        }
         Q_EMIT newJointState();
+        if(ui.measure_joint_limits->isChecked()){
+            limits[0].push_back(q[0].back());
+            limits[1].push_back(q[1].back());
+        }
     }
 }
 
@@ -272,16 +266,23 @@ void MSJPlatformRQT::gridMap(){
         if(limits[1][i]>max[1])
             max[1] = limits[1][i];
     }
-    double target[3] = {min[0],min[1],0};
+    ROS_INFO("min: %f %f %f", min[0], min[1], min[2]);
+    ROS_INFO("max: %f %f %f", max[0], max[1], max[2]);
+    double target[3] = {0,0,0};
     bool dir[3] = {false,false,false};
     bool x_first = true;
     while(ros::ok()){
-        if(ui.run_grid->isChecked()){
+        if(ui.grid_map->isChecked()){
+            double speed_axis0 = ui.speed_axis0->value()/5000.0;
+            double speed_axis1 = ui.speed_axis1->value()/5000.0;
+            double speed_axis2 = ui.speed_axis2->value()/5000.0;
             if(x_first) {
-                target[0] += (dir[0] ? -1.0 : 1.0) * 0.001;
+                bool ok;
+
+                target[0] += (dir[0] ? -1.0 : 1.0) * speed_axis0;
                 if (target[0] > max[0] || target[0] < min[0]) {
                     dir[0] = !dir[0];
-                    target[1] += (dir[1] ? -1.0 : 1.0) * 0.01;
+                    target[1] += (dir[1] ? -1.0 : 1.0) * speed_axis1;
                     if (target[1] > max[1] || target[1] < min[1]) {
                         dir[1] = false;
                         target[1] = min[1];
@@ -301,9 +302,9 @@ void MSJPlatformRQT::gridMap(){
                 }
             }
             if(pnpoly(limits[0],limits[1],target[0],target[1])==0){
-//                ROS_INFO_THROTTLE(1,"not inside");
+                ROS_INFO_THROTTLE(5,"%f %f not inside", target[0], target[1]);
             }else{
-//                ROS_INFO_THROTTLE(1,"inside");
+                ROS_INFO_THROTTLE(5,"%f %f inside", target[0], target[1]);
                 std_msgs::Float32 msg;
                 msg.data = target[0];
                 sphere_axis0.publish(msg);
@@ -312,7 +313,7 @@ void MSJPlatformRQT::gridMap(){
                 if(ui.heading->isChecked()) {
                     if (target[2] > max[2] || target[2] < min[2])
                         dir[2] = !dir[2];
-                    target[2] += (dir[2] ? -1.0 : 1.0) * 0.001;
+                    target[2] += (dir[2] ? -1.0 : 1.0) * speed_axis2;
                     msg.data = target[2];
                     sphere_axis2.publish(msg);
                 }
@@ -598,6 +599,24 @@ void MSJPlatformRQT::zeroClicked() {
     }
 }
 
+void MSJPlatformRQT::measureJointLimits() {
+    if(ui.measure_joint_limits->isChecked()) {
+        limits[0].clear();
+        limits[1].clear();
+    }else{
+        string path = ros::package::getPath("robots");
+        string model_name;
+        nh->getParam("model_name", model_name);
+        path+="/" + model_name + "/joint_limits.yaml";
+        if(limits[0].size()>0) {
+            ROS_INFO("recorded %d joint limits", limits[0].size());
+            writeJointLimits(path);
+        }else{
+            ROS_WARN("did not record any joint limits, are the vive trackers on?");
+        }
+    }
+}
+
 void MSJPlatformRQT::showMagneticField(){
     show_magnetic_field = ui.show_magnetic_field->isChecked();
 }
@@ -635,6 +654,83 @@ void MSJPlatformRQT::calibrateSystem(){
             rate.sleep();
         }
     }
+}
+
+bool MSJPlatformRQT::readJointLimits(const string &filepath){
+    if(!fileExists(filepath)) {
+        ROS_ERROR_STREAM(filepath << " does not exist, check your path");
+        return false;
+    }
+    YAML::Node config = YAML::LoadFile(filepath);
+    vector<double> sphere_axis0_limits = config["sphere_axis0"].as<vector<double>>();
+    vector<double> sphere_axis1_limits = config["sphere_axis1"].as<vector<double>>();
+    if(sphere_axis0_limits.size()!=sphere_axis1_limits.size()){
+        ROS_ERROR("not the same amount of joint limits for sphere_axis0 and sphere_axis1, aborting...");
+        return false;
+    }
+    limits[0].clear();
+    limits[1].clear();
+    for(auto val:sphere_axis0_limits)
+        limits[0].push_back(val);
+    for(auto val:sphere_axis1_limits)
+        limits[1].push_back(val);
+    ROS_INFO("read %ld joint limits", sphere_axis0_limits.size());
+    ui.joint_space->graph(0)->setData(limits[0],limits[1]);
+    ui.joint_space->xAxis->rescale();
+    ui.joint_space->yAxis->rescale();
+    ui.joint_space->replot();
+    return true;
+}
+
+bool MSJPlatformRQT::writeJointLimits(const string &filepath){
+    std::ofstream fout(filepath);
+    if (!fout.is_open()) {
+        ROS_WARN_STREAM("Could not write config " << filepath);
+        return false;
+    }
+    YAML::Node config;
+    {
+        stringstream str;
+        str << "[";
+        for (uint i = 0; i < limits[0].size(); i++) {
+            if (i < limits[0].size() - 1)
+                str << "0,";
+            else
+                str << "0]";
+        }
+        YAML::Node node = YAML::Load(str.str());
+        int i = 0;
+        for (auto val:limits[0]) {
+            node[i] = val;
+            i++;
+        }
+        config["sphere_axis0"] = node;
+    }
+    {
+        stringstream str;
+        str << "[";
+        for (uint i = 0; i < limits[1].size(); i++) {
+            if (i < limits[1].size() - 1)
+                str << "0,";
+            else
+                str << "0]";
+        }
+        YAML::Node node = YAML::Load(str.str());
+        int i = 0;
+        for (auto val:limits[1]) {
+            node[i] = val;
+            i++;
+        }
+        config["sphere_axis1"] = node;
+    }
+
+    fout << config;
+    return true;
+}
+
+bool MSJPlatformRQT::fileExists(const string &filepath){
+    struct stat buffer;
+    return (stat (filepath.c_str(), &buffer) == 0);
 }
 
 PLUGINLIB_EXPORT_CLASS(MSJPlatformRQT, rqt_gui_cpp::Plugin)
