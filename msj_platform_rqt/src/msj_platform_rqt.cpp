@@ -219,12 +219,12 @@ void MSJPlatformRQT::MagneticSensor(const roboy_middleware_msgs::MagneticSensor:
 void MSJPlatformRQT::JointState(const sensor_msgs::JointState::ConstPtr &msg){
     static int counter = 0;
     counter++;
-    if(counter%20==0) {
+    if(counter%50==0) {
         lock_guard<mutex> lock(mux);
         for (int i = 0; i < msg->name.size(); i++) {
             q[i].push_back(msg->position[i]);
         }
-        if(q[0].size()>10000){
+        if(q[0].size()>2000){
             q[0].pop_front();
             q[1].pop_front();
             q[2].pop_front();
@@ -254,7 +254,6 @@ int MSJPlatformRQT::pnpoly(QVector<double> limits_x, QVector<double> limits_y, d
 }
 
 void MSJPlatformRQT::gridMap(){
-    ros::Rate rate(50);
     double min[3] = {0,0,-0.5}, max[3] = {0,0,0.5};
     for(int i=0;i<limits[0].size();i++){
         if(limits[0][i]<min[0])
@@ -271,53 +270,125 @@ void MSJPlatformRQT::gridMap(){
     double target[3] = {0,0,0};
     bool dir[3] = {false,false,false};
     bool x_first = true;
+    int i=0;
+    int iteration = 0;
+    ros::Time t0 = ros::Time::now();
+    std_msgs::Float32 msg;
+    msg.data = 0;
+    sphere_axis0.publish(msg);
+    sphere_axis1.publish(msg);
+    sphere_axis2.publish(msg);
     while(ros::ok()){
         if(ui.grid_map->isChecked()){
-            double speed_axis0 = ui.speed_axis0->value()/5000.0;
-            double speed_axis1 = ui.speed_axis1->value()/5000.0;
-            double speed_axis2 = ui.speed_axis2->value()/5000.0;
-            if(x_first) {
-                bool ok;
+            if(abs(q[0].back()-target[0]<0.05) && abs(q[1].back()-target[1]<0.05) && abs(q[2].back()-target[2]<0.05)) {
+                if (ui.grid->isChecked()) {
+                    ros::Rate rate(50);
+                    double speed_axis0 = ui.speed_axis0->value() / 5000.0;
+                    double speed_axis1 = ui.speed_axis1->value() / 5000.0;
+                    double speed_axis2 = ui.speed_axis2->value() / 5000.0;
+                    if (x_first) {
+                        target[0] += (dir[0] ? -1.0 : 1.0) * speed_axis0;
+                        if (target[0] > max[0] || target[0] < min[0]) {
+                            dir[0] = !dir[0];
+                            target[1] += (dir[1] ? -1.0 : 1.0) * speed_axis1;
+                            if (target[1] > max[1] || target[1] < min[1]) {
+                                dir[1] = false;
+                                target[1] = min[1];
+                                x_first = false;
+                            }
+                        }
+                    } else {
+                        target[1] += (dir[1] ? -1.0 : 1.0) * speed_axis0;
+                        if (target[1] > max[1] || target[1] < min[1]) {
+                            dir[1] = !dir[1];
+                            target[0] += (dir[0] ? -1.0 : 1.0) * speed_axis1;
+                            if (target[0] > max[0] || target[0] < min[0]) {
+                                dir[0] = false;
+                                target[0] = min[0];
+                                x_first = true;
+                            }
+                        }
+                    }
+                    if (pnpoly(limits[0], limits[1], target[0], target[1]) == 0) {
+                        ROS_INFO_THROTTLE(5, "%f %f not inside", target[0], target[1]);
+                    } else {
+                        ROS_INFO_THROTTLE(5, "%f %f inside", target[0], target[1]);
+                        std_msgs::Float32 msg;
+                        msg.data = target[0];
+                        sphere_axis0.publish(msg);
+                        msg.data = target[1];
+                        sphere_axis1.publish(msg);
+                        if (ui.heading->isChecked()) {
+                            if (target[2] > max[2] || target[2] < min[2])
+                                dir[2] = !dir[2];
+                            target[2] += (dir[2] ? -1.0 : 1.0) * speed_axis2;
+                            msg.data = target[2];
+                            sphere_axis2.publish(msg);
+                        }
+                        rate.sleep();
+                    }
 
-                target[0] += (dir[0] ? -1.0 : 1.0) * speed_axis0;
-                if (target[0] > max[0] || target[0] < min[0]) {
-                    dir[0] = !dir[0];
-                    target[1] += (dir[1] ? -1.0 : 1.0) * speed_axis1;
-                    if (target[1] > max[1] || target[1] < min[1]) {
-                        dir[1] = false;
-                        target[1] = min[1];
-                        x_first = false;
+                } else if (ui.spiral->isChecked()) {
+                    ros::Rate rate(10);
+                    double speed_axis0 = ui.speed_axis0->value() / 5000.0;
+                    double speed_axis1 = ui.speed_axis1->value() / 5000.0;
+                    double speed_axis2 = ui.speed_axis2->value() / 5000.0;
+                    float angle = 0.1f * i;
+                    target[0] = (speed_axis0 + speed_axis1 * angle) * cos(angle);
+                    target[1] = (speed_axis0 + speed_axis1 * angle) * sin(angle);
+                    i++;
+                    if (pnpoly(limits[0], limits[1], target[0], target[1]) == 0) {
+                        ROS_INFO_THROTTLE(5, "%f %f not inside", target[0], target[1]);
+                        if ((target[0] > max[0] && target[1] > max[1]) || (target[0] > max[0] && target[1] < min[1]) ||
+                            (target[0] < min[0] && target[1] > max[0]) || (target[0] < min[0] && target[1] < min[1]))
+                            i = 0;
+                    } else {
+                        ROS_INFO_THROTTLE(5, "%f %f inside", target[0], target[1]);
+                        std_msgs::Float32 msg;
+                        msg.data = target[0];
+                        sphere_axis0.publish(msg);
+                        msg.data = target[1];
+                        sphere_axis1.publish(msg);
+                        if (ui.heading->isChecked()) {
+                            if (target[2] > max[2] || target[2] < min[2])
+                                dir[2] = !dir[2];
+                            target[2] += (dir[2] ? -1.0 : 1.0) * speed_axis2;
+                            msg.data = target[2];
+                            sphere_axis2.publish(msg);
+                        }
+                        rate.sleep();
+                    }
+                    rate.sleep();
+                } else if (ui.random->isChecked()) {
+                    if ((ros::Time::now() - t0).sec > ui.speed_axis0->value()) {
+                        t0 = ros::Time::now();
+                        target[0] = rand() / (float) RAND_MAX * (max[0] - min[0]) + min[0];
+                        target[1] = rand() / (float) RAND_MAX * (max[1] - min[1]) + min[1];
+                        if (pnpoly(limits[0], limits[1], target[0], target[1]) == 0) {
+                            ROS_INFO_THROTTLE(5, "%f %f not inside", target[0], target[1]);
+                        } else {
+                            ROS_INFO_THROTTLE(5, "%f %f inside", target[0], target[1]);
+                            std_msgs::Float32 msg;
+                            msg.data = target[0];
+                            sphere_axis0.publish(msg);
+                            msg.data = target[1];
+                            sphere_axis1.publish(msg);
+                        }
+                    }
+                    if (ui.heading->isChecked()) {
+                        ros::Rate rate(50);
+                        double speed_axis2 = ui.speed_axis2->value() / 1000.0;
+                        std_msgs::Float32 msg;
+                        if (target[2] > max[2] || target[2] < min[2])
+                            dir[2] = !dir[2];
+                        target[2] += (dir[2] ? -1.0 : 1.0) * speed_axis2;
+                        msg.data = target[2];
+                        sphere_axis2.publish(msg);
+                        rate.sleep();
                     }
                 }
             }else{
-                target[1] += (dir[1] ? -1.0 : 1.0) * 0.001;
-                if (target[1] > max[1] || target[1] < min[1]) {
-                    dir[1] = !dir[1];
-                    target[0] += (dir[0] ? -1.0 : 1.0) * 0.01;
-                    if (target[0] > max[0] || target[0] < min[0]) {
-                        dir[0] = false;
-                        target[0] = min[0];
-                        x_first = true;
-                    }
-                }
-            }
-            if(pnpoly(limits[0],limits[1],target[0],target[1])==0){
-                ROS_INFO_THROTTLE(5,"%f %f not inside", target[0], target[1]);
-            }else{
-                ROS_INFO_THROTTLE(5,"%f %f inside", target[0], target[1]);
-                std_msgs::Float32 msg;
-                msg.data = target[0];
-                sphere_axis0.publish(msg);
-                msg.data = target[1];
-                sphere_axis1.publish(msg);
-                if(ui.heading->isChecked()) {
-                    if (target[2] > max[2] || target[2] < min[2])
-                        dir[2] = !dir[2];
-                    target[2] += (dir[2] ? -1.0 : 1.0) * speed_axis2;
-                    msg.data = target[2];
-                    sphere_axis2.publish(msg);
-                }
-                rate.sleep();
+                ROS_INFO_THROTTLE(1, "waiting for robot to reach target %.3f %.3f %.3f, currently at %.3f %.3f %.3f",target[0],target[1],target[2],q[0].back(),q[1].back(),q[2].back());
             }
         }
     }
