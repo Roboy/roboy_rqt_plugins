@@ -1,0 +1,16 @@
+./package.xml:  <name>roboy_motor_status</name>
+./include/roboy_motor_status/roboy_motor_status.hpp:#include <roboy_motor_status/ui_roboy_motor_status.h>
+./setup.py:    packages=['roboy_motor_status'],
+./plugin.xml:<library path="lib/libroboy_motor_status">
+./src/roboy_motor_status.cpp:#include <roboy_motor_status/roboy_motor_status.hpp>
+./CMakeLists.txt:project( roboy_motor_status)
+./CMakeLists.txt:  qt5_wrap_cpp(roboy_motor_status_MOCS include/roboy_motor_status/roboy_motor_status.hpp qcustomplot/qcustomplot.h)
+./CMakeLists.txt:  qt5_wrap_ui(roboy_motor_status_UIS_H src/roboy_motor_status.ui)
+./CMakeLists.txt:  qt4_wrap_cpp(roboy_motor_status_MOCS include/roboy_motor_status/roboy_motor_status.hpp qcustomplot/qcustomplot.h)
+./CMakeLists.txt:  qt4_wrap_ui(roboy_motor_status_UIS_H src/roboy_motor_status.ui)
+./CMakeLists.txt:add_library( roboy_motor_status src/roboy_motor_status.cpp ${roboy_motor_status_MOCS} ${roboy_motor_status_UIS_H}
+./CMakeLists.txt:add_dependencies(roboy_motor_status roboy_middleware_msgs_gencpp)
+./CMakeLists.txt:target_link_libraries(roboy_motor_status ${catkin_LIBRARIES} )
+./CMakeLists.txt:  target_link_libraries(roboy_motor_status Qt5::Widgets)
+./CMakeLists.txt:  target_link_libraries(roboy_motor_status ${QT_QTCORE_LIBRARY} ${QT_QTGUI_LIBRARY})
+./CMakeLists.txt:install(TARGETS roboy_motor_status

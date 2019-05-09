@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>roboy_motor_status</name>
+  <name>vr_puppets</name>
   <version>0.0.0</version>
   <description>roboy motor status plugin for rqt</description>
   <maintainer email="simon.trendel@tum.de">Simon Trendel</maintainer>

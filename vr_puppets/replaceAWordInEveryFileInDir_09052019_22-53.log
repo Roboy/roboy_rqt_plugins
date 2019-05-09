@@ -1,0 +1,22 @@
+./include/roboy_motor_status/roboy_motor_status.hpp:class RoboyMotorStatus
+./include/roboy_motor_status/roboy_motor_status.hpp:    RoboyMotorStatus();
+./include/roboy_motor_status/roboy_motor_status.hpp:    Ui::RoboyMotorStatus ui;
+./plugin.xml:  <class name="RoboyMotorStatus" type="RoboyMotorStatus" base_class_type="rqt_gui_cpp::Plugin">
+./src/roboy_motor_status.cpp:RoboyMotorStatus::RoboyMotorStatus()
+./src/roboy_motor_status.cpp:    setObjectName("RoboyMotorStatus");
+./src/roboy_motor_status.cpp:void RoboyMotorStatus::initPlugin(qt_gui_cpp::PluginContext &context) {
+./src/roboy_motor_status.cpp:    motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &RoboyMotorStatus::MotorStatus, this);
+./src/roboy_motor_status.cpp:    udp_thread.reset(new std::thread(&RoboyMotorStatus::receiveStatusUDP, this));
+./src/roboy_motor_status.cpp:void RoboyMotorStatus::shutdownPlugin() {
+./src/roboy_motor_status.cpp:void RoboyMotorStatus::saveSettings(qt_gui_cpp::Settings &plugin_settings,
+./src/roboy_motor_status.cpp:void RoboyMotorStatus::restoreSettings(const qt_gui_cpp::Settings &plugin_settings,
+./src/roboy_motor_status.cpp:void RoboyMotorStatus::receiveStatusUDP() {
+./src/roboy_motor_status.cpp:void RoboyMotorStatus::MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg) {
+./src/roboy_motor_status.cpp:void RoboyMotorStatus::plotData() {
+./src/roboy_motor_status.cpp:void RoboyMotorStatus::rescale(){
+./src/roboy_motor_status.cpp:void RoboyMotorStatus::plotMotorChanged(){
+./src/roboy_motor_status.cpp:void RoboyMotorStatus::toggleAll(){
+./src/roboy_motor_status.cpp:void RoboyMotorStatus::fpgaChanged(int fpga){
+./src/roboy_motor_status.cpp:PLUGINLIB_EXPORT_CLASS(RoboyMotorStatus, rqt_gui_cpp::Plugin)
+./src/roboy_motor_status.ui: <class>RoboyMotorStatus</class>
+./src/roboy_motor_status.ui: <widget class="QWidget" name="RoboyMotorStatus">
