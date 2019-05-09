@@ -64,6 +64,12 @@ void RoboyMotorStatus::initPlugin(qt_gui_cpp::PluginContext &context) {
     spinner->start();
 
     start_time = ros::Time::now();
+
+    uint32_t ip;
+    inet_pton(AF_INET, "192.168.255.255", &ip);
+    udp.reset(new UDPSocket(8000));
+    udp_thread.reset(new std::thread(&RoboyMotorStatus::receiveStatusUDP, this));
+    udp_thread->detach();
 }
 
 void RoboyMotorStatus::shutdownPlugin() {
@@ -78,6 +84,47 @@ void RoboyMotorStatus::saveSettings(qt_gui_cpp::Settings &plugin_settings,
 void RoboyMotorStatus::restoreSettings(const qt_gui_cpp::Settings &plugin_settings,
                                        const qt_gui_cpp::Settings &instance_settings) {
     // v = instance_settings.value(k)
+}
+
+void RoboyMotorStatus::receiveStatusUDP() {
+    ROS_INFO("start receiving udp");
+    while (ros::ok()) {
+        int bytes_received = udp->receiveUDP();
+        if (bytes_received == 20) {
+            ros::Duration delta = (ros::Time::now() - start_time);
+            time.push_back(delta.toSec());
+            int motor = udp->buf[0];
+            int32_t pos = (int32_t) ((uint8_t) udp->buf[7] << 24 | (uint8_t) udp->buf[6] << 16 |
+                                        (uint8_t) udp->buf[5] << 8 | (uint8_t) udp->buf[4]);
+            int32_t vel = (int32_t) ((uint8_t) udp->buf[11] << 24 | (uint8_t) udp->buf[10] << 16 |
+                                     (uint8_t) udp->buf[9] << 8 | (uint8_t) udp->buf[8]);
+            int32_t dis = (int32_t) ((uint8_t) udp->buf[15] << 24 | (uint8_t) udp->buf[14] << 16 |
+                                     (uint8_t) udp->buf[13] << 8 | (uint8_t) udp->buf[12]);
+            int32_t pwm = (int32_t) ((uint8_t) udp->buf[19] << 24 | (uint8_t) udp->buf[18] << 16 |
+                                     (uint8_t) udp->buf[17] << 8 | (uint8_t) udp->buf[16]);
+            motorData[3][motor][0].push_back(pos);
+            motorData[3][motor][1].push_back(vel);
+            motorData[3][motor][2].push_back(dis);
+            motorData[3][motor][3].push_back(pwm);
+//            ROS_INFO_THROTTLE(1,"receiving status from motor %d, pos=%d, vel=%d, dis=%d, pwm=%d",motor,pos,vel,dis,pwm);
+            if (motorData[3][motor][0].size() > samples_per_plot) {
+                motorData[3][motor][0].pop_front();
+                motorData[3][motor][1].pop_front();
+                motorData[3][motor][2].pop_front();
+                motorData[3][motor][3].pop_front();
+            }
+            if (time.size() > samples_per_plot)
+                time.pop_front();
+
+            if ((counter++) % 20 == 0) {
+                Q_EMIT newData();
+            }
+            if (counter % 100 == 0) {
+                rescale();
+            }
+        }
+    }
+    ROS_INFO("stop receiving udp");
 }
 
 void RoboyMotorStatus::MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg) {

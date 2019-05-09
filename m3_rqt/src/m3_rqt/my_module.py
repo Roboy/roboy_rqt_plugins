@@ -24,7 +24,7 @@ class MyPlugin(Plugin):
     port = 8002  # where do you expect to get a msg?
     bufferSize = 12 # whatever you need
     server_thread = []
-    client_address = ('192.168.0.119', 8000)
+    client_address = ('192.168.0.102', 8000)
     def __init__(self, context):
         super(MyPlugin, self).__init__(context)
         # Give QObjects reasonable names

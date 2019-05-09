@@ -3,7 +3,7 @@ project( roboy_motor_status)
 
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O0 -g")
 
-find_package(catkin REQUIRED COMPONENTS roscpp roslint rqt_gui rqt_gui_cpp std_msgs roboy_middleware_msgs )
+find_package(catkin REQUIRED COMPONENTS roscpp roslint rqt_gui rqt_gui_cpp std_msgs roboy_middleware_msgs common_utilities)
 catkin_package(CATKIN_DEPENDS roboy_middleware_msgs)
 
 include_directories( include qcustomplot)

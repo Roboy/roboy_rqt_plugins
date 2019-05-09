@@ -10,6 +10,8 @@
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
 #include <common_utilities/CommonDefinitions.h>
+#include <common_utilities/UDPSocket.hpp>
+#include <thread>
 
 #endif
 
@@ -37,6 +39,7 @@ public Q_SLOTS:
     void fpgaChanged(int fpga);
 private:
     void MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
+    void receiveStatusUDP();
 Q_SIGNALS:
     void newData();
 private:
@@ -45,7 +48,7 @@ private:
 
     QVector<double> time;
     int counter = 0;
-    QVector<double> motorData[NUMBER_OF_FPGAS][NUMBER_OF_MOTORS_PER_FPGA][4];
+    QVector<double> motorData[6][NUMBER_OF_MOTORS_PER_FPGA][4];
     bool motorConnected[NUMBER_OF_FPGAS][NUMBER_OF_MOTORS_PER_FPGA], plotMotor[NUMBER_OF_MOTORS_PER_FPGA];
     int samples_per_plot = 300;
     QColor color_pallette[16] = {Qt::blue, Qt::red, Qt::green, Qt::cyan, Qt::magenta, Qt::darkGray, Qt::darkRed, Qt::darkGreen,
@@ -54,4 +57,6 @@ private:
     ros::Subscriber motorStatus;
     ros::Time start_time;
     boost::shared_ptr<ros::AsyncSpinner> spinner;
+    UDPSocketPtr udp;
+    boost::shared_ptr<std::thread> udp_thread;
 };
