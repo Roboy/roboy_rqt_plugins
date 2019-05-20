@@ -254,7 +254,7 @@ int MSJPlatformRQT::pnpoly(QVector<double> limits_x, QVector<double> limits_y, d
 }
 
 void MSJPlatformRQT::gridMap(){
-    double min[3] = {0,0,-0.5}, max[3] = {0,0,0.5};
+    double min[3] = {0,0,-1}, max[3] = {0,0,1};
     for(int i=0;i<limits[0].size();i++){
         if(limits[0][i]<min[0])
             min[0] = limits[0][i];
@@ -278,9 +278,11 @@ void MSJPlatformRQT::gridMap(){
     sphere_axis0.publish(msg);
     sphere_axis1.publish(msg);
     sphere_axis2.publish(msg);
+    bool external_robot_state = false;
+    nh->getParam("external_robot_state",external_robot_state);
     while(ros::ok()){
         if(ui.grid_map->isChecked()){
-            if(abs(q[0].back()-target[0]<0.05) && abs(q[1].back()-target[1]<0.05) && abs(q[2].back()-target[2]<0.05)) {
+            if((abs(q[0].back()-target[0]<0.05) && abs(q[1].back()-target[1]<0.05) && abs(q[2].back()-target[2]<0.05)) || !external_robot_state) {
                 if (ui.grid->isChecked()) {
                     ros::Rate rate(50);
                     double speed_axis0 = ui.speed_axis0->value() / 5000.0;
@@ -362,18 +364,18 @@ void MSJPlatformRQT::gridMap(){
                 } else if (ui.random->isChecked()) {
                     if ((ros::Time::now() - t0).sec > ui.speed_axis0->value()) {
                         t0 = ros::Time::now();
-                        target[0] = rand() / (float) RAND_MAX * (max[0] - min[0]) + min[0];
-                        target[1] = rand() / (float) RAND_MAX * (max[1] - min[1]) + min[1];
-                        if (pnpoly(limits[0], limits[1], target[0], target[1]) == 0) {
-                            ROS_INFO_THROTTLE(5, "%f %f not inside", target[0], target[1]);
-                        } else {
-                            ROS_INFO_THROTTLE(5, "%f %f inside", target[0], target[1]);
-                            std_msgs::Float32 msg;
-                            msg.data = target[0];
-                            sphere_axis0.publish(msg);
-                            msg.data = target[1];
-                            sphere_axis1.publish(msg);
-                        }
+                        bool inside = false;
+                        do {
+                            target[0] = rand() / (float) RAND_MAX * (max[0] - min[0]) + min[0];
+                            target[1] = rand() / (float) RAND_MAX * (max[1] - min[1]) + min[1];
+                            inside = pnpoly(limits[0], limits[1], target[0], target[1]);
+                        }while(!inside);
+                        ROS_INFO_THROTTLE(5, "%f %f inside", target[0], target[1]);
+                        std_msgs::Float32 msg;
+                        msg.data = target[0];
+                        sphere_axis0.publish(msg);
+                        msg.data = target[1];
+                        sphere_axis1.publish(msg);
                     }
                     if (ui.heading->isChecked()) {
                         ros::Rate rate(50);

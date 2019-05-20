@@ -54,7 +54,6 @@ void VRPuppets::initPlugin(qt_gui_cpp::PluginContext &context) {
         ros::init(argc, argv, "motor_status_rqt_plugin");
     }
 
-    motorStatus = nh->subscribe("/roboy/middleware/MotorStatus", 1, &VRPuppets::MotorStatus, this);
     QObject::connect(this, SIGNAL(newData()), this, SLOT(plotData()));
     QObject::connect(ui.toggle_all, SIGNAL(clicked()), this, SLOT(toggleAll()));
     QObject::connect(ui.fpga, SIGNAL(valueChanged(int)), this, SLOT(fpgaChanged(int)));
@@ -102,6 +101,7 @@ void VRPuppets::receiveStatusUDP() {
                                      (uint8_t) udp->buf[13] << 8 | (uint8_t) udp->buf[12]);
             int32_t pwm = (int32_t) ((uint8_t) udp->buf[19] << 24 | (uint8_t) udp->buf[18] << 16 |
                                      (uint8_t) udp->buf[17] << 8 | (uint8_t) udp->buf[16]);
+//            ROS_INFO_THROTTLE(1,"%d",vel);
             motorData[3][motor][0].push_back(pos);
             motorData[3][motor][1].push_back(vel);
             motorData[3][motor][2].push_back(dis);
@@ -125,58 +125,6 @@ void VRPuppets::receiveStatusUDP() {
         }
     }
     ROS_INFO("stop receiving udp");
-}
-
-void VRPuppets::MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg) {
-    ROS_DEBUG_THROTTLE(5, "receiving motor status");
-    if(msg->id == ui.fpga->value()) {
-        ros::Duration delta = (ros::Time::now() - start_time);
-        time.push_back(delta.toSec());
-        for (uint motor = 0; motor < msg->position.size(); motor++) {
-            std::vector<int>::iterator it = std::find(active_motors[msg->id].begin(), active_motors[msg->id].end(),
-                                                      motor);
-            if (it != active_motors[msg->id].end() && plotMotor[motor]) {
-                motorData[msg->id][motor][0].push_back(msg->position[motor]);
-                motorData[msg->id][motor][1].push_back(msg->velocity[motor]);
-                motorData[msg->id][motor][2].push_back(msg->displacement[motor]);
-                motorData[msg->id][motor][3].push_back(msg->current[motor]);
-                if (motorData[msg->id][motor][0].size() > samples_per_plot) {
-                    motorData[msg->id][motor][0].pop_front();
-                    motorData[msg->id][motor][1].pop_front();
-                    motorData[msg->id][motor][2].pop_front();
-                    motorData[msg->id][motor][3].pop_front();
-                }
-            }else{
-                motorData[msg->id][motor][0].push_back(std::numeric_limits<double>::quiet_NaN());
-                motorData[msg->id][motor][1].push_back(std::numeric_limits<double>::quiet_NaN());
-                motorData[msg->id][motor][2].push_back(std::numeric_limits<double>::quiet_NaN());
-                motorData[msg->id][motor][3].push_back(std::numeric_limits<double>::quiet_NaN());
-                if (motorData[msg->id][motor][0].size() > samples_per_plot) {
-                    motorData[msg->id][motor][0].pop_front();
-                    motorData[msg->id][motor][1].pop_front();
-                    motorData[msg->id][motor][2].pop_front();
-                    motorData[msg->id][motor][3].pop_front();
-                }
-            }
-        }
-        if (time.size() > samples_per_plot)
-            time.pop_front();
-
-        if ((counter++) % 20 == 0) {
-            Q_EMIT newData();
-        }
-
-        if (counter % 100 == 0) {
-            if (msg->power_sense) {
-                if(ui.power_sense!=nullptr)
-                    ui.power_sense->setStyleSheet("background-color:green;");
-            }else {
-                if(ui.power_sense!=nullptr)
-                    ui.power_sense->setStyleSheet("background-color:red;");
-            }
-            rescale();
-        }
-    }
 }
 
 void VRPuppets::plotData() {

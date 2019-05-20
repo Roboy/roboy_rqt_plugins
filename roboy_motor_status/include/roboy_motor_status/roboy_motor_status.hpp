@@ -10,7 +10,6 @@
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
 #include <common_utilities/CommonDefinitions.h>
-#include <common_utilities/UDPSocket.hpp>
 #include <thread>
 
 #endif
@@ -39,7 +38,6 @@ public Q_SLOTS:
     void fpgaChanged(int fpga);
 private:
     void MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
-    void receiveStatusUDP();
 Q_SIGNALS:
     void newData();
 private:
@@ -57,6 +55,4 @@ private:
     ros::Subscriber motorStatus;
     ros::Time start_time;
     boost::shared_ptr<ros::AsyncSpinner> spinner;
-    UDPSocketPtr udp;
-    boost::shared_ptr<std::thread> udp_thread;
 };

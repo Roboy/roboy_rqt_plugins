@@ -38,7 +38,6 @@ public Q_SLOTS:
     void toggleAll();
     void fpgaChanged(int fpga);
 private:
-    void MotorStatus(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
     void receiveStatusUDP();
 Q_SIGNALS:
     void newData();
