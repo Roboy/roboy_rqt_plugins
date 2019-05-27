@@ -7,11 +7,17 @@
 #include <vr_puppets/ui_vr_puppets.h>
 #include <roboy_middleware_msgs/MotorStatus.h>
 #include <QWidget>
+#include <QLabel>
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
 #include <common_utilities/CommonDefinitions.h>
 #include <common_utilities/UDPSocket.hpp>
 #include <thread>
+#include <QScrollArea>
+#include <QRadioButton>
+#include <QSlider>
+#include <QVBoxLayout>
+#include <QtWidgets/QCheckBox>
 
 #endif
 
@@ -34,21 +40,29 @@ public:
 public Q_SLOTS:
     void plotData();
     void rescale();
-    void plotMotorChanged();
-    void toggleAll();
-    void fpgaChanged(int fpga);
+    void sendCommand();
+    void controlModeChanged();
+    void allToPosition();
+    void allToVelocity();
+    void allToDisplacement();
 private:
     void receiveStatusUDP();
+    void updateMotorCommands();
 Q_SIGNALS:
     void newData();
 private:
     Ui::VRPuppets ui;
     QWidget *widget_;
-
+    QWidget* motor_command_scrollarea;
+    vector<QWidget*> widgets;
+    map<int,QCheckBox*> check;
+    map<int,QSlider*> sliders;
     QVector<double> time;
     int counter = 0;
-    QVector<double> motorData[6][NUMBER_OF_MOTORS_PER_FPGA][4];
-    bool motorConnected[NUMBER_OF_FPGAS][NUMBER_OF_MOTORS_PER_FPGA], plotMotor[NUMBER_OF_MOTORS_PER_FPGA];
+    map<int,QVector<double>> motor_position, motor_velocity, motor_displacement, motor_force, motor_pwm;
+    map<int,string> ip_address;
+    map<int,QRadioButton*> pos,vel,dis;
+    map<int,int> control_mode;
     int samples_per_plot = 300;
     QColor color_pallette[16] = {Qt::blue, Qt::red, Qt::green, Qt::cyan, Qt::magenta, Qt::darkGray, Qt::darkRed, Qt::darkGreen,
                                  Qt::darkBlue, Qt::darkCyan, Qt::darkMagenta, Qt::darkYellow, Qt::black, Qt::gray, Qt::green, Qt::cyan};
@@ -56,6 +70,8 @@ private:
     ros::Subscriber motorStatus;
     ros::Time start_time;
     boost::shared_ptr<ros::AsyncSpinner> spinner;
-    UDPSocketPtr udp;
+    UDPSocketPtr udp, udp_command;
     boost::shared_ptr<std::thread> udp_thread;
+    bool initialized = false;
+    map<int,int> set_points;
 };
