@@ -1,7 +1,6 @@
 import os
 import rospy
 import rospkg
-
 from python_qt_binding import QT_BINDING
 import sys
 from python_qt_binding.QtCore import qDebug
@@ -11,6 +10,7 @@ from python_qt_binding.QtWidgets import QWidget, QSlider
 from python_qt_binding.QtCore import QObject
 # import socket programming library
 import socket, select
+import matplotlib
 # import thread module
 from _thread import *
 import threading
@@ -50,10 +50,10 @@ class MyPlugin(Plugin):
         loadUi(ui_file, self._widget)
         # Give QObjects reasonable names
         self._widget.setObjectName('M3')
-        # Show _widget.windowTitle on left-top of each plugin (when 
-        # it's set in _widget). This is useful when you open multiple 
-        # plugins at once. Also if you open multiple instances of your 
-        # plugin at once, these lines add number to make it easy to 
+        # Show _widget.windowTitle on left-top of each plugin (when
+        # it's set in _widget). This is useful when you open multiple
+        # plugins at once. Also if you open multiple instances of your
+        # plugin at once, these lines add number to make it easy to
         # tell from pane to pane.
         if context.serial_number() > 1:
             self._widget.setWindowTitle(self._widget.windowTitle() + (' (%d)' % context.serial_number()))

@@ -59,13 +59,6 @@ void VRPuppets::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     start_time = ros::Time::now();
 
-    uint32_t ip;
-    inet_pton(AF_INET, "192.168.255.255", &ip);
-    udp.reset(new UDPSocket(8000));
-    udp_command.reset(new UDPSocket(8001));
-    udp_thread.reset(new std::thread(&VRPuppets::receiveStatusUDP, this));
-    udp_thread->detach();
-
     QScrollArea* scrollArea = widget_->findChild<QScrollArea *>("motor_command");
     scrollArea->setBackgroundRole(QPalette::Window);
     scrollArea->setFrameShadow(QFrame::Plain);
@@ -79,10 +72,18 @@ void VRPuppets::initPlugin(qt_gui_cpp::PluginContext &context) {
     motor_command_scrollarea->setLayout(new QVBoxLayout(motor_command_scrollarea));
     scrollArea->setWidget(motor_command_scrollarea);
 
+    uint32_t ip;
+    inet_pton(AF_INET, "192.168.255.255", &ip);
+    udp.reset(new UDPSocket(8000));
+    udp_command.reset(new UDPSocket(8001));
+    udp_thread.reset(new std::thread(&VRPuppets::receiveStatusUDP, this));
+    udp_thread->detach();
+
     ros::Duration d(3);
     ROS_INFO("waiting 3 seconds for active motors");
     d.sleep();
     updateMotorCommands();
+
     initialized = true;
 }
 
