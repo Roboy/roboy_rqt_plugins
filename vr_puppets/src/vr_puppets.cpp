@@ -130,12 +130,22 @@ void VRPuppets::receiveStatusUDP() {
             motor_velocity[motor].push_back(vel);
             motor_displacement[motor].push_back(dis);
             motor_pwm[motor].push_back(pwm);
+            for(auto m:ip_address){
+                if(m.first==motor)
+                    continue;
+                motor_position[m.first].push_back(motor_position[m.first].back());
+                motor_velocity[m.first].push_back(motor_velocity[m.first].back());
+                motor_displacement[m.first].push_back(motor_displacement[m.first].back());
+                motor_pwm[m.first].push_back(motor_pwm[m.first].back());
+            }
 //            ROS_INFO_THROTTLE(1,"receiving status from motor %d, pos=%d, vel=%d, dis=%d, pwm=%d",motor,pos,vel,dis,pwm);
             if (motor_position[motor].size() > samples_per_plot) {
-                motor_position[motor].pop_front();
-                motor_velocity[motor].pop_front();
-                motor_displacement[motor].pop_front();
-                motor_pwm[motor].pop_front();
+                for(auto m:ip_address) {
+                    motor_position[m.first].pop_front();
+                    motor_velocity[m.first].pop_front();
+                    motor_displacement[m.first].pop_front();
+                    motor_pwm[m.first].pop_front();
+                }
             }
             if (time.size() > samples_per_plot)
                 time.pop_front();
