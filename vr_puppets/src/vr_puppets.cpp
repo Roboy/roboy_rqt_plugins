@@ -16,32 +16,6 @@ void VRPuppets::initPlugin(qt_gui_cpp::PluginContext &context) {
     // add widget to the user interface
     context.addWidget(widget_);
 
-    for (uint motor = 0; motor < NUMBER_OF_MOTORS_PER_FPGA; motor++) {
-        ui.position_plot->addGraph();
-        ui.position_plot->graph(motor)->setPen(QPen(color_pallette[motor%16])); // %16 because we only have 16 colors :(
-        ui.velocity_plot->addGraph();
-        ui.velocity_plot->graph(motor)->setPen(QPen(color_pallette[motor%16]));
-        ui.displacement_plot->addGraph();
-        ui.displacement_plot->graph(motor)->setPen(QPen(color_pallette[motor%16]));
-        ui.pwm_plot->addGraph();
-        ui.pwm_plot->graph(motor)->setPen(QPen(color_pallette[motor%16]));
-    }
-    ui.position_plot->xAxis->setLabel("time[s]");
-    ui.position_plot->yAxis->setLabel("ticks");
-    ui.position_plot->replot();
-
-    ui.velocity_plot->xAxis->setLabel("time[s]");
-    ui.velocity_plot->yAxis->setLabel("ticks/s");
-    ui.velocity_plot->replot();
-
-    ui.displacement_plot->xAxis->setLabel("time[s]");
-    ui.displacement_plot->yAxis->setLabel("ticks");
-    ui.displacement_plot->replot();
-
-    ui.pwm_plot->xAxis->setLabel("time[s]");
-    ui.pwm_plot->yAxis->setLabel("[1]");
-    ui.pwm_plot->replot();
-
     nh = ros::NodeHandlePtr(new ros::NodeHandle);
     if (!ros::isInitialized()) {
         int argc = 0;
@@ -82,6 +56,33 @@ void VRPuppets::initPlugin(qt_gui_cpp::PluginContext &context) {
     ros::Duration d(3);
     ROS_INFO("waiting 3 seconds for active motors");
     d.sleep();
+
+    for (uint motor = 0; motor < 20; motor++) {
+        ui.position_plot->addGraph();
+        ui.position_plot->graph(motor)->setPen(QPen(color_pallette[motor%16])); // %16 because we only have 16 colors :(
+        ui.velocity_plot->addGraph();
+        ui.velocity_plot->graph(motor)->setPen(QPen(color_pallette[motor%16]));
+        ui.displacement_plot->addGraph();
+        ui.displacement_plot->graph(motor)->setPen(QPen(color_pallette[motor%16]));
+        ui.pwm_plot->addGraph();
+        ui.pwm_plot->graph(motor)->setPen(QPen(color_pallette[motor%16]));
+    }
+    ui.position_plot->xAxis->setLabel("time[s]");
+    ui.position_plot->yAxis->setLabel("ticks");
+    ui.position_plot->replot();
+
+    ui.velocity_plot->xAxis->setLabel("time[s]");
+    ui.velocity_plot->yAxis->setLabel("ticks/s");
+    ui.velocity_plot->replot();
+
+    ui.displacement_plot->xAxis->setLabel("time[s]");
+    ui.displacement_plot->yAxis->setLabel("ticks");
+    ui.displacement_plot->replot();
+
+    ui.pwm_plot->xAxis->setLabel("time[s]");
+    ui.pwm_plot->yAxis->setLabel("[1]");
+    ui.pwm_plot->replot();
+
     updateMotorCommands();
 
     initialized = true;
@@ -110,10 +111,10 @@ void VRPuppets::receiveStatusUDP() {
             time.push_back(delta.toSec());
             int motor = udp->buf[0];
             auto it = ip_address.find(motor);
-            if (it == ip_address.end()) {
-                ROS_INFO("new motor");
+            if (it == ip_address.end()) {;
                 char IP[INET_ADDRSTRLEN];
                 inet_ntop(AF_INET, &udp->client_addr.sin_addr, IP, INET_ADDRSTRLEN);
+                ROS_INFO("new motor %d %s", motor, IP);
                 ip_address[motor] = IP;
             }
             int32_t pos = (int32_t) ((uint8_t) udp->buf[7] << 24 | (uint8_t) udp->buf[6] << 16 |
@@ -300,6 +301,7 @@ void VRPuppets::sendCommand(){
         set_points[m.first] = (sliders[m.first]->value()-50)*motor_scale;
         mempcpy(udp_command->buf,&set_points[m.first],4);
         mempcpy(&udp_command->buf[4],&m.first,4);
+        udp_command->numbytes = 10;
         udp_command->client_addr.sin_addr.s_addr = inet_addr(m.second.c_str());
         udp_command->sendUDPToClient();
     }
