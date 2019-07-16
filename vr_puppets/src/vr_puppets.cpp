@@ -27,6 +27,9 @@ void VRPuppets::initPlugin(qt_gui_cpp::PluginContext &context) {
     QObject::connect(ui.all_to_position, SIGNAL(clicked()), this, SLOT(allToPosition()));
     QObject::connect(ui.all_to_velocity, SIGNAL(clicked()), this, SLOT(allToVelocity()));
     QObject::connect(ui.all_to_displacement, SIGNAL(clicked()), this, SLOT(allToDisplacement()));
+    QObject::connect(ui.stop, SIGNAL(clicked()), this, SLOT(stop()));
+    ui.stop->setStyleSheet("background-color: red");
+    QObject::connect(ui.setpoint_all, SIGNAL(valueChanged()), this, SLOT(sliderMovedAll()));
 
     spinner.reset(new ros::AsyncSpinner(2));
     spinner->start();
@@ -176,21 +179,28 @@ void VRPuppets::updateMotorCommands(){
         widget->setLayout(new QHBoxLayout(widget));
 
         QCheckBox *c = new QCheckBox(widget);
-        c->setText(QString(m.first));
-        c->setFixedSize(60,30);
+        c->setFixedSize(20,30);
         c->setCheckable(true);
+        c->setChecked(true);
         c->setObjectName(QString(m.first));
         check[m.first] = c;
         widget->layout()->addWidget(c);
 
+        QLabel *label2 = new QLabel(widget);
+        label2->setFixedSize(30,30);
+        char str[22];
+        sprintf(str, "ID %d", m.first);
+        label2->setText(str);
+        widget->layout()->addWidget(label2);
+
         QLabel *label = new QLabel(widget);
-        label->setFixedSize(120,30);
+        label->setFixedSize(100,30);
         label->setText(m.second.c_str());
         widget->layout()->addWidget(label);
 
         QRadioButton *p = new QRadioButton(widget);
         p->setText("pos");
-        p->setFixedSize(60,30);
+        p->setFixedSize(50,30);
         p->setCheckable(true);
         p->setObjectName("pos");
         pos[m.first] = p;
@@ -200,7 +210,7 @@ void VRPuppets::updateMotorCommands(){
 
         QRadioButton *v = new QRadioButton(widget);
         v->setText("vel");
-        v->setFixedSize(60,30);
+        v->setFixedSize(50,30);
         v->setCheckable(true);
         v->setObjectName("vel");
         widget->layout()->addWidget(v);
@@ -209,7 +219,7 @@ void VRPuppets::updateMotorCommands(){
 
         QRadioButton *d = new QRadioButton(widget);
         d->setText("dis");
-        d->setFixedSize(60,30);
+        d->setFixedSize(50,30);
         d->setCheckable(true);
         d->setObjectName("dis");
         d->setChecked(true);
@@ -224,7 +234,7 @@ void VRPuppets::updateMotorCommands(){
         widget->layout()->addWidget(slider);
         sliders[m.first] = slider;
 
-        QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(sendCommand()));
+        QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(sliderMoved()));
 
         motor_command_scrollarea->layout()->addWidget(widget);
         widgets.push_back(widget);
@@ -306,11 +316,6 @@ void VRPuppets::sendCommand(){
     udp_command->client_addr.sin_port = htons(8001);
     udp_command->numbytes = 10;
     for(auto m:ip_address){
-        bool ok;
-        int motor_scale = ui.scale->text().toInt(&ok);
-        if(!ok)
-            return;
-        set_points[m.first] = (sliders[m.first]->value()-50)*motor_scale;
         mempcpy(udp_command->buf,&set_points[m.first],4);
         mempcpy(&udp_command->buf[4],&m.first,4);
         udp_command->numbytes = 10;
@@ -388,33 +393,157 @@ void VRPuppets::controlModeChanged(){
 }
 
 void VRPuppets::allToPosition(){
+    bool ok;
     for(auto m:ip_address){
         control_mode[m.first] = POSITION;
         pos[m.first]->setChecked(true);
         vel[m.first]->setChecked(false);
         dis[m.first]->setChecked(false);
+        set_points[m.first] = ui.setpoint_pos->text().toInt(&ok);
     }
+    ui.setpoint->setText(ui.setpoint_pos->text());
     controlModeChanged();
+    sendCommand();
 }
 
 void VRPuppets::allToVelocity(){
+    bool ok;
     for(auto m:ip_address){
         control_mode[m.first] = VELOCITY;
         pos[m.first]->setChecked(false);
         vel[m.first]->setChecked(true);
         dis[m.first]->setChecked(false);
+        set_points[m.first] = ui.setpoint_vel->text().toInt(&ok);
     }
+    ui.setpoint->setText(ui.setpoint_vel->text());
     controlModeChanged();
+    sendCommand();
 }
 
 void VRPuppets::allToDisplacement(){
+    bool ok;
     for(auto m:ip_address){
         control_mode[m.first] = DISPLACEMENT;
         pos[m.first]->setChecked(false);
         vel[m.first]->setChecked(false);
         dis[m.first]->setChecked(true);
+        set_points[m.first] = ui.setpoint_dis->text().toInt(&ok);
     }
+    ui.setpoint->setText(ui.setpoint_dis->text());
     controlModeChanged();
+    sendCommand();
+}
+
+void VRPuppets::sliderMoved(){
+    bool ok;
+    for(auto m:ip_address) {
+        if(check[m.first]->isChecked()) {
+            int motor_scale = ui.scale->text().toInt(&ok);
+            if (!ok){
+                ROS_ERROR("motor scale invalid");
+                return;
+            }
+            set_points[m.first] = (sliders[m.first]->value() - 50) * motor_scale;
+        }
+    }
+    sendCommand();
+}
+
+void VRPuppets::sliderMovedAll(){
+    bool ok;
+    for(auto m:ip_address) {
+        if(check[m.first]->isChecked()) {
+            int motor_scale = ui.scale->text().toInt(&ok);
+            if (!ok) {
+                ROS_ERROR("motor scale invalid");
+                return;
+            }
+            set_points[m.first] = (ui.setpoint_all->value() - 50) * motor_scale;
+        }
+    }
+    sendCommand();
+}
+
+void VRPuppets::stop(){
+    if(!ui.stop->isChecked()) {
+        ui.stop->setStyleSheet("background-color: red");
+        bool ok;
+        char str[100];
+        for (auto m:ip_address) {
+            switch (control_mode[m.first]) {
+                case POSITION:
+                    sprintf(str,"%d", Kp[m.first]);
+                    ui.Kp_pos->setText(str);
+                    sprintf(str,"%d", Ki[m.first]);
+                    ui.Ki_pos->setText(str);
+                    sprintf(str,"%d", Kd[m.first]);
+                    ui.Kd_pos->setText(str);
+                    break;
+                case VELOCITY:
+                    sprintf(str,"%d", Kp[m.first]);
+                    ui.Kp_vel->setText(str);
+                    sprintf(str,"%d", Ki[m.first]);
+                    ui.Ki_vel->setText(str);
+                    sprintf(str,"%d", Kd[m.first]);
+                    ui.Kd_vel->setText(str);
+                    break;
+                case DISPLACEMENT:
+                    sprintf(str,"%d", Kp[m.first]);
+                    ui.Kp_dis->setText(str);
+                    sprintf(str,"%d", Ki[m.first]);
+                    ui.Ki_dis->setText(str);
+                    sprintf(str,"%d", Kd[m.first]);
+                    ui.Kd_dis->setText(str);
+                    break;
+            }
+
+            ui.pos_frame->setEnabled(true);
+            ui.vel_frame->setEnabled(true);
+            ui.dis_frame->setEnabled(true);
+            ui.motor_command->setEnabled(true);
+            ui.setpoint_all->setEnabled(true);
+            ui.stop->setText("CONTINUE");
+        }
+        controlModeChanged();
+    }else{
+        ui.stop->setStyleSheet("background-color: green");
+        bool ok;
+        for (auto m:ip_address) {
+            switch (control_mode[m.first]) {
+                case POSITION:
+                    Kp[m.first] = ui.Kp_pos->text().toInt(&ok);
+                    Ki[m.first] = ui.Ki_pos->text().toInt(&ok);
+                    Kd[m.first] = ui.Kd_pos->text().toInt(&ok);
+                    ui.Kp_pos->setText("0");
+                    ui.Ki_pos->setText("0");
+                    ui.Kd_pos->setText("0");
+                    break;
+                case VELOCITY:
+                    Kp[m.first] = ui.Kp_vel->text().toInt(&ok);
+                    Ki[m.first] = ui.Ki_vel->text().toInt(&ok);
+                    Kd[m.first] = ui.Kd_vel->text().toInt(&ok);
+                    ui.Kp_vel->setText("0");
+                    ui.Ki_vel->setText("0");
+                    ui.Kd_vel->setText("0");
+                    break;
+                case DISPLACEMENT:
+                    Kp[m.first] = ui.Kp_dis->text().toInt(&ok);
+                    Ki[m.first] = ui.Ki_dis->text().toInt(&ok);
+                    Kd[m.first] = ui.Kd_dis->text().toInt(&ok);
+                    ui.Kp_dis->setText("0");
+                    ui.Ki_dis->setText("0");
+                    ui.Kd_dis->setText("0");
+                    break;
+            }
+            ui.pos_frame->setEnabled(false);
+            ui.vel_frame->setEnabled(false);
+            ui.dis_frame->setEnabled(false);
+            ui.motor_command->setEnabled(false);
+            ui.setpoint_all->setEnabled(false);
+            ui.stop->setText("STOP");
+        }
+        controlModeChanged();
+    }
 }
 
 PLUGINLIB_EXPORT_CLASS(VRPuppets, rqt_gui_cpp::Plugin)

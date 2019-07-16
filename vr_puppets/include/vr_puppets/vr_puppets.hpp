@@ -46,6 +46,9 @@ public Q_SLOTS:
     void allToPosition();
     void allToVelocity();
     void allToDisplacement();
+    void sliderMoved();
+    void sliderMovedAll();
+    void stop();
 private:
     void receiveStatusUDP();
     void updateMotorCommands();
@@ -62,7 +65,8 @@ private:
     int counter = 0;
     map<int,QVector<double>> motor_position, motor_velocity, motor_displacement, motor_force, motor_pwm;
     map<int,string> ip_address;
-    map<int,QRadioButton*> pos,vel,dis;
+    map<int,QRadioButton*> active,pos,vel,dis;
+    map<int,int> Kp,Ki,Kd;
     map<int,int> control_mode;
     int samples_per_plot = 300;
     QColor color_pallette[16] = {Qt::blue, Qt::red, Qt::green, Qt::cyan, Qt::magenta, Qt::darkGray, Qt::darkRed, Qt::darkGreen,
