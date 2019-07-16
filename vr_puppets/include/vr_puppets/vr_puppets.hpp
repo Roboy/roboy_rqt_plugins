@@ -6,6 +6,8 @@
 #include <rqt_gui_cpp/plugin.h>
 #include <vr_puppets/ui_vr_puppets.h>
 #include <roboy_middleware_msgs/MotorStatus.h>
+#include <roboy_middleware_msgs/MotorCommand.h>
+#include <std_srvs/Empty.h>
 #include <QWidget>
 #include <QLabel>
 #include <pluginlib/class_list_macros.h>
@@ -27,6 +29,11 @@ class VRPuppets
     Q_OBJECT
 public:
     VRPuppets();
+    ~VRPuppets(){
+        system("rosnode kill serial_node");
+        if(udp_thread->joinable())
+            udp_thread->join();
+    }
 
     virtual void initPlugin(qt_gui_cpp::PluginContext &context);
 
@@ -49,11 +56,16 @@ public Q_SLOTS:
     void sliderMoved();
     void sliderMovedAll();
     void stop();
+    void sendMotorCommandLinearActuators();
+    void serialNode();
+    void zero();
+    void newMotor();
 private:
     void receiveStatusUDP();
     void updateMotorCommands();
 Q_SIGNALS:
-    void newData();
+    void new_data();
+    void new_motor();
 private:
     Ui::VRPuppets ui;
     QWidget *widget_;
@@ -73,6 +85,8 @@ private:
                                  Qt::darkBlue, Qt::darkCyan, Qt::darkMagenta, Qt::darkYellow, Qt::black, Qt::gray, Qt::green, Qt::cyan};
     ros::NodeHandlePtr nh;
     ros::Subscriber motorStatus;
+    ros::Publisher motor_command;
+    ros::ServiceClient zero_srv;
     ros::Time start_time;
     boost::shared_ptr<ros::AsyncSpinner> spinner;
     UDPSocketPtr udp, udp_command;
