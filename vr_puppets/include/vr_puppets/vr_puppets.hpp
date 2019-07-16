@@ -18,6 +18,7 @@
 #include <QSlider>
 #include <QVBoxLayout>
 #include <QtWidgets/QCheckBox>
+#include <mutex>
 
 #endif
 
@@ -74,4 +75,5 @@ private:
     boost::shared_ptr<std::thread> udp_thread;
     bool initialized = false;
     map<int,int> set_points;
+    mutex mux;
 };

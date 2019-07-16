@@ -53,8 +53,8 @@ void VRPuppets::initPlugin(qt_gui_cpp::PluginContext &context) {
     udp_thread.reset(new std::thread(&VRPuppets::receiveStatusUDP, this));
     udp_thread->detach();
 
-    ros::Duration d(3);
-    ROS_INFO("waiting 3 seconds for active motors");
+    ros::Duration d(0.5);
+    ROS_INFO("waiting 0.5 seconds for active motors");
     d.sleep();
 
     for (uint motor = 0; motor < 20; motor++) {
@@ -126,6 +126,7 @@ void VRPuppets::receiveStatusUDP() {
             int32_t pwm = (int32_t) ((uint8_t) udp->buf[19] << 24 | (uint8_t) udp->buf[18] << 16 |
                                      (uint8_t) udp->buf[17] << 8 | (uint8_t) udp->buf[16]);
 //            ROS_INFO_THROTTLE(1,"%d",vel);
+            lock_guard<mutex> lock(mux);
             motor_position[motor].push_back(pos);
             motor_velocity[motor].push_back(vel);
             motor_displacement[motor].push_back(dis);
@@ -231,6 +232,7 @@ void VRPuppets::updateMotorCommands(){
 }
 
 void VRPuppets::plotData() {
+    lock_guard<mutex> lock(mux);
     for (auto m:ip_address) {
         ui.position_plot->graph(m.first)->setData(time, motor_position[m.first]);
         ui.velocity_plot->graph(m.first)->setData(time, motor_velocity[m.first]);
