@@ -8,6 +8,7 @@
 #include <roboy_middleware_msgs/MotorStatus.h>
 #include <roboy_middleware_msgs/MotorCommand.h>
 #include <std_srvs/Empty.h>
+#include <std_srvs/SetBool.h>
 #include <QWidget>
 #include <QLabel>
 #include <pluginlib/class_list_macros.h>
@@ -87,6 +88,7 @@ private:
     ros::Subscriber motorStatus;
     ros::Publisher motor_command;
     ros::ServiceClient zero_srv;
+    ros::ServiceServer e_stop_server;
     ros::Time start_time;
     boost::shared_ptr<ros::AsyncSpinner> spinner;
     UDPSocketPtr udp, udp_command;
@@ -94,4 +96,7 @@ private:
     bool initialized = false;
     map<int,int> set_points;
     mutex mux;
+
+    bool e_stop = false;
+    bool EmergencyCallback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res);
 };
