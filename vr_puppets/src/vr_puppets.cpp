@@ -332,9 +332,6 @@ void VRPuppets::rescale(){
 }
 
 void VRPuppets::sendCommand(){
-    if(e_stop){
-        ROS_WARN("M3 units set to emergency stop!");
-    }else{
 
         udp_command->client_addr.sin_port = htons(8001);
         udp_command->numbytes = 10;
@@ -345,7 +342,7 @@ void VRPuppets::sendCommand(){
             udp_command->client_addr.sin_addr.s_addr = inet_addr(m.second.c_str());
             udp_command->sendUDPToClient();
         }
-    }
+
 }
 
 void VRPuppets::controlModeChanged(){
@@ -596,12 +593,12 @@ void VRPuppets::serialNode(){
 bool VRPuppets::EmergencyCallback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res) {
     if (req.data == 1) {
         ROS_INFO("M3-Emergency stop service called.");
-        e_stop = true;
+        ui.stop->setChecked(true);
         res.success = true;
         res.message = "Emergency stop service called";
     } else {
         ROS_INFO("Resuming normal operation.");
-        e_stop = false;
+        ui.stop->setChecked(false);
         res.success = true;
         res.message = "Resuming normal operation.";
     }
