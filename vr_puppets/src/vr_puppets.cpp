@@ -25,6 +25,7 @@ void VRPuppets::initPlugin(qt_gui_cpp::PluginContext &context) {
 
     motor_command = nh->advertise<roboy_middleware_msgs::MotorCommand>("/stepper_motor_shield/MotorCommand",1);
     zero_srv = nh->serviceClient<std_srvs::Empty>("/stepper_motor_shield/zero");
+    e_stop_server = nh->advertiseService("/m3/emergency_stop",&VRPuppets::EmergencyCallback,this);
 
     QObject::connect(this, SIGNAL(new_data()), this, SLOT(plotData()));
     QObject::connect(this, SIGNAL(new_motor()), this, SLOT(newMotor()));
@@ -331,15 +332,17 @@ void VRPuppets::rescale(){
 }
 
 void VRPuppets::sendCommand(){
-    udp_command->client_addr.sin_port = htons(8001);
-    udp_command->numbytes = 10;
-    for(auto m:ip_address){
-        mempcpy(udp_command->buf,&set_points[m.first],4);
-        mempcpy(&udp_command->buf[4],&m.first,4);
+
+        udp_command->client_addr.sin_port = htons(8001);
         udp_command->numbytes = 10;
-        udp_command->client_addr.sin_addr.s_addr = inet_addr(m.second.c_str());
-        udp_command->sendUDPToClient();
-    }
+        for (auto m:ip_address) {
+            mempcpy(udp_command->buf, &set_points[m.first], 4);
+            mempcpy(&udp_command->buf[4], &m.first, 4);
+            udp_command->numbytes = 10;
+            udp_command->client_addr.sin_addr.s_addr = inet_addr(m.second.c_str());
+            udp_command->sendUDPToClient();
+        }
+
 }
 
 void VRPuppets::controlModeChanged(){
@@ -585,6 +588,21 @@ void VRPuppets::sendMotorCommandLinearActuators(){
 
 void VRPuppets::serialNode(){
     system("rosrun rosserial_arduino serial_node.py _port:=/dev/ttyACM0&");
+}
+
+bool VRPuppets::EmergencyCallback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res) {
+    if (req.data == 1) {
+        ROS_INFO("M3-Emergency stop service called.");
+        ui.stop->setChecked(true);
+        res.success = true;
+        res.message = "Emergency stop service called";
+    } else {
+        ROS_INFO("Resuming normal operation.");
+        ui.stop->setChecked(false);
+        res.success = true;
+        res.message = "Resuming normal operation.";
+    }
+    return true;
 }
 
 void VRPuppets::zero(){
