@@ -64,6 +64,7 @@ public Q_SLOTS:
 private:
     void receiveStatusUDP();
     void updateMotorCommands();
+    void MotorCommand( const roboy_middleware_msgs::MotorCommand::ConstPtr &msg);
 Q_SIGNALS:
     void new_data();
     void new_motor();
@@ -85,7 +86,7 @@ private:
     QColor color_pallette[16] = {Qt::blue, Qt::red, Qt::green, Qt::cyan, Qt::magenta, Qt::darkGray, Qt::darkRed, Qt::darkGreen,
                                  Qt::darkBlue, Qt::darkCyan, Qt::darkMagenta, Qt::darkYellow, Qt::black, Qt::gray, Qt::green, Qt::cyan};
     ros::NodeHandlePtr nh;
-    ros::Subscriber motorStatus;
+    ros::Subscriber motorStatus, motor_command_sub;
     ros::Publisher motor_command;
     ros::ServiceClient zero_srv;
     ros::ServiceServer e_stop_server;

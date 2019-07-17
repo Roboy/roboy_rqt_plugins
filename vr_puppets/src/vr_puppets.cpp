@@ -24,6 +24,8 @@ void VRPuppets::initPlugin(qt_gui_cpp::PluginContext &context) {
     }
 
     motor_command = nh->advertise<roboy_middleware_msgs::MotorCommand>("/stepper_motor_shield/MotorCommand",1);
+    motor_command_sub = nh->subscribe("/roboy/middleware/MotorCommand",1,&VRPuppets::MotorCommand, this);
+
     zero_srv = nh->serviceClient<std_srvs::Empty>("/stepper_motor_shield/zero");
     e_stop_server = nh->advertiseService("/m3/emergency_stop",&VRPuppets::EmergencyCallback,this);
 
@@ -258,6 +260,15 @@ void VRPuppets::updateMotorCommands(){
     }
 }
 
+void VRPuppets::MotorCommand( const roboy_middleware_msgs::MotorCommand::ConstPtr &msg){
+    if(msg->id==69){
+        for(int i=0;i<msg->motors.size();i++){
+            set_points[msg->motors[i]] = msg->set_points[i];
+        }
+        sendCommand();
+    }
+}
+
 void VRPuppets::plotData() {
     lock_guard<mutex> lock(mux);
     if(!ros::ok())
@@ -332,7 +343,6 @@ void VRPuppets::rescale(){
 }
 
 void VRPuppets::sendCommand(){
-
         udp_command->client_addr.sin_port = htons(8001);
         udp_command->numbytes = 10;
         for (auto m:ip_address) {
@@ -342,7 +352,6 @@ void VRPuppets::sendCommand(){
             udp_command->client_addr.sin_addr.s_addr = inet_addr(m.second.c_str());
             udp_command->sendUDPToClient();
         }
-
 }
 
 void VRPuppets::controlModeChanged(){
@@ -575,7 +584,7 @@ void VRPuppets::stop(){
 
 void VRPuppets::sendMotorCommandLinearActuators(){
     roboy_middleware_msgs::MotorCommand msg;
-    msg.id = 69;
+    msg.id = 68;
     msg.motors = {0,1,2,3,4,5,6,7,8,9};
     msg.set_points = {(float)ui.motor0->value(),
                       (float)ui.motor1->value(),
