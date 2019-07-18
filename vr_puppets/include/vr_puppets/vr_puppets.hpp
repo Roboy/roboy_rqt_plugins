@@ -7,6 +7,7 @@
 #include <vr_puppets/ui_vr_puppets.h>
 #include <roboy_middleware_msgs/MotorStatus.h>
 #include <roboy_middleware_msgs/MotorCommand.h>
+#include <roboy_middleware_msgs/ControlMode.h>
 #include <std_srvs/Empty.h>
 #include <std_srvs/SetBool.h>
 #include <QWidget>
@@ -65,6 +66,8 @@ private:
     void receiveStatusUDP();
     void updateMotorCommands();
     void MotorCommand( const roboy_middleware_msgs::MotorCommand::ConstPtr &msg);
+    bool EmergencyCallback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res);
+    bool ControlMode(roboy_middleware_msgs::ControlMode::Request &req, roboy_middleware_msgs::ControlMode::Response &res);
 Q_SIGNALS:
     void new_data();
     void new_motor();
@@ -87,9 +90,9 @@ private:
                                  Qt::darkBlue, Qt::darkCyan, Qt::darkMagenta, Qt::darkYellow, Qt::black, Qt::gray, Qt::green, Qt::cyan};
     ros::NodeHandlePtr nh;
     ros::Subscriber motorStatus, motor_command_sub;
-    ros::Publisher motor_command;
+    ros::Publisher motor_command, motor_status;
     ros::ServiceClient zero_srv;
-    ros::ServiceServer e_stop_server;
+    ros::ServiceServer e_stop_server, control_mode_srv;
     ros::Time start_time;
     boost::shared_ptr<ros::AsyncSpinner> spinner;
     UDPSocketPtr udp, udp_command;
@@ -99,5 +102,4 @@ private:
     mutex mux;
 
     bool e_stop = false;
-    bool EmergencyCallback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res);
 };
