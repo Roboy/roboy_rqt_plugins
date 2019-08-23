@@ -24,8 +24,12 @@ void VRPuppets::initPlugin(qt_gui_cpp::PluginContext &context) {
     }
 
     motor_command = nh->advertise<roboy_middleware_msgs::MotorCommand>("/stepper_motor_shield/MotorCommand",1);
+    motor_status = nh->advertise<roboy_middleware_msgs::MotorStatus>("/VRpuppet/MotorStatus",1);
+    motor_command_sub = nh->subscribe("/VRpuppet/MotorCommand",1,&VRPuppets::MotorCommand, this);
+
     zero_srv = nh->serviceClient<std_srvs::Empty>("/stepper_motor_shield/zero");
     e_stop_server = nh->advertiseService("/m3/emergency_stop",&VRPuppets::EmergencyCallback,this);
+    control_mode_srv = nh->advertiseService("/VRpuppet/ControlMode",&VRPuppets::ControlMode,this);
 
     QObject::connect(this, SIGNAL(new_data()), this, SLOT(plotData()));
     QObject::connect(this, SIGNAL(new_motor()), this, SLOT(newMotor()));
@@ -178,6 +182,16 @@ void VRPuppets::receiveStatusUDP() {
 
             if ((counter++) % (approx_hz+1) == 0) {
                 Q_EMIT new_data();
+                roboy_middleware_msgs::MotorStatus msg;
+                msg.id = 69;
+                msg.power_sense = !ui.stop->isChecked();
+                for(auto m:ip_address){
+                    msg.position.push_back(motor_position[m.first].back());
+                    msg.velocity.push_back(motor_velocity[m.first].back());
+                    msg.displacement.push_back(motor_displacement[m.first].back());
+                    msg.pwm_ref.push_back(motor_pwm[m.first].back());
+                }
+                motor_status.publish(msg);
             }
             if (counter % ((approx_hz+5)*10) == 0 && initialized) {
                 rescale();
@@ -262,6 +276,15 @@ void VRPuppets::updateMotorCommands(){
     }
 }
 
+void VRPuppets::MotorCommand( const roboy_middleware_msgs::MotorCommand::ConstPtr &msg){
+    if(msg->id==69){
+        for(int i=0;i<msg->motors.size();i++){
+            set_points[msg->motors[i]] = msg->set_points[i];
+        }
+        sendCommand();
+    }
+}
+
 void VRPuppets::plotData() {
     lock_guard<mutex> lock(mux);
     if(!ros::ok())
@@ -336,7 +359,6 @@ void VRPuppets::rescale(){
 }
 
 void VRPuppets::sendCommand(){
-
         udp_command->client_addr.sin_port = htons(8001);
         udp_command->numbytes = 10;
         for (auto m:ip_address) {
@@ -346,10 +368,10 @@ void VRPuppets::sendCommand(){
             udp_command->client_addr.sin_addr.s_addr = inet_addr(m.second.c_str());
             udp_command->sendUDPToClient();
         }
-
 }
 
 void VRPuppets::controlModeChanged(){
+    lock_guard<mutex> lock(mux);
     udp_command->client_addr.sin_port = htons(8001);
     udp_command->numbytes = 20;
     int Kp, Ki, Kd;
@@ -616,7 +638,7 @@ void VRPuppets::stop(){
 
 void VRPuppets::sendMotorCommandLinearActuators(){
     roboy_middleware_msgs::MotorCommand msg;
-    msg.id = 69;
+    msg.id = 68;
     msg.motors = {0,1,2,3,4,5,6,7,8,9};
     msg.set_points = {(float)ui.motor0->value(),
                       (float)ui.motor1->value(),
@@ -644,6 +666,81 @@ bool VRPuppets::EmergencyCallback(std_srvs::SetBool::Request &req, std_srvs::Set
         stop();
         res.success = true;
         res.message = "Resuming normal operation.";
+    }
+    return true;
+}
+
+bool VRPuppets::ControlMode(roboy_middleware_msgs::ControlMode::Request &req, roboy_middleware_msgs::ControlMode::Response &res){
+    if(req.motor_id.empty()){
+        for(auto m:ip_address){
+            control_mode[m.first] = req.control_mode;
+            switch(req.control_mode){
+                case 0:
+                    pos[m.first]->setChecked(true);
+                    vel[m.first]->setChecked(false);
+                    dis[m.first]->setChecked(false);
+                    break;
+                case 1:
+                    pos[m.first]->setChecked(false);
+                    vel[m.first]->setChecked(true);
+                    dis[m.first]->setChecked(false);
+                    break;
+                case 2:
+                    pos[m.first]->setChecked(false);
+                    vel[m.first]->setChecked(false);
+                    dis[m.first]->setChecked(true);
+                    break;
+            }
+        }
+        controlModeChanged();
+        sendCommand();
+        switch(req.control_mode){
+            case 0:
+                ROS_INFO("control mode changed for all muscles to POSITION");
+                break;
+            case 1:
+                ROS_INFO("control mode changed for all muscles to VELOCITY");
+                break;
+            case 2:
+                ROS_INFO("control mode changed for all muscles to DISPLACEMENT");
+                break;
+        }
+
+    }else{
+        for(auto m:req.motor_id){
+            control_mode[m] = req.control_mode;
+            set_points[m] = req.set_point;
+            switch (req.control_mode) {
+                case 0:
+                    pos[m]->setChecked(true);
+                    vel[m]->setChecked(false);
+                    dis[m]->setChecked(false);
+                    break;
+                case 1:
+                    pos[m]->setChecked(false);
+                    vel[m]->setChecked(true);
+                    dis[m]->setChecked(false);
+                    break;
+                case 2:
+                    pos[m]->setChecked(false);
+                    vel[m]->setChecked(false);
+                    dis[m]->setChecked(true);
+                    break;
+            }
+        }
+        controlModeChanged();
+        sendCommand();
+        switch(req.control_mode){
+            case 0:
+                ROS_INFO("control mode changed to POSITION");
+                break;
+            case 1:
+                ROS_INFO("control mode changed to VELOCITY");
+                break;
+            case 2:
+                ROS_INFO("control mode changed to DISPLACEMENT");
+                break;
+        }
     }
     return true;
 }
