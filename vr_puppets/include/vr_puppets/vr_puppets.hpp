@@ -101,5 +101,7 @@ private:
     map<int,int> set_points;
     mutex mux;
 
+    bool EmergencyCallback(std_srvs::SetBool::Request &req, std_srvs::SetBool::Response &res);
     bool e_stop = false;
+
 };
