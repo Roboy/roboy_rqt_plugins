@@ -1,0 +1,14 @@
+<library path="lib/libshoulder_testbed">
+  <class name="ShoulderTestbed" type="ShoulderTestbed" base_class_type="rqt_gui_cpp::Plugin">
+    <description>
+      shoulder testbed plugin
+    </description>
+    <qtgui>
+      <group>
+        <label>Roboy</label>
+      </group>
+      <label>shoulder testbed</label>
+      <statustip>Great user interface to provide real value.</statustip>
+    </qtgui>
+  </class>
+</library>
