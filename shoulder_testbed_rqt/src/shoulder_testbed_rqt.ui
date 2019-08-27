@@ -187,8 +187,17 @@
       <height>21</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>-1000</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="pageStep">
+     <number>100</number>
+    </property>
     <property name="value">
-     <number>50</number>
+     <number>0</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -200,7 +209,7 @@
      <enum>QSlider::TicksBelow</enum>
     </property>
     <property name="tickInterval">
-     <number>10</number>
+     <number>100</number>
     </property>
    </widget>
    <widget class="QLineEdit" name="setpoint_motor_1">
@@ -225,8 +234,17 @@
       <height>21</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>-1000</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="pageStep">
+     <number>100</number>
+    </property>
     <property name="value">
-     <number>50</number>
+     <number>0</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -238,7 +256,7 @@
      <enum>QSlider::TicksBelow</enum>
     </property>
     <property name="tickInterval">
-     <number>10</number>
+     <number>100</number>
     </property>
    </widget>
    <widget class="QLabel" name="label_3">
@@ -276,8 +294,17 @@
       <height>21</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>-1000</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="pageStep">
+     <number>100</number>
+    </property>
     <property name="value">
-     <number>50</number>
+     <number>0</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -289,7 +316,7 @@
      <enum>QSlider::TicksBelow</enum>
     </property>
     <property name="tickInterval">
-     <number>10</number>
+     <number>100</number>
     </property>
    </widget>
    <widget class="QLabel" name="label_4">
@@ -327,8 +354,17 @@
       <height>21</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>-1000</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="pageStep">
+     <number>100</number>
+    </property>
     <property name="value">
-     <number>50</number>
+     <number>0</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -340,7 +376,7 @@
      <enum>QSlider::TicksBelow</enum>
     </property>
     <property name="tickInterval">
-     <number>10</number>
+     <number>100</number>
     </property>
    </widget>
    <widget class="QLabel" name="label_5">
@@ -378,8 +414,17 @@
       <height>21</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>-1000</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="pageStep">
+     <number>100</number>
+    </property>
     <property name="value">
-     <number>50</number>
+     <number>0</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -391,7 +436,7 @@
      <enum>QSlider::TicksBelow</enum>
     </property>
     <property name="tickInterval">
-     <number>10</number>
+     <number>100</number>
     </property>
    </widget>
    <widget class="QLabel" name="label_6">
@@ -429,8 +474,17 @@
       <height>21</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>-1000</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="pageStep">
+     <number>100</number>
+    </property>
     <property name="value">
-     <number>50</number>
+     <number>0</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -442,7 +496,7 @@
      <enum>QSlider::TicksBelow</enum>
     </property>
     <property name="tickInterval">
-     <number>10</number>
+     <number>100</number>
     </property>
    </widget>
    <widget class="QLabel" name="label_7">
@@ -480,8 +534,17 @@
       <height>21</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>-1000</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="pageStep">
+     <number>100</number>
+    </property>
     <property name="value">
-     <number>50</number>
+     <number>0</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -493,7 +556,7 @@
      <enum>QSlider::TicksBelow</enum>
     </property>
     <property name="tickInterval">
-     <number>10</number>
+     <number>100</number>
     </property>
    </widget>
    <widget class="QLabel" name="label_8">
@@ -531,8 +594,17 @@
       <height>21</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>-1000</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="pageStep">
+     <number>100</number>
+    </property>
     <property name="value">
-     <number>50</number>
+     <number>0</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -544,7 +616,7 @@
      <enum>QSlider::TicksBelow</enum>
     </property>
     <property name="tickInterval">
-     <number>10</number>
+     <number>100</number>
     </property>
    </widget>
    <widget class="QLabel" name="label_9">
@@ -582,8 +654,17 @@
       <height>21</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>-1000</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="pageStep">
+     <number>100</number>
+    </property>
     <property name="value">
-     <number>50</number>
+     <number>0</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -595,7 +676,7 @@
      <enum>QSlider::TicksBelow</enum>
     </property>
     <property name="tickInterval">
-     <number>10</number>
+     <number>100</number>
     </property>
    </widget>
    <widget class="QLabel" name="label_10">
@@ -633,8 +714,17 @@
       <height>21</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>-1000</number>
+    </property>
+    <property name="maximum">
+     <number>1000</number>
+    </property>
+    <property name="pageStep">
+     <number>100</number>
+    </property>
     <property name="value">
-     <number>50</number>
+     <number>0</number>
     </property>
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
@@ -646,7 +736,7 @@
      <enum>QSlider::TicksBelow</enum>
     </property>
     <property name="tickInterval">
-     <number>10</number>
+     <number>100</number>
     </property>
    </widget>
    <widget class="QLabel" name="label_11">

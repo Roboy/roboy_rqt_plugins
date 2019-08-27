@@ -1,4 +1,4 @@
-#include <shoulder_testbed/shoulder_testbed.hpp>
+#include <shoulder_testbed_rqt/shoulder_testbed_rqt.hpp>
 #include <QtWidgets/QCheckBox>
 
 ShoulderTestbed::ShoulderTestbed()
@@ -178,6 +178,16 @@ void ShoulderTestbed::sendMotorCommandLinearActuators(){
                       (float)ui.motor_7->value(),
                       (float)ui.motor_8->value(),
                       (float)ui.motor_9->value()};
+    ui.setpoint_motor_0->setText(QString::number(ui.motor_0->value()));
+    ui.setpoint_motor_1->setText(QString::number(ui.motor_1->value()));
+    ui.setpoint_motor_2->setText(QString::number(ui.motor_2->value()));
+    ui.setpoint_motor_3->setText(QString::number(ui.motor_3->value()));
+    ui.setpoint_motor_4->setText(QString::number(ui.motor_4->value()));
+    ui.setpoint_motor_5->setText(QString::number(ui.motor_5->value()));
+    ui.setpoint_motor_6->setText(QString::number(ui.motor_6->value()));
+    ui.setpoint_motor_7->setText(QString::number(ui.motor_7->value()));
+    ui.setpoint_motor_8->setText(QString::number(ui.motor_8->value()));
+    ui.setpoint_motor_9->setText(QString::number(ui.motor_9->value()));
     motor_command.publish(msg);
 }
 

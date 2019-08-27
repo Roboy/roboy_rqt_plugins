@@ -1,4 +1,4 @@
-<library path="lib/libshoulder_testbed">
+<library path="lib/libshoulder_testbed_rqt">
   <class name="ShoulderTestbed" type="ShoulderTestbed" base_class_type="rqt_gui_cpp::Plugin">
     <description>
       shoulder testbed plugin

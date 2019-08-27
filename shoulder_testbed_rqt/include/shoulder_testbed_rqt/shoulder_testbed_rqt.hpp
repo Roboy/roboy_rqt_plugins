@@ -4,7 +4,7 @@
 
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
-#include <shoulder_testbed/ui_shoulder_testbed.h>
+#include <shoulder_testbed_rqt/ui_shoulder_testbed_rqt.h>
 #include <roboy_middleware_msgs/MotorStatus.h>
 #include <roboy_middleware_msgs/MotorCommand.h>
 #include <roboy_middleware_msgs/ControlMode.h>

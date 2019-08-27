@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>shoulder_testbed</name>
+  <name>shoulder_testbed_rqt</name>
   <version>0.0.0</version>
   <description>shoulder_testbed plugin for rqt</description>
   <maintainer email="simon.trendel@tum.de">Simon Trendel</maintainer>
