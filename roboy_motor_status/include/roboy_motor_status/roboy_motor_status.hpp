@@ -11,7 +11,8 @@
 #include <QStringList>
 #include <common_utilities/CommonDefinitions.h>
 #include <thread>
-
+#include <map>
+using namespace std;
 #endif
 
 class RoboyMotorStatus
@@ -46,7 +47,7 @@ private:
 
     QVector<double> time;
     int counter = 0;
-    QVector<double> motorData[6][NUMBER_OF_MOTORS_PER_FPGA][4];
+    map<int,map<int,map<int,QVector<double>>>> motorData;
     bool motorConnected[NUMBER_OF_FPGAS][NUMBER_OF_MOTORS_PER_FPGA], plotMotor[NUMBER_OF_MOTORS_PER_FPGA];
     int samples_per_plot = 300;
     QColor color_pallette[16] = {Qt::blue, Qt::red, Qt::green, Qt::cyan, Qt::magenta, Qt::darkGray, Qt::darkRed, Qt::darkGreen,

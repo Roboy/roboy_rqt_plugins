@@ -303,8 +303,9 @@ void RoboyMotorCommand::controlModeChanged(){
         return;
     }
     msg.request.set_point = 0;
+
     if(!motorControl[ui.fpga->value()].call(msg))
-        ROS_ERROR("failed to change control mode of %s, is emergency stop active?! are the fpgas connected?!",fpga_name_from_id[ui.fpga->value()].c_str());
+        ROS_ERROR("failed to change control mode of %s",fpga_name_from_id[ui.fpga->value()].c_str());
 }
 
 void RoboyMotorCommand::update_config(){

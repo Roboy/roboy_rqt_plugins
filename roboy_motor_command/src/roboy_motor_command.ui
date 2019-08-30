@@ -910,7 +910,7 @@
     </rect>
    </property>
    <property name="minimum">
-    <number>2</number>
+    <number>3</number>
    </property>
    <property name="maximum">
     <number>6</number>
@@ -964,7 +964,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroup_2"/>
   <buttongroup name="buttonGroup"/>
+  <buttongroup name="buttonGroup_2"/>
  </buttongroups>
 </ui>
