@@ -220,6 +220,7 @@ void RoboyMotorStatus::toggleAll(){
 }
 
 void RoboyMotorStatus::fpgaChanged(int fpga){
+    ui.fpga_name->setText(fpga_name_from_id[fpga].c_str());
     for(int i=0;i<NUMBER_OF_MOTORS_PER_FPGA;i++) {
         char str[20];
         sprintf(str,"motor_%d",i);
