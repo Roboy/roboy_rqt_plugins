@@ -52,15 +52,13 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
     scale = widget_->findChild<QLineEdit *>("motor_scale");
 
     motorCommand = nh->advertise<roboy_middleware_msgs::MotorCommand>("/roboy/middleware/MotorCommand", 1);
-    motorControl[FPGA_LEFT] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/shoulder_left/middleware/ControlMode");
-    motorControl[FPGA_RIGHT] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/shoulder_right/middleware/ControlMode");
-    motorControl[UNKNOWN] = nh->serviceClient<roboy_middleware_msgs::ControlMode>("/roboy/unknown/middleware/ControlMode");
-    motorConfig[FPGA_LEFT] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/shoulder_left/middleware/MotorConfig");
-    motorConfig[FPGA_RIGHT] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/shoulder_right/middleware/MotorConfig");
-    motorConfig[UNKNOWN] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>("/roboy/unknown/middleware/MotorConfig");
-    emergencyStop[FPGA_LEFT] = nh->serviceClient<std_srvs::SetBool>("/roboy/shoulder_left/middleware/EmergencyStop");
-    emergencyStop[FPGA_RIGHT] = nh->serviceClient<std_srvs::SetBool>("/roboy/shoulder_right/middleware/EmergencyStop");
-    emergencyStop[UNKNOWN] = nh->serviceClient<std_srvs::SetBool>("/roboy/unknown/middleware/EmergencyStop");
+    for(auto fpga:fpga_names) {
+        motorControl[fpga_id_from_name[fpga]] = nh->serviceClient<roboy_middleware_msgs::ControlMode>(
+                "/roboy/"+fpga+"/middleware/ControlMode");
+        motorConfig[fpga_id_from_name[fpga]] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>(
+                "/roboy/"+fpga+"/middleware/MotorConfig");
+        emergencyStop[fpga_id_from_name[fpga]] = nh->serviceClient<std_srvs::SetBool>("/roboy/"+fpga+"/middleware/EmergencyStop");
+    }
 
     ui.stop_button_all->setStyleSheet("background-color: green");
     QObject::connect(ui.stop_button_all, SIGNAL(clicked()), this, SLOT(stopButtonAllClicked()));
@@ -69,7 +67,6 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
     QObject::connect(ui.vel, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
     QObject::connect(ui.dis, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
     QObject::connect(ui.force, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
-    QObject::connect(ui.current, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
     QObject::connect(ui.direct, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
     QObject::connect(ui.fpga, SIGNAL(valueChanged(int)), this, SLOT(addFpgaWidgets(int)));
 
@@ -98,26 +95,24 @@ void RoboyMotorCommand::stopButtonAllClicked(){
     if(ui.stop_button_all->isChecked()) {
         ui.stop_button_all->setStyleSheet("background-color: red");
         msg.request.data = 1;
-        for(uint fpga=FPGA_LEFT;fpga<=FPGA_RIGHT;fpga++)
+        for(uint fpga=2;fpga<=6;fpga++)
             emergencyStop[fpga].call(msg);
         ui.motor_command->setEnabled(false);
         ui.pos->setEnabled(false);
         ui.vel->setEnabled(false);
         ui.dis->setEnabled(false);
         ui.force->setEnabled(false);
-        ui.current->setEnabled(false);
         ui.direct->setEnabled(false);
     }else {
         ui.stop_button_all->setStyleSheet("background-color: green");
         msg.request.data = 0;
-        for(uint fpga=FPGA_LEFT;fpga<=FPGA_RIGHT;fpga++)
+        for(uint fpga=2;fpga<=6;fpga++)
             emergencyStop[fpga].call(msg);
         ui.motor_command->setEnabled(true);
         ui.pos->setEnabled(true);
         ui.vel->setEnabled(true);
         ui.dis->setEnabled(true);
         ui.force->setEnabled(true);
-        ui.current->setEnabled(true);
         ui.direct->setEnabled(true);
     }
 }
@@ -128,8 +123,11 @@ void RoboyMotorCommand::setPointChanged(){
     double motor_scale = scale->text().toDouble(&ok);
     if(!ok)
         return;
-
+    int fpga = ui.fpga->value();
     for (uint motor = 0; motor < total_number_of_motors; motor++) {
+        vector<int>::iterator it = find (active_motors[ui.fpga->value()].begin(), active_motors[ui.fpga->value()].end(), motor);
+        if (it == active_motors[fpga].end())
+            continue;
         double setPoint = setpoint_widget[motor]->text().toDouble(&ok) * motor_scale;
         if(setpoint[motor] != setPoint && ok) {
             setpoint[motor] = setPoint;
@@ -155,8 +153,11 @@ void RoboyMotorCommand::setPointChangedSlider(){
         ROS_ERROR("invalid scale");
         return;
     }
-
+    int fpga = ui.fpga->value();
     for (uint motor = 0; motor < total_number_of_motors; motor++) {
+        vector<int>::iterator it = find (active_motors[ui.fpga->value()].begin(), active_motors[ui.fpga->value()].end(), motor);
+        if (it == active_motors[fpga].end())
+            continue;
         double setPoint = (setpoint_slider_widget[motor]->value()-50.0) * motor_scale;
         if(setpoint[motor] != setPoint ) {
             setpoint[motor] = setPoint;
@@ -182,9 +183,12 @@ void RoboyMotorCommand::setPointAllChanged(){
         ROS_ERROR("invalid scale");
         return;
     }
-
+    int fpga = ui.fpga->value();
     double setPoint = setpoint_widget_all->text().toDouble(&ok) * motor_scale;
     for (uint motor = 0; motor < total_number_of_motors; motor++) {
+        vector<int>::iterator it = find (active_motors[ui.fpga->value()].begin(), active_motors[ui.fpga->value()].end(), motor);
+        if (it == active_motors[fpga].end())
+            continue;
         if(setpoint[motor] != setPoint) {
             setpoint[motor] = setPoint;
             msg.id = ui.fpga->value();
@@ -209,10 +213,13 @@ void RoboyMotorCommand::setPointAllChangedSlider(){
         ROS_ERROR("invalid scale");
         return;
     }
-
+    int fpga = ui.fpga->value();
     double setPoint = (setpoint_slider_widget_all->value()-50.0) * motor_scale;
     ui.motor_setPoint_all->setText(QString::number(setPoint));
     for (uint motor = 0; motor < total_number_of_motors; motor++) {
+        vector<int>::iterator it = find (active_motors[ui.fpga->value()].begin(), active_motors[ui.fpga->value()].end(), motor);
+        if (it == active_motors[fpga].end())
+            continue;
         if(setpoint[motor] != setPoint) {
             setpoint[motor] = setPoint;
             msg.id = ui.fpga->value();
@@ -231,8 +238,12 @@ void RoboyMotorCommand::setPointAllChangedSlider(){
 
 void RoboyMotorCommand::controlModeChanged(){
     roboy_middleware_msgs::ControlMode msg;
+    int fpag = ui.fpga->value();
     if(ui.pos->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
+            vector<int>::iterator it = find (active_motors[ui.fpga->value()].begin(), active_motors[ui.fpga->value()].end(), motor);
+            if (it == active_motors[fpag].end())
+                continue;
             control_mode[motor] = POSITION;
             pos[motor]->setChecked(true);
         }
@@ -241,6 +252,9 @@ void RoboyMotorCommand::controlModeChanged(){
     }
     if(ui.vel->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
+            vector<int>::iterator it = find (active_motors[ui.fpga->value()].begin(), active_motors[ui.fpga->value()].end(), motor);
+            if (it == active_motors[fpag].end())
+                continue;
             control_mode[motor] = VELOCITY;
             vel[motor]->setChecked(true);
         }
@@ -249,6 +263,9 @@ void RoboyMotorCommand::controlModeChanged(){
     }
     if(ui.dis->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
+            vector<int>::iterator it = find (active_motors[ui.fpga->value()].begin(), active_motors[ui.fpga->value()].end(), motor);
+            if (it == active_motors[fpag].end())
+                continue;
             control_mode[motor] = DISPLACEMENT;
             dis[motor]->setChecked(true);
         }
@@ -257,22 +274,20 @@ void RoboyMotorCommand::controlModeChanged(){
     }
     if(ui.force->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
+            vector<int>::iterator it = find (active_motors[ui.fpga->value()].begin(), active_motors[ui.fpga->value()].end(), motor);
+            if (it == active_motors[fpag].end())
+                continue;
             control_mode[motor] = FORCE;
             force[motor]->setChecked(true);
         }
         msg.request.control_mode = DISPLACEMENT;
         ROS_INFO("changed to FORCE control");
     }
-    if(ui.current->isChecked()) {
-        for(int motor = 0; motor<total_number_of_motors; motor++){
-            control_mode[motor] = CURRENT;
-            cur[motor]->setChecked(true);
-        }
-        msg.request.control_mode = CURRENT;
-        ROS_INFO("changed to CURRENT control");
-    }
     if(ui.direct->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
+            vector<int>::iterator it = find (active_motors[ui.fpga->value()].begin(), active_motors[ui.fpga->value()].end(), motor);
+            if (it == active_motors[fpag].end())
+                continue;
             control_mode[motor] = DIRECT_PWM;
             dir[motor]->setChecked(true);
         }
@@ -366,6 +381,9 @@ void RoboyMotorCommand::update_config(){
     if(ui.dir_motor_config->isChecked())
         motor_config_control_mode = DIRECT_PWM;
     for(int i=0;i<NUMBER_OF_MOTORS_PER_FPGA;i++){
+        vector<int>::iterator it = find (active_motors[ui.fpga->value()].begin(), active_motors[ui.fpga->value()].end(), i);
+        if (it == active_motors[ui.fpga->value()].end())
+            continue;
         msg.request.config.motors.push_back(i);
         msg.request.config.setpoint.push_back(0);
         msg.request.config.control_mode.push_back(motor_config_control_mode);
@@ -404,8 +422,13 @@ void RoboyMotorCommand::addFpgaWidgets(int fpga){
     cur.clear();
     dir.clear();
 
+    ui.fpga_name->setText(fpga_name_from_id[fpga].c_str());
+
     total_number_of_motors = NUMBER_OF_MOTORS_PER_FPGA;
     for (uint motor = 0; motor < NUMBER_OF_MOTORS_PER_FPGA; motor++) {
+        vector<int>::iterator it = find (active_motors[ui.fpga->value()].begin(), active_motors[ui.fpga->value()].end(), motor);
+        if (it == active_motors[fpga].end())
+            continue;
         QWidget *widget = new QWidget(motor_command_scrollarea);
         char str[100];
         sprintf(str, "motor%d_%d", fpga, motor);
@@ -414,101 +437,73 @@ void RoboyMotorCommand::addFpgaWidgets(int fpga){
         widget->setLayout(new QHBoxLayout(widget));
 
         QLabel *label = new QLabel(widget);
-        sprintf(str, "%s/%d", body_parts[fpga].c_str(), motor);
-        label->setFixedSize(40,30);
+        sprintf(str, "%d", motor);
+        label->setFixedSize(20,30);
         label->setText(str);
         widget->layout()->addWidget(label);
 
         bool active = true;
 
-        vector<int>::iterator it = find (active_motors[ui.fpga->value()].begin(), active_motors[ui.fpga->value()].end(), motor);
-        if (it == active_motors[fpga].end())
-            active = false;
-
         QRadioButton *p = new QRadioButton(widget);
         p->setText("pos");
-        p->setFixedSize(60,30);
+        p->setFixedSize(50,30);
         p->setCheckable(true);
         p->setObjectName("pos");
-        if(!active)
-            p->setEnabled(false);
-        pos.push_back(p);
+        pos[motor]= p;
         QObject::connect(p, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
 
         widget->layout()->addWidget(p);
 
         QRadioButton *v = new QRadioButton(widget);
         v->setText("vel");
-        v->setFixedSize(60,30);
+        v->setFixedSize(50,30);
         v->setCheckable(true);
         v->setObjectName("vel");
-        if(!active)
-            v->setEnabled(false);
         widget->layout()->addWidget(v);
-        vel.push_back(v);
+        vel[motor]= v;
         QObject::connect(v, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
 
         QRadioButton *d = new QRadioButton(widget);
         d->setText("dis");
-        d->setFixedSize(60,30);
+        d->setFixedSize(50,30);
         d->setCheckable(true);
         d->setObjectName("dis");
         d->setChecked(true);
-        if(!active)
-            d->setEnabled(false);
         setpoint.push_back(0);
         control_mode.push_back(DISPLACEMENT);
         widget->layout()->addWidget(d);
-        dis.push_back(d);
+        dis[motor]= d;
         QObject::connect(d, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
 
         QRadioButton *f = new QRadioButton(widget);
         f->setText("force");
-        f->setFixedSize(60,30);
+        f->setFixedSize(50,30);
         f->setCheckable(true);
         f->setObjectName("force");
-        if(!active)
-            f->setEnabled(false);
         widget->layout()->addWidget(f);
-        force.push_back(f);
+        force[motor] = f;
         QObject::connect(f, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
 
-        QRadioButton *c = new QRadioButton(widget);
-        c->setText("cur");
-        c->setFixedSize(60,30);
-        c->setCheckable(true);
-        c->setObjectName("cur");
-        c->setChecked(true);
-        if(!active)
-            c->setEnabled(false);
-        setpoint.push_back(0);
-        control_mode.push_back(CURRENT);
-        widget->layout()->addWidget(c);
-        cur.push_back(c);
-        QObject::connect(c, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
-
         QRadioButton *di = new QRadioButton(widget);
-        di->setText("cur");
-        di->setFixedSize(60,30);
+        di->setText("pwm");
+        di->setFixedSize(50,30);
         di->setCheckable(true);
-        di->setObjectName("dir");
+        di->setObjectName("pwm");
         di->setChecked(true);
-        if(!active)
-            di->setEnabled(false);
         setpoint.push_back(0);
         control_mode.push_back(DIRECT_PWM);
         widget->layout()->addWidget(di);
-        dir.push_back(di);
+        dir[motor]=di;
         QObject::connect(di, SIGNAL(clicked()), this, SLOT(controlModeChanged()));
 
         QLineEdit *line = new QLineEdit(widget);
-        line->setFixedSize(100,30);
+        line->setFixedSize(70,30);
         if(!active)
             line->setEnabled(false);
         widget->layout()->addWidget(line);
-        setpoint_widget.push_back(line);
+        setpoint_widget[motor] = line;
         QObject::connect(line, SIGNAL(editingFinished()), this, SLOT(setPointChanged()));
-        setpoint_widget.back()->setText(QString::number(setpoint[motor]));
+        setpoint_widget[motor]->setText(QString::number(setpoint[motor]));
 
         QSlider *slider = new QSlider(Qt::Orientation::Horizontal,widget);
         slider->setFixedSize(100,30);
@@ -516,7 +511,7 @@ void RoboyMotorCommand::addFpgaWidgets(int fpga){
         if(!active)
             slider->setEnabled(false);
         widget->layout()->addWidget(slider);
-        setpoint_slider_widget.push_back(slider);
+        setpoint_slider_widget[motor] = slider;
 
         QObject::connect(slider, SIGNAL(valueChanged(int)), this, SLOT(setPointChangedSlider()));
 

@@ -64,13 +64,12 @@ private:
     vector<double> setpoint;
     vector<int> control_mode;
     int total_number_of_motors = 0, number_of_fpgas = 6;
-    vector<QRadioButton*> pos, vel, dis, force, cur, dir;
-    vector<QSlider*> setpoint_slider_widget;
+    map<int,QRadioButton*> pos, vel, dis, force, cur, dir;
+    map<int,QSlider*> setpoint_slider_widget;
     QSlider *setpoint_slider_widget_all;
-    vector<QLineEdit*> setpoint_widget;
+    map<int,QLineEdit*> setpoint_widget;
     QLineEdit *setpoint_widget_all;
     QLineEdit* scale;
     QWidget* motor_command_scrollarea;
     vector<QWidget*> widgets;
-    vector<string> body_parts = {"h","spl","spr","shl","shr","unknown"};
 };
