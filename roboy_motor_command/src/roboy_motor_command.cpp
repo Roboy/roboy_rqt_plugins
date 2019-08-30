@@ -52,12 +52,13 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
     scale = widget_->findChild<QLineEdit *>("motor_scale");
 
     motorCommand = nh->advertise<roboy_middleware_msgs::MotorCommand>("/roboy/middleware/MotorCommand", 1);
-    for(auto fpga:fpga_names) {
-        motorControl[fpga_id_from_name[fpga]] = nh->serviceClient<roboy_middleware_msgs::ControlMode>(
-                "/roboy/"+fpga+"/middleware/ControlMode");
-        motorConfig[fpga_id_from_name[fpga]] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>(
-                "/roboy/"+fpga+"/middleware/MotorConfig");
-        emergencyStop[fpga_id_from_name[fpga]] = nh->serviceClient<std_srvs::SetBool>("/roboy/"+fpga+"/middleware/EmergencyStop");
+    for(int i=0;i<fpga_names.size();i++) {
+        motorControl[fpga_id_from_name[fpga_names[i]]] = nh->serviceClient<roboy_middleware_msgs::ControlMode>(
+                "/roboy/"+fpga_names[i]+"/middleware/ControlMode");
+        motorConfig[fpga_id_from_name[fpga_names[i]]] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>(
+                "/roboy/"+fpga_names[i]+"/middleware/MotorConfig");
+        emergencyStop[fpga_id_from_name[fpga_names[i]]] = nh->serviceClient<std_srvs::SetBool>("/roboy/"+fpga_names[i]+"/middleware/EmergencyStop");
+        ROS_INFO("here");
     }
 
     ui.stop_button_all->setStyleSheet("background-color: green");
@@ -248,7 +249,7 @@ void RoboyMotorCommand::controlModeChanged(){
             pos[motor]->setChecked(true);
         }
         msg.request.control_mode = POSITION;
-        ROS_INFO("changed to POSITION control");
+        ROS_INFO("changing to POSITION control");
     }
     if(ui.vel->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
@@ -259,7 +260,7 @@ void RoboyMotorCommand::controlModeChanged(){
             vel[motor]->setChecked(true);
         }
         msg.request.control_mode = VELOCITY;
-        ROS_INFO("changed to VELOCITY control");
+        ROS_INFO("changing to VELOCITY control");
     }
     if(ui.dis->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
@@ -270,7 +271,7 @@ void RoboyMotorCommand::controlModeChanged(){
             dis[motor]->setChecked(true);
         }
         msg.request.control_mode = DISPLACEMENT;
-        ROS_INFO("changed to DISPLACEMENT control");
+        ROS_INFO("changing to DISPLACEMENT control");
     }
     if(ui.force->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
@@ -281,7 +282,7 @@ void RoboyMotorCommand::controlModeChanged(){
             force[motor]->setChecked(true);
         }
         msg.request.control_mode = DISPLACEMENT;
-        ROS_INFO("changed to FORCE control");
+        ROS_INFO("changing to FORCE control");
     }
     if(ui.direct->isChecked()) {
         for(int motor = 0; motor<total_number_of_motors; motor++){
@@ -292,7 +293,7 @@ void RoboyMotorCommand::controlModeChanged(){
             dir[motor]->setChecked(true);
         }
         msg.request.control_mode = DIRECT_PWM;
-        ROS_INFO("changed to DIRECT_PWM control");
+        ROS_INFO("changing to DIRECT_PWM control");
     }
 
     bool ok;
@@ -303,7 +304,7 @@ void RoboyMotorCommand::controlModeChanged(){
     }
     msg.request.set_point = 0;
     if(!motorControl[ui.fpga->value()].call(msg))
-        ROS_ERROR("failed to change control mode of head, is emergency stop active?! are the fpgas connected?!");
+        ROS_ERROR("failed to change control mode of %s, is emergency stop active?! are the fpgas connected?!",fpga_name_from_id[ui.fpga->value()].c_str());
 }
 
 void RoboyMotorCommand::update_config(){
