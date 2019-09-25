@@ -4,10 +4,18 @@ import roboy_middleware_msgs.msg
 rospy.init_node("cycle_script")
 
 pos = 0
+initial_pos = 0
+inital_pose_received = False
 
 def MotorStatus(msg):
     global pos
+    global initial_pos
+    global inital_pose_received
     pos = msg.position[11]
+    if not inital_pose_received:
+        initial_pos = pos
+        inital_pose_received = True
+
     # rospy.loginfo_throttle(1,pos)
 
 pub = rospy.Publisher('roboy/middleware/MotorCommand', roboy_middleware_msgs.msg.MotorCommand, queue_size=1)
@@ -15,19 +23,27 @@ rospy.Subscriber("roboy/middleware/MotorStatus", roboy_middleware_msgs.msg.Motor
 up = True
 
 cycle = 0
+max_cycles = 1000-134-51-32-12-99-116-16-149-70-146
 
 while not rospy.is_shutdown():
-    msg = roboy_middleware_msgs.msg.MotorCommand()
-    msg.id = 3
-    msg.motors = [11]
-    if pos>518145 and up:
-        up = False
-    if pos<100000 and not up:
-        rospy.loginfo_throttle(1,"cycle %d"%(cycle))
-        cycle = cycle + 1
-        up = True
-    if up:
-        msg.set_points = [1000]
+    if cycle>max_cycles:
+        break
+    if inital_pose_received:
+        msg = roboy_middleware_msgs.msg.MotorCommand()
+        msg.id = 3
+        msg.motors = [11]
+        if pos>initial_pos+450000 and up:
+            up = False
+        if pos<initial_pos+50000 and not up:
+            rospy.loginfo_throttle(1,"cycle %d"%(cycle))
+            cycle = cycle + 1
+            up = True
+        if up:
+            msg.set_points = [1500]
+        else:
+            msg.set_points = [40]
+        pub.publish(msg)
     else:
-        msg.set_points = [20]
-    pub.publish(msg)
+        rospy.loginfo_throttle(1,"waiting for initial position message")
+
+rospy.loginfo("done")
