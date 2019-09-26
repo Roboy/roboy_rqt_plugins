@@ -23,7 +23,7 @@ rospy.Subscriber("roboy/middleware/MotorStatus", roboy_middleware_msgs.msg.Motor
 up = True
 
 cycle = 0
-max_cycles = 1000-134-51-32-12-99-116-16-149-70-146
+max_cycles = 1000
 
 while not rospy.is_shutdown():
     if cycle>max_cycles:
@@ -35,13 +35,13 @@ while not rospy.is_shutdown():
         if pos>initial_pos+450000 and up:
             up = False
         if pos<initial_pos+50000 and not up:
-            rospy.loginfo_throttle(1,"cycle %d"%(cycle))
+            rospy.loginfo_throttle(1,"cycle %d/%d"%(cycle,max_cycles))
             cycle = cycle + 1
             up = True
         if up:
-            msg.set_points = [1500]
+            msg.set_points = [3000]
         else:
-            msg.set_points = [40]
+            msg.set_points = [600]
         pub.publish(msg)
     else:
         rospy.loginfo_throttle(1,"waiting for initial position message")
