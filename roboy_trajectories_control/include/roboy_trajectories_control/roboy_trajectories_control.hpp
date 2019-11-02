@@ -118,7 +118,6 @@ class RoboyTrajectoriesControl:
             map<string,actionlib::SimpleActionClient<roboy_control_msgs::PerformMovementAction>*> performMovement_ac;
             map<string,actionlib::SimpleActionClient<roboy_control_msgs::PerformMovementsAction>*> performMovements_ac;
             void checkMotorStatus();
-            void motorStatusCallback(const roboy_middleware_msgs::MotorStatus::ConstPtr &msg);
             void performMovementsResultCallback(const roboy_control_msgs::PerformMovementsActionResult::ConstPtr &msg);
             void initializeRosCommunication();
 

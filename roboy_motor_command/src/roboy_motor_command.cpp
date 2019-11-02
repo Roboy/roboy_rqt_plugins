@@ -58,7 +58,7 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
         motorConfig[fpga_id_from_name[fpga_names[i]]] = nh->serviceClient<roboy_middleware_msgs::MotorConfigService>(
                 "/roboy/"+fpga_names[i]+"/middleware/MotorConfig");
         emergencyStop[fpga_id_from_name[fpga_names[i]]] = nh->serviceClient<std_srvs::SetBool>("/roboy/"+fpga_names[i]+"/middleware/EmergencyStop");
-        ROS_INFO("here");
+        ROS_INFO_STREAM("finished setting up " << fpga_names[i]);
     }
 
     ui.stop_button_all->setStyleSheet("background-color: green");
@@ -74,7 +74,9 @@ void RoboyMotorCommand::initPlugin(qt_gui_cpp::PluginContext &context) {
     QObject::connect(ui.update_config, SIGNAL(clicked()), this, SLOT(update_config()));
 
     QObject::connect(ui.load_motor_config, SIGNAL(clicked()), this, SLOT(loadMotorConfig()));
+    ROS_INFO_STREAM("Loading morot config");
     loadMotorConfig();
+    ROS_INFO_STREAM("done init");
 }
 
 void RoboyMotorCommand::shutdownPlugin() {
@@ -406,6 +408,7 @@ void RoboyMotorCommand::update_config(){
 }
 
 void RoboyMotorCommand::loadMotorConfig(){
+    ROS_INFO_STREAM("motor config path: " << ui.motor_config_path->text().toStdString());
     readConfig(ui.motor_config_path->text().toStdString());
 }
 
