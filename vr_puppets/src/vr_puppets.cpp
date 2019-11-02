@@ -176,7 +176,7 @@ void VRPuppets::receiveStatusUDP() {
             if (time.size() > samples_per_plot)
                 time.pop_front();
 
-            if ((counter++) % (approx_hz+1) == 0) {
+            if ((counter++) % (100) == 0) {
                 Q_EMIT new_data();
                 roboy_middleware_msgs::MotorStatus msg;
                 msg.id = 69;
@@ -189,7 +189,7 @@ void VRPuppets::receiveStatusUDP() {
                 }
                 motor_status.publish(msg);
             }
-            if (counter % ((approx_hz+5)*10) == 0 && initialized) {
+            if ((counter % 500) == 0 && initialized) {
                 rescale();
             }
         }
@@ -368,12 +368,11 @@ void VRPuppets::sendCommand(){
 
 void VRPuppets::controlModeChanged(){
     lock_guard<mutex> lock(mux);
-    udp_command->client_addr.sin_port = htons(8001);
-    udp_command->numbytes = 20;
+
     int Kp, Ki, Kd;
     for(auto m:ip_address) {
         bool ok;
-        if (pos[m.first]->isChecked()){
+        if (control_mode[m.first]==POSITION){
             Kp = ui.Kp_pos->text().toInt(&ok);
             if (!ok) {
                 ROS_ERROR("invalid conversion to integer of Kp");
@@ -389,7 +388,7 @@ void VRPuppets::controlModeChanged(){
                 ROS_ERROR("invalid conversion to integer of Kd");
                 return;
             }
-        }else if(vel[m.first]->isChecked()) {
+        }else if(control_mode[m.first]==VELOCITY) {
             Kp = ui.Kp_vel->text().toInt(&ok);
             if (!ok) {
                 ROS_ERROR("invalid conversion to integer of Kp");
@@ -405,7 +404,7 @@ void VRPuppets::controlModeChanged(){
                 ROS_ERROR("invalid conversion to integer of Kd");
                 return;
             }
-        }else if(dis[m.first]->isChecked()) {
+        }else if(control_mode[m.first]==DISPLACEMENT) {
             Kp = ui.Kp_dis->text().toInt(&ok);
             if(!ok) {
                 ROS_ERROR("invalid conversion to integer of Kp");
@@ -430,8 +429,19 @@ void VRPuppets::controlModeChanged(){
         mempcpy(&udp_command->buf[8],&Kp,4);
         mempcpy(&udp_command->buf[12],&control_mode[m.first],4);
         mempcpy(&udp_command->buf[16],&m.first,4);
+
+        udp_command->client_addr.sin_port = htons(8001);
+        udp_command->numbytes = 20;
         udp_command->client_addr.sin_addr.s_addr = inet_addr(m.second.c_str());
         udp_command->sendUDPToClient();
+
+        if(control_mode[m.first]) {
+            udp_command->numbytes = 10;
+            set_points[m.first] = motor_position[m.first].back();
+            ui.setpoint->setText(ui.setpoint_pos->text());
+            mempcpy(udp_command->buf, &set_points[m.first], 4);
+            mempcpy(&udp_command->buf[4], &m.first, 4);
+        }
     }
 }
 
