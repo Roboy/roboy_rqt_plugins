@@ -435,12 +435,13 @@ void VRPuppets::controlModeChanged(){
         udp_command->client_addr.sin_addr.s_addr = inet_addr(m.second.c_str());
         udp_command->sendUDPToClient();
 
-        if(control_mode[m.first]) {
+        if(control_mode[m.first]==POSITION) {
             udp_command->numbytes = 10;
             set_points[m.first] = motor_position[m.first].back();
             ui.setpoint->setText(ui.setpoint_pos->text());
             mempcpy(udp_command->buf, &set_points[m.first], 4);
             mempcpy(&udp_command->buf[4], &m.first, 4);
+            udp_command->sendUDPToClient();
         }
     }
 }
